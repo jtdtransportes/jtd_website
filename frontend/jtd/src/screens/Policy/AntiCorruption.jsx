@@ -1,6 +1,7 @@
 import React from "react";
 import "./Policy.css";
 import Header from "../../components/Header/Header";
+import Footer from "../../components/Footer/Footer";
 
 const AntiCorruption = () => {
   return (
@@ -412,6 +413,7 @@ const AntiCorruption = () => {
           </p>
         </div>
       </div>
+      <Footer/>
     </>
   );
 };

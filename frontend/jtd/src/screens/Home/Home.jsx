@@ -8,6 +8,7 @@ import MeetUs from '../../components/MeetUs/MeetUs'
 import QuickActions from '../../components/QuickActions/QuickActions'
 import BusinessPartner from '../../components/BusinessPartner/BusinessPartner'
 import Contact from '../../components/Contact/Contact'
+import Footer from '../../components/Footer/Footer'
 
 const Home = () => {
     return (
@@ -20,6 +21,7 @@ const Home = () => {
             <BusinessPartner />
             <ServiceArea />
             <Contact />
+            <Footer/>
         </div>
     )
 }

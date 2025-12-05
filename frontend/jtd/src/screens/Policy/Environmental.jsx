@@ -1,6 +1,7 @@
 import React from "react";
 import "./Policy.css";
 import Header from "../../components/Header/Header";
+import Footer from "../../components/Footer/Footer";
 
 const Environmental = () => {
   return (
@@ -47,11 +48,13 @@ const Environmental = () => {
                 ambientalmente correta;
               </li>
             </ul>
-            <br /><br />
+            <br />
+            <br />
             <b>A DIREÇÃO</b>
           </p>
         </div>
       </div>
+      <Footer />
     </>
   );
 };
