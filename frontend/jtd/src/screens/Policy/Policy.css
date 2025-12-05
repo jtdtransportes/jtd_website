@@ -1,0 +1,68 @@
+.policy-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 40px 0;
+}
+
+.policy-content {
+    max-width: 700px;
+    width: 100%;
+    text-align: justify;
+    color: #6e6e6e;
+}
+
+.policy-content h2,
+.policy-content h4 {
+    text-align: left;
+    color: #707070;
+}
+
+.subtitulo {
+    margin-top: 25px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.paragrafo {
+    margin-top: 12px;
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.lista{
+    list-style: none;
+}
+
+@media (max-width: 768px) {
+  .policy-content {
+    max-width: 95%;
+  }
+
+  .subtitulo {
+    font-size: 18px;
+  }
+
+  .paragrafo {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .policy-container {
+    padding: 20px 60px;
+  }
+
+  .policy-content {
+    max-width: 100%;
+  }
+
+  .subtitulo {
+    font-size: 17px;
+  }
+
+  .paragrafo {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}

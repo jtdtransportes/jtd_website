@@ -1,6 +1,5 @@
 import React from "react";
 import './Contact.css'
-import CaminhaoAzulPequeno from "../../assets/caminhaoazulpequeno.png"
 
 const Contact = () => {
     return (

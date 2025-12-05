@@ -9,7 +9,7 @@ const Banner = () => {
       <div className='banner-text-container'>
         <h1>A carga é sua. <br /> A responsabilidade é nossa.</h1>
         <p>Desde <b>2013</b> fornecendo serviços de transporte de carga, com <b>qualidade</b> e <b>pontualidade</b> para o mercado.</p>
-        <button>Fazer orçamento</button>
+        <button>Contato</button>
       </div>
     </div>
   )
