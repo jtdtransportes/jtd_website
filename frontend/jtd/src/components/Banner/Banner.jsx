@@ -1,54 +1,65 @@
-import React, { useEffect, useState } from 'react'
-import "./Banner.css"
+import React, { useEffect, useState } from "react";
+import "./Banner.css";
 
-import BannerImage from "../../assets/banner.png"
-import BannerImageMobile from "../../assets/banner_mobile.png"
+import BannerImage from "../../assets/banner.png";
+import BannerImageMobile from "../../assets/banner_mobile.png";
 
-import BannerImage1 from "../../assets/banner1.png"
-import BannerImageMobile1 from "../../assets/banner_mobile1.jpg"
+import BannerImage1 from "../../assets/banner1.png";
+import BannerImageMobile1 from "../../assets/banner_mobile1.jpg";
 
-import BannerImage2 from "../../assets/banner2.png"
-import BannerImageMobile2 from "../../assets/banner_mobile2.png"
+import BannerImage2 from "../../assets/banner2.png";
+import BannerImageMobile2 from "../../assets/banner_mobile2.png";
 
 const banners = [
   {
     desktop: BannerImage,
     mobile: BannerImageMobile,
-    showText: true
+    showText: true,
+    button: {
+      text: "Contato",
+      link: "#contato",
+      desktopClass: "btn-banner-1",
+      mobileClass: "btn-banner-1-mobile",
+    },
   },
   {
     desktop: BannerImage1,
     mobile: BannerImageMobile1,
-    showText: false
+    showText: false,
+    button: {
+      text: "Saiba mais",
+      link: "#servicos",
+      desktopClass: "btn-banner-2",
+      mobileClass: "btn-banner-2-mobile",
+    },
   },
   {
     desktop: BannerImage2,
     mobile: BannerImageMobile2,
-    showText: false
-  }
-]
+    showText: false,
+  },
+];
 
 const Banner = () => {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768)
-    }
+      setIsMobile(window.innerWidth <= 768);
+    };
 
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  // Auto slide
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % banners.length)
-    }, 6000)
+      setCurrentIndex((prev) => (prev + 1) % banners.length);
+    }, 6000);
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="banner-container">
@@ -64,28 +75,43 @@ const Banner = () => {
               alt="Banner"
             />
 
-            <div className={`banner-content ${banner.showText ? "with-text" : "only-button"}`}>
+            <div
+              className={`banner-content ${
+                banner.showText ? "with-text" : "only-button"
+              }`}
+            >
               {banner.showText && (
                 <>
                   <h1>
                     A carga é sua. <br /> A responsabilidade é nossa.
                   </h1>
                   <p>
-                    Desde <b>2013</b> fornecendo serviços de transporte de carga,
-                    com <b>qualidade</b> e <b>pontualidade</b> para o mercado.
+                    Desde <b>2013</b> fornecendo serviços de transporte de
+                    carga, com <b>qualidade</b> e <b>pontualidade</b> para o
+                    mercado.
                   </p>
                 </>
               )}
 
-              <a href="#contato">
-                <button>Contato</button>
-              </a>
+              {banner.button && (
+                <a href={banner.button.link}>
+                  <button
+                    className={
+                      isMobile
+                        ? banner.button.mobileClass
+                        : banner.button.desktopClass
+                    }
+                  >
+                    {banner.button.text}
+                  </button>
+                </a>
+              )}
             </div>
           </div>
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Banner
+export default Banner;

@@ -19,12 +19,15 @@
   display: block;
 }
 
+/* Conteúdo do banner */
 .banner-content {
   position: absolute;
-  top: 20%;
-  left: 5%;
-  color: white;
-  z-index: 2;
+  inset: 0;
+  padding-left: 5%;
+  padding-right: 5%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .banner-content.with-text {
@@ -39,17 +42,19 @@
 .banner-content h1 {
   font-size: 2.4rem;
   margin-bottom: 20px;
+  color: white;
 }
 
 .banner-content p {
   font-size: 1.5rem;
   max-width: 85%;
+  color: white;
   line-height: 1.4;
   margin-bottom: 25px;
 }
 
+/* Estilo base dos botões */
 .banner-content button {
-  background-color: white;
   border: none;
   font-weight: bold;
   border-radius: 40px;
@@ -62,6 +67,64 @@
   transform: translateY(-3px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+
+/* =========================
+   BOTÕES POR BANNER
+   ========================= */
+
+/* Banner 1 */
+.btn-banner-1 {
+  background: white;
+  color: rgb(12, 12, 12);
+  position: absolute;
+  left: 12%;
+}
+
+.btn-banner-1-mobile {
+  background: white;
+  color: black;
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Banner 2 */
+.btn-banner-2 {
+  background: white;
+  border: 2px solid white;
+  color: rgb(0, 0, 0);
+  align-self: flex-end;
+  margin-top: 15%;
+  margin-left: 6%;
+}
+
+.btn-banner-2-mobile {
+  background: black;
+  color: white;
+  width: 80%;
+}
+
+/* Banner 3 */
+.btn-banner-3 {
+  background: #cfa45d;
+  color: #000;
+  align-self: flex-end;
+  margin-top: 20px;
+}
+
+
+.btn-banner-3-mobile {
+  background: #cfa45d;
+  color: #000;
+  position: absolute;
+  bottom: 8%;
+  right: 5%;
+}
+
+/* =========================
+   MOBILE
+   ========================= */
 
 @media (max-width: 768px) {
   .banner-content.with-text {
