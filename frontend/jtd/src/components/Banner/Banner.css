@@ -1,48 +1,79 @@
 .banner-container {
-    position: relative;
-    overflow: hidden;
-    margin: 0;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.banner-slider {
+  display: flex;
+  transition: transform 0.8s ease-in-out;
+}
+
+.banner-slide {
+  min-width: 100%;
+  position: relative;
 }
 
 .banner-img {
-    width: 100%;
-    display: block;
-    height: auto;
+  width: 100%;
+  display: block;
 }
 
-.banner-text-container {
-    position: absolute;
-    top: 20%;
-    left: 5%;
-    color: white;
-    max-width: 40%;
-    z-index: 1;
+.banner-content {
+  position: absolute;
+  top: 20%;
+  left: 5%;
+  color: white;
+  z-index: 2;
 }
 
-.banner-text-container h1 {
-    font-size: 2.4rem;
-    margin-bottom: 20px;
-
+.banner-content.with-text {
+  max-width: 40%;
 }
 
-.banner-text-container p {
-    font-size: 1.5rem;
-    max-width: 85%;
-    line-height: 1.4;
-    margin-bottom: 25px;
+.banner-content.only-button {
+  top: 50%;
+  transform: translateY(-50%);
 }
 
-.banner-text-container button{
-    background-color: white;
-    border: none;
-    font-weight: bold;
-    border-radius: 40px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
+.banner-content h1 {
+  font-size: 2.4rem;
+  margin-bottom: 20px;
 }
 
-.banner-text-container button:hover {
-  transform: translateY(-3px); 
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+.banner-content p {
+  font-size: 1.5rem;
+  max-width: 85%;
+  line-height: 1.4;
+  margin-bottom: 25px;
+}
+
+.banner-content button {
+  background-color: white;
+  border: none;
+  font-weight: bold;
+  border-radius: 40px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.banner-content button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+  .banner-content.with-text {
+    max-width: 90%;
+    top: 15%;
+  }
+
+  .banner-content h1 {
+    font-size: 1.8rem;
+  }
+
+  .banner-content p {
+    font-size: 1.2rem;
+  }
 }
