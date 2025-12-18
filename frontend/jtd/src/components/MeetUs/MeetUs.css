@@ -1,40 +1,72 @@
 .meetus-container {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: minmax(280px, 420px) 1fr;
+    gap: 60px;
     align-items: center;
-    justify-content: space-between;
-    padding-right: 0;
+    padding: 80px 8%;
     width: 100%;
-    border-radius: 16px;
-    padding: 40px 0 0 0;
-    margin-top: 20px;
+    box-sizing: border-box;
 }
 
-.meetus-info-text {
-    flex: 1;
-    margin: 0 5vw 0 20vw;
-}
-
-.meetus-info-text p {
-    color: #0F3F59;
-    font-size: 30px;
-}
-
+/* IMAGEM */
 .meetus-image {
-    margin-left: 5vw;
-    margin-top: 5vh;
-    flex-shrink: 0; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .meetus-image img {
-    width: auto;
-    max-width: 450px;
+    width: 100%;
+    max-width: 380px;
     height: auto;
-    display: block;
 }
 
-.meetus-description{
-    font-size: 22px !important;
-    max-width: 30vw;
-    margin-top: 15px;
+/* TEXTO */
+.meetus-info-text {
+    max-width: 680px;
+}
+
+.meetus-info-text h6 {
+    color: #0F3F59;
+    font-size: 30px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.meetus-description {
+    font-size: 18px;
+    line-height: 1.7;
+    color: #3b3b3b;
+    text-align: justify;
+}
+
+@media (max-width: 768px) {
+    .meetus-container {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding: 30px 6%;
+        text-align: center;
+    }
+
+    .meetus-image {
+        order: 1;
+    }
+
+    .meetus-info-text {
+        order: 2;
+        max-width: 100%;
+    }
+
+    .meetus-image img {
+        max-width: 260px;
+    }
+
+    .meetus-info-text p:first-child {
+        font-size: 28px;
+    }
+
+    .meetus-description {
+        font-size: 16px;
+        line-height: 1.6;
+    }
 }

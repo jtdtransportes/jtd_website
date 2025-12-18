@@ -128,7 +128,6 @@
     left: 0;
 }
 
-/* BOTÃO DE FECHAR */
 .mobile-menu .close-menu {
     background: none;
     border: none;
@@ -142,14 +141,12 @@
     margin: 0;
 }
 
-/* ITENS GERAIS */
 .mobile-list li {
     border-bottom: 1px solid #e5e5e5;
     padding: 14px 0;
     font-size: 17px;
 }
 
-/* LINKS */
 .mobile-menu a,
 .mobile-dropdown-title {
     text-decoration: none;
@@ -160,18 +157,15 @@
     align-items: center;
 }
 
-/* DROPDOWNS */
 .mobile-dropdown {
     cursor: pointer;
 }
 
-/* FUNDO CINZA CLARO QUANDO ABERTO */
 .mobile-dropdown.open,
 .mobile-dropdown:hover {
     background: #f2f2f2;
 }
 
-/* SETINHA */
 .arrow {
     transition: transform 0.3s ease;
 }
@@ -180,7 +174,6 @@
     transform: rotate(180deg);
 }
 
-/* SUBMENUS */
 .mobile-submenu {
     display: flex;
     flex-direction: column;
@@ -195,12 +188,10 @@
     font-size: 16px;
 }
 
-/* ÚLTIMO SUBITEM sem borda */
 .mobile-submenu a:last-child {
     border-bottom: none;
 }
 
-/* BOTÃO BLOG */
 .mobile-blog-btn {
     background: #01304A;
     color: white !important;
@@ -210,7 +201,6 @@
     margin-top: 10px;
 }
 
-/* BACKDROP */
 .backdrop {
     position: fixed;
     top: 0;
@@ -221,8 +211,11 @@
     z-index: 1000;
 }
 
-/* RESPONSIVIDADE */
 @media (max-width: 768px) {
+    .header-container {
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
     .header-list {
         display: none;
     }
@@ -234,4 +227,5 @@
     .jtd_logo_container {
         margin-left: 20px;
     }
+
 }

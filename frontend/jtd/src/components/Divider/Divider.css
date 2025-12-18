@@ -1,0 +1,14 @@
+.divider {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .divider {
+        display: flex;
+        width: 70%;
+        height: 3px;
+        background-color: #f0f0f0;
+        margin: 40px auto;
+        border-radius: 2px;
+    }
+}

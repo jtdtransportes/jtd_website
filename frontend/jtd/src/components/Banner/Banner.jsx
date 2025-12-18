@@ -59,7 +59,7 @@ const Banner = () => {
     }, 6000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [currentIndex]);
 
   return (
     <div className="banner-container">
@@ -108,6 +108,16 @@ const Banner = () => {
               )}
             </div>
           </div>
+        ))}
+      </div>
+      <div className="banner-dots">
+        {banners.map((_, index) => (
+          <button
+            key={index}
+            className={`banner-dot ${currentIndex === index ? "active" : ""}`}
+            onClick={() => setCurrentIndex(index)}
+            aria-label={`Ir para o banner ${index + 1}`}
+          />
         ))}
       </div>
     </div>

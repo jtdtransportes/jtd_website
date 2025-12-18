@@ -19,7 +19,6 @@
   display: block;
 }
 
-/* Conteúdo do banner */
 .banner-content {
   position: absolute;
   inset: 0;
@@ -53,7 +52,6 @@
   margin-bottom: 25px;
 }
 
-/* Estilo base dos botões */
 .banner-content button {
   border: none;
   font-weight: bold;
@@ -68,11 +66,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* =========================
-   BOTÕES POR BANNER
-   ========================= */
 
-/* Banner 1 */
 .btn-banner-1 {
   background: white;
   color: rgb(12, 12, 12);
@@ -89,7 +83,6 @@
   transform: translateX(-50%);
 }
 
-/* Banner 2 */
 .btn-banner-2 {
   background: white;
   border: 2px solid white;
@@ -99,32 +92,37 @@
   margin-left: 6%;
 }
 
-.btn-banner-2-mobile {
-  background: black;
-  color: white;
-  width: 80%;
-}
 
-/* Banner 3 */
-.btn-banner-3 {
-  background: #cfa45d;
-  color: #000;
-  align-self: flex-end;
-  margin-top: 20px;
-}
-
-
-.btn-banner-3-mobile {
-  background: #cfa45d;
-  color: #000;
+.banner-dots {
   position: absolute;
-  bottom: 8%;
-  right: 5%;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 5;
 }
 
-/* =========================
-   MOBILE
-   ========================= */
+.banner-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.banner-dot:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.banner-dot.active {
+  background: white;
+  width: 22px;
+  border-radius: 12px;
+}
+
 
 @media (max-width: 768px) {
   .banner-content.with-text {
@@ -133,10 +131,31 @@
   }
 
   .banner-content h1 {
-    font-size: 1.8rem;
+    display: none;
   }
 
   .banner-content p {
-    font-size: 1.2rem;
+    display: none;
   }
+
+  .btn-banner-1 {
+    background: white;
+    color: rgb(12, 12, 12);
+    position: absolute;
+  }
+
+  .btn-banner-1-mobile {
+    background: white;
+    color: black;
+    position: absolute;
+    bottom: 10%;
+    left: 23%;
+    transform: translateX(-50%);
+  }
+
+  .btn-banner-2,
+  .btn-banner-2-mobile {
+    display: none;
+  }
+
 }
