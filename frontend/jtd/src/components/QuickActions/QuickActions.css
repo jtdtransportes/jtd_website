@@ -70,3 +70,63 @@
 .action-item img {
     width: 20px;
 }
+
+@media (max-width: 768px) {
+    .quick-actions-container {
+        margin-top: 80px;
+    }
+
+    .open-section-container {
+        position: relative;
+        align-items: flex-start;
+        padding: 3.5rem 1.5rem 0 1.5rem;
+    }
+
+    .desc-actions-content {
+        margin: 0;
+        z-index: 2;
+    }
+
+    .desc-actions-text-blue {
+        font-size: 1.4rem;
+        white-space: nowrap;
+        line-height: 1.1;
+        margin-bottom: 4px;
+        color: #01304A;
+    }
+
+    .desc-actions-text-white {
+        font-size: 1.6rem;
+        line-height: 1.1;
+        margin-top: 0;
+        padding-top: 6px;
+        color: white;
+    }
+
+    .img-caminhao-content {
+        position: absolute;
+        right: -0.5rem;
+        top: 90px;
+        transform: translateY(-92%);
+        z-index: 10;
+        margin: 0;
+    }
+
+    .img-caminhao-content img {
+        max-width: 170px;
+        height: auto;
+        display: block;
+    }
+
+    .quick-background-linear {
+        top: 90px;
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        left: 0;
+    }
+
+    .actions-map-container {
+        gap: 20px;
+    }
+}

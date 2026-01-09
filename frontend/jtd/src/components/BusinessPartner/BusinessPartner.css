@@ -2,6 +2,7 @@
   background-color: #fff;
   text-align: center;
   margin-bottom: 10px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .business-partner__header {
@@ -30,8 +31,9 @@
   border-spacing: 2rem;
   margin: 0 auto;
 }
+
 .business-partner__cell {
-      width: 180px;
+  width: 180px;
   height: 180px;
   padding: 1rem;
   border: 1px solid #ccc;
@@ -43,7 +45,7 @@
 
 .business-partner__logo {
   max-width: 100px;
-   max-height: 100%;
+  max-height: 100%;
   filter: grayscale(100%);
   transition: filter 0.3s ease;
 }
@@ -53,5 +55,50 @@
 }
 
 .business-partner__logo--large {
-  max-width: 140px; 
+  max-width: 140px;
+}
+
+@media (max-width: 768px) {
+
+  .business-partner__title {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+
+  .business-partner__subtitle {
+    font-size: 1rem;
+    padding: 0 1rem;
+    display: flex;
+    text-align: justify;
+  }
+
+  .business-partner__table,
+  .business-partner__table tbody,
+  .business-partner__row {
+    display: block;
+    width: 100%;
+  }
+
+  .business-partner__row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    justify-items: center;
+  }
+
+  .business-partner__cell {
+    width: 100%;
+    height: 140px;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .business-partner__logo {
+    max-width: 90px;
+  }
+
+  .business-partner__logo--large {
+    max-width: 110px;
+  }
 }

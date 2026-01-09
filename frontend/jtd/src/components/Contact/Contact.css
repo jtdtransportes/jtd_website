@@ -1,13 +1,14 @@
 .contact__container {
   display: flex;
   flex-direction: row;
-  margin-bottom: 100px;
   align-items: center;
   justify-content: space-between;
   background-image: url("../../assets/backgroundcontato.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  font-family: Arial, Helvetica, sans-serif;
+
 }
 
 .contact__content {
@@ -61,4 +62,55 @@
 .contact__image img {
   width: 70%;
   max-width: 350px;
+}
+
+@media (max-width: 768px) {
+
+  .contact__container {
+    flex-direction: column;
+    margin-bottom: 20px;
+    width: 100%;
+    min-height: 150px;
+    overflow-x: hidden;
+    background: none;
+  }
+
+  .contact__content {
+    padding: 2rem 1.5rem;
+    width: 100%;
+    text-align: center;
+  }
+
+  .contact__header {
+    padding: 0;
+  }
+
+  .contact__title {
+    font-size: 1.4rem;
+  }
+
+  .contact__subtitle {
+    font-size: 1rem;
+    margin-top: 10px;
+  }
+
+  .contact__subtitle_handle {
+    font-size: 1rem;
+    display: flex;
+    text-align: justify;
+  }
+
+  .contact__button_open {
+    margin-top: 1.5rem;
+  }
+
+  .contact__button_open button {
+    width: 110%;
+    max-width: 150px;
+    border-radius: 30px;
+  }
+
+  .contact__image {
+    display: none;
+  }
 }

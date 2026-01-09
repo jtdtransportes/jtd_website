@@ -42,3 +42,47 @@
     max-width: 30vw;
     margin-top: 15px;
 }
+
+@media (max-width: 768px) {
+
+    .service-container {
+        flex-direction: column;
+        padding: 24px 0;
+        margin-top: 24px;
+        text-align: center;
+    }
+
+    .service-info-text {
+        margin-left: 0;
+        padding: 0 1.5rem;
+        width: 100%;
+    }
+
+    .service__title {
+        font-size: 1.6rem;
+        text-align: center;
+    }
+
+    .service-description {
+        max-width: 100%;
+        font-size: 1.1rem !important;
+        text-align: justify;
+        margin: 12px auto 0 auto;
+    }
+
+    .service-map {
+        width: 100%;
+        margin-top: 24px;
+        border-radius: 0;
+        justify-content: center;
+    }
+
+    .service-map img {
+        max-width: 100%;
+    }
+
+    .service-map>div {
+        width: 100% !important;
+        border-radius: 0 !important;
+    }
+}
