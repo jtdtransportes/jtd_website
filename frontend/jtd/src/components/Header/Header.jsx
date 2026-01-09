@@ -16,7 +16,7 @@ const Header = () => {
     <>
       <div className="header-container">
         <div className="jtd_logo_container">
-          <a href="/">
+          <a href="/jtd_website">
             <img
               src={JTDLogo}
               alt="Logo da JTD na cor azul, escrito jtd transportes."
@@ -26,19 +26,19 @@ const Header = () => {
 
         <ul className="header-list">
           <li className="header-list-item">
-            <a href="/">Home</a>
+            <a href="/jtd_website">Home</a>
           </li>
           <li className="header-list-item">
-            <a href="/">Quem somos</a>
+            <a href="/jtd_website">Quem somos</a>
           </li>
           <li className="header-list-item">
-            <a href="/">Serviços</a>
+            <a href="/jtd_website">Serviços</a>
           </li>
           <li className="header-list-item">
-            <a href="/">Clientes</a>
+            <a href="/jtd_website">Clientes</a>
           </li>
           <li className="header-list-item">
-            <a href="/">Localização</a>
+            <a href="/jtd_website">Localização</a>
           </li>
 
           <li className="header-list-item dropdown">
@@ -46,8 +46,8 @@ const Header = () => {
               Contato <IoChevronDown className="arrow-icon" />
             </button>
             <div className="dropdown-content">
-              <a href="/">Fale Conosco</a>
-              <a href="/">Sugestões e Reclamações</a>
+              <a href="/jtd_website">Fale Conosco</a>
+              <a href="/jtd_website">Sugestões e Reclamações</a>
             </div>
           </li>
 
