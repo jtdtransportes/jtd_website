@@ -3,6 +3,7 @@ import "./Header.css";
 import JTDLogo from "../../assets/icons/jtd_logo_azul.png";
 import { IoChevronDown, IoMenu, IoClose } from "react-icons/io5";
 import { Link } from "react-router-dom";
+// import BaseModal from "../ModalContact/BaseModal";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
