@@ -19,8 +19,8 @@ const Home = () => {
             <MeetUs />
             <QuickActions />
             <BusinessPartner />
-            <ServiceArea />
             <Contact />
+            <ServiceArea />
             <Footer/>
         </div>
     )

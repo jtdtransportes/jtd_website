@@ -1,7 +1,6 @@
 {
   "name": "jtd",
   "version": "0.1.0",
-  "homepage": "https://jtdtransportes.github.io/jtd_website",
   "private": true,
   "dependencies": {
     "@react-google-maps/api": "^2.20.7",

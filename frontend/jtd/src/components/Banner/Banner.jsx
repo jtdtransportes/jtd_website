@@ -7,9 +7,6 @@ import BannerImageMobile from "../../assets/banner_mobile.png";
 import BannerImage1 from "../../assets/banner1.png";
 import BannerImageMobile1 from "../../assets/banner_mobile1.jpg";
 
-import BannerImage2 from "../../assets/banner2.png";
-import BannerImageMobile2 from "../../assets/banner_mobile2.png";
-
 const banners = [
   {
     desktop: BannerImage,
@@ -32,12 +29,7 @@ const banners = [
       desktopClass: "btn-banner-2",
       mobileClass: "btn-banner-2-mobile",
     },
-  },
-  {
-    desktop: BannerImage2,
-    mobile: BannerImageMobile2,
-    showText: false,
-  },
+  }
 ];
 
 const Banner = () => {

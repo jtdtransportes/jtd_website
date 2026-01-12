@@ -9,7 +9,6 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
-/* IMAGEM */
 .meetus-image {
     display: flex;
     justify-content: center;
@@ -22,7 +21,6 @@
     height: auto;
 }
 
-/* TEXTO */
 .meetus-info-text {
     max-width: 680px;
 }
