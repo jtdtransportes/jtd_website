@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import { Resend } from "resend"; // Importação do Resend
+import { Resend } from "resend";
 import dotenv from "dotenv";
 import { z } from "zod";
 
@@ -30,7 +30,6 @@ app.use(
   })
 );
 
-// Inicializa o Resend com a chave da API
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 function zodErrorToMessage(error) {
@@ -67,17 +66,14 @@ const contactSchema = z.object({
   message: z.string().trim().min(5).max(4000),
 });
 
-// Função auxiliar ajustada para o Resend
 function buildMail({ subject, lines, replyTo }) {
   const to = (process.env.MAIL_TO || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
 
-  // IMPORTANTE: No Resend, o "from" deve ser um domínio verificado ou o e-mail de teste deles.
-  // Se você ainda não configurou domínio, use "onboarding@resend.dev"
   const from = process.env.MAIL_FROM_EMAIL || "onboarding@resend.dev";
-  
+
   const text = lines.filter(Boolean).join("\n\n");
 
   const safe = (s) =>
@@ -101,12 +97,12 @@ function buildMail({ subject, lines, replyTo }) {
   `;
 
   return {
-    from, // Ex: "Seu Site <onboarding@resend.dev>"
+    from,
     to,
     subject,
     html,
     text,
-    reply_to: replyTo, // Resend usa snake_case para reply_to
+    replyTo,
   };
 }
 
