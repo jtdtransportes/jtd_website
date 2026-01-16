@@ -107,7 +107,6 @@ const Contact = () => {
               });
               form.reset();
 
-              setOpenFeedback(false);
             } catch (err) {
               console.error(err);
               setFeedbackStatus({
@@ -199,7 +198,6 @@ const Contact = () => {
               });
               form.reset();
 
-              form.reset();
             } catch (err) {
               console.error(err);
               setContactStatus({
