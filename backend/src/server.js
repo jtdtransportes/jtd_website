@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import nodemailer from "nodemailer";
+import { Resend } from "resend"; // Importação do Resend
 import dotenv from "dotenv";
 import { z } from "zod";
 
@@ -30,24 +30,8 @@ app.use(
   })
 );
 
-console.log("SMTP CONFIG:", {
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: process.env.SMTP_SECURE,
-  user: process.env.SMTP_USER ? "OK" : "MISSING",
-  pass: process.env.SMTP_PASS ? "OK" : "MISSING",
-});
-
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT || 587),
-  secure: String(process.env.SMTP_SECURE).toLowerCase() === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+// Inicializa o Resend com a chave da API
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function zodErrorToMessage(error) {
   const first = error.issues?.[0];
@@ -83,15 +67,17 @@ const contactSchema = z.object({
   message: z.string().trim().min(5).max(4000),
 });
 
-function buildMail({ subject, lines }) {
+// Função auxiliar ajustada para o Resend
+function buildMail({ subject, lines, replyTo }) {
   const to = (process.env.MAIL_TO || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const fromName = process.env.MAIL_FROM_NAME || "Site";
-  const fromEmail = process.env.SMTP_USER;
-
+  // IMPORTANTE: No Resend, o "from" deve ser um domínio verificado ou o e-mail de teste deles.
+  // Se você ainda não configurou domínio, use "onboarding@resend.dev"
+  const from = process.env.MAIL_FROM_EMAIL || "onboarding@resend.dev";
+  
   const text = lines.filter(Boolean).join("\n\n");
 
   const safe = (s) =>
@@ -115,16 +101,16 @@ function buildMail({ subject, lines }) {
   `;
 
   return {
+    from, // Ex: "Seu Site <onboarding@resend.dev>"
     to,
-    from: `"${fromName}" <${fromEmail}>`,
     subject,
-    text,
     html,
+    text,
+    reply_to: replyTo, // Resend usa snake_case para reply_to
   };
 }
 
 app.get("/health", (_, res) => res.json({ ok: true }));
-
 
 app.post("/api/feedback", async (req, res) => {
   const parsed = feedbackSchema.safeParse(req.body);
@@ -139,19 +125,24 @@ app.post("/api/feedback", async (req, res) => {
 
   try {
     const lines = [
-      name?.trim() ? name.trim() : null,
-      email?.trim() ? email.trim() : null,
-      message.trim(),
+      name?.trim() ? `Nome: ${name.trim()}` : null,
+      email?.trim() ? `Email: ${email.trim()}` : null,
+      `Mensagem:\n${message.trim()}`,
     ];
 
-    const mail = buildMail({
+    const mailOptions = buildMail({
       subject: "Sugestões e reclamações (site)",
       lines,
+      replyTo: email,
     });
 
-    if (email) mail.replyTo = email;
+    const { error } = await resend.emails.send(mailOptions);
 
-    await transporter.sendMail(mail);
+    if (error) {
+      console.error("Resend Error:", error);
+      throw new Error(error.message);
+    }
+
     return res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -175,22 +166,27 @@ app.post("/api/contact", async (req, res) => {
 
   try {
     const lines = [
-      name.trim(),
-      email.trim(),
-      company?.trim() ? company.trim() : null,
-      role?.trim() ? role.trim() : null,
-      phone?.trim() ? phone.trim() : null,
-      message.trim(),
+      `Nome: ${name.trim()}`,
+      `Email: ${email.trim()}`,
+      company?.trim() ? `Empresa: ${company.trim()}` : null,
+      role?.trim() ? `Cargo: ${role.trim()}` : null,
+      phone?.trim() ? `Telefone: ${phone.trim()}` : null,
+      `Mensagem:\n${message.trim()}`,
     ];
 
-    const mail = buildMail({
+    const mailOptions = buildMail({
       subject: "Contato (site)",
       lines,
+      replyTo: email,
     });
 
-    mail.replyTo = email;
+    const { error } = await resend.emails.send(mailOptions);
 
-    await transporter.sendMail(mail);
+    if (error) {
+      console.error("Resend Error:", error);
+      throw new Error(error.message);
+    }
+
     return res.json({ ok: true });
   } catch (err) {
     console.error(err);
