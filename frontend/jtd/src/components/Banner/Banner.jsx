@@ -12,23 +12,11 @@ const banners = [
     desktop: BannerImage,
     mobile: BannerImageMobile,
     showText: true,
-    button: {
-      text: "Contato",
-      link: "#contato",
-      desktopClass: "btn-banner-1",
-      mobileClass: "btn-banner-1-mobile",
-    },
   },
   {
     desktop: BannerImage1,
     mobile: BannerImageMobile1,
     showText: false,
-    button: {
-      text: "Saiba mais",
-      link: "#servicos",
-      desktopClass: "btn-banner-2",
-      mobileClass: "btn-banner-2-mobile",
-    },
   }
 ];
 
@@ -85,19 +73,6 @@ const Banner = () => {
                 </>
               )}
 
-              {banner.button && (
-                <a href={banner.button.link}>
-                  <button
-                    className={
-                      isMobile
-                        ? banner.button.mobileClass
-                        : banner.button.desktopClass
-                    }
-                  >
-                    {banner.button.text}
-                  </button>
-                </a>
-              )}
             </div>
           </div>
         ))}
