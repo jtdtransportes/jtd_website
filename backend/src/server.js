@@ -30,6 +30,15 @@ app.use(
   })
 );
 
+console.log("SMTP CONFIG:", {
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: process.env.SMTP_SECURE,
+  user: process.env.SMTP_USER ? "OK" : "MISSING",
+  pass: process.env.SMTP_PASS ? "OK" : "MISSING",
+});
+
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT || 587),
