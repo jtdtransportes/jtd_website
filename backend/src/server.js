@@ -14,11 +14,28 @@ app.set("trust proxy", 1);
 app.use(helmet());
 app.use(express.json({ limit: "200kb" }));
 
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN?.split(",").map((s) => s.trim()) ?? "*",
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true);
+
+      if (allowedOrigins.length === 0) return cb(null, true);
+      if (allowedOrigins.includes(origin)) return cb(null, true);
+
+      return cb(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+    optionsSuccessStatus: 204,
   })
 );
+
+app.options(/^\/api\/.*$/, cors());
 
 app.use(
   "/api/",
