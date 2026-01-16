@@ -1,0 +1,16 @@
+# Dependências
+backend/node_modules/
+frontend/node_modules/
+
+# Variáveis de ambiente
+.env
+backend/.env
+frontend/.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Arquivos do sistema
+.DS_Store

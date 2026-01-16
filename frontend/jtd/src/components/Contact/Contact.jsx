@@ -5,6 +5,25 @@ import BaseModal from "../ModalContact/BaseModal";
 const Contact = () => {
   const [openFeedback, setOpenFeedback] = useState(false);
   const [openContact, setOpenContact] = useState(false);
+  const API_URL = "http://localhost:4000";
+
+  const [sendingFeedback, setSendingFeedback] = useState(false);
+  const [sendingContact, setSendingContact] = useState(false);
+  const [feedbackStatus, setFeedbackStatus] = useState({ type: "", text: "" });
+  const [contactStatus, setContactStatus] = useState({ type: "", text: "" });
+
+  const StatusBox = ({ type, text, onClose }) => {
+    if (!text) return null;
+
+    return (
+      <div className={`status-box status-box--${type}`}>
+        <span>{text}</span>
+        <button type="button" className="status-box__close" onClick={onClose}>
+          ✕
+        </button>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -42,16 +61,77 @@ const Contact = () => {
           A JTD Transportes acredita que ouvir os clientes...
         </p>
 
-        <form className="contact-modal__form">
+        <StatusBox
+          type={feedbackStatus.type}
+          text={feedbackStatus.text}
+          onClose={() => setFeedbackStatus({ type: "", text: "" })}
+        />
+
+        <form
+          className="contact-modal__form"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (sendingFeedback) return;
+
+            setSendingFeedback(true);
+            try {
+              const form = e.currentTarget;
+              const fd = new FormData(form);
+
+              const payload = {
+                name: String(fd.get("name") || ""),
+                email: String(fd.get("email") || ""),
+                message: String(fd.get("message") || ""),
+              };
+
+              const res = await fetch(`${API_URL}/api/feedback`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
+
+              if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setFeedbackStatus({
+                  type: "error",
+                  text:
+                    data?.message ||
+                    "Não foi possível enviar o e-mail, tente novamente.",
+                });
+                return;
+              }
+
+              setFeedbackStatus({
+                type: "success",
+                text: "Enviado com sucesso.",
+              });
+              form.reset();
+
+              setOpenFeedback(false);
+            } catch (err) {
+              console.error(err);
+              setFeedbackStatus({
+                type: "error",
+                text: "Erro de conexão com o servidor. Tente novamente.",
+              });
+            } finally {
+              setSendingFeedback(false);
+            }
+          }}
+        >
           <div className="contact-modal__form-row">
-            <input type="text" placeholder="Nome (opcional)" />
-            <input type="email" placeholder="E-mail (opcional)" />
+            <input name="name" type="text" placeholder="Nome (opcional)" />
+            <input name="email" type="email" placeholder="E-mail (opcional)" />
           </div>
 
-          <textarea placeholder="Mensagem" rows="6" />
+          <textarea name="message" placeholder="Mensagem" rows="6" required />
 
-          <button type="submit" className="contact-modal__submit">
-            Enviar e-mail
+          <button
+            type="submit"
+            className="contact-modal__submit"
+            disabled={sendingFeedback}
+          >
+            {sendingFeedback ? "Enviando..." : "Enviar e-mail"}
           </button>
         </form>
       </BaseModal>
@@ -70,19 +150,83 @@ const Contact = () => {
           Transportes. Retornaremos o mais breve possível.
         </p>
 
-        <form className="contactModal__form">
+        <StatusBox
+          type={contactStatus.type}
+          text={contactStatus.text}
+          onClose={() => setContactStatus({ type: "", text: "" })}
+        />
+
+        <form
+          className="contactModal__form"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (sendingContact) return;
+
+            setSendingContact(true);
+            try {
+              const form = e.currentTarget;
+              const fd = new FormData(form);
+
+              const payload = {
+                name: String(fd.get("name") || ""),
+                email: String(fd.get("email") || ""),
+                company: String(fd.get("company") || ""),
+                role: String(fd.get("role") || ""),
+                phone: String(fd.get("phone") || ""),
+                message: String(fd.get("message") || ""),
+              };
+
+              const res = await fetch(`${API_URL}/api/contact`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
+
+              if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setContactStatus({
+                  type: "error",
+                  text:
+                    data?.message ||
+                    "Não foi possível enviar o e-mail, tente novamente.",
+                });
+                return;
+              }
+
+              setContactStatus({
+                type: "success",
+                text: "Enviado com sucesso.",
+              });
+              form.reset();
+
+              form.reset();
+            } catch (err) {
+              console.error(err);
+              setContactStatus({
+                type: "error",
+                text: "Erro de conexão com o servidor. Tente novamente.",
+              });
+            } finally {
+              setSendingContact(false);
+            }
+          }}
+        >
           <div className="contactModal__form_row">
-            <input type="text" placeholder="Nome" />
-            <input type="email" placeholder="E-mail" />
-            <input type="text" placeholder="Empresa" />
-            <input type="text" placeholder="Cargo" />
-            <input type="text" placeholder="Telefone" />
+            <input name="name" type="text" placeholder="Nome" required />
+            <input name="email" type="email" placeholder="E-mail" required />
+            <input name="company" type="text" placeholder="Empresa" />
+            <input name="role" type="text" placeholder="Cargo" />
+            <input name="phone" type="text" placeholder="Telefone" />
           </div>
 
-          <textarea placeholder="Mensagem" rows="6" />
+          <textarea name="message" placeholder="Mensagem" rows="6" required />
 
-          <button type="submit" className="contactModal__submit">
-            Enviar mensagem
+          <button
+            type="submit"
+            className="contactModal__submit"
+            disabled={sendingContact}
+          >
+            {sendingContact ? "Enviando..." : "Enviar mensagem"}
           </button>
         </form>
       </BaseModal>

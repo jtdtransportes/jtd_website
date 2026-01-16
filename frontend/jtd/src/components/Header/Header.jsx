@@ -3,14 +3,35 @@ import "./Header.css";
 import JTDLogo from "../../assets/icons/jtd_logo_azul.png";
 import { IoChevronDown, IoMenu, IoClose } from "react-icons/io5";
 import { Link } from "react-router-dom";
-// import BaseModal from "../ModalContact/BaseModal";
+import BaseModal from "../ModalContact/BaseModal";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [openFeedback, setOpenFeedback] = useState(false);
+  const [openContact, setOpenContact] = useState(false);
+  const API_URL = "http://localhost:4000";
+
+  const [sendingFeedback, setSendingFeedback] = useState(false);
+  const [sendingContact, setSendingContact] = useState(false);
+  const [feedbackStatus, setFeedbackStatus] = useState({ type: "", text: "" });
+  const [contactStatus, setContactStatus] = useState({ type: "", text: "" });
 
   const toggleDropdown = (menu) => {
     setOpenDropdown(openDropdown === menu ? null : menu);
+  };
+
+  const StatusBox = ({ type, text, onClose }) => {
+    if (!text) return null;
+
+    return (
+      <div className={`status-box status-box--${type}`}>
+        <span>{text}</span>
+        <button type="button" className="status-box__close" onClick={onClose}>
+          ✕
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -47,8 +68,18 @@ const Header = () => {
               Contato <IoChevronDown className="arrow-icon" />
             </button>
             <div className="dropdown-content">
-              <Link to="/">Sugestões e Reclamações</Link>
-              <Link to="/">Fale Conosco</Link>
+              <button
+                className="button-dropdown-sugest"
+                onClick={() => setOpenFeedback(true)}
+              >
+                Sugestões e Reclamações
+              </button>
+              <button
+                className="button-dropdown-contact"
+                onClick={() => setOpenContact(true)}
+              >
+                Fale Conosco
+              </button>
             </div>
           </li>
 
@@ -115,8 +146,25 @@ const Header = () => {
           </li>
           {openDropdown === "contato" && (
             <div className="mobile-submenu">
-              <a href="/">Fale Conosco</a>
-              <a href="/">Sugestões e Reclamações</a>
+              <button
+                className="mobile-submenu-btn"
+                onClick={() => {
+                  setOpenContact(true);
+                  setMenuOpen(false);
+                }}
+              >
+                Fale Conosco
+              </button>
+
+              <button
+                className="mobile-submenu-btn"
+                onClick={() => {
+                  setOpenFeedback(true);
+                  setMenuOpen(false);
+                }}
+              >
+                Sugestões e Reclamações
+              </button>
             </div>
           )}
 
@@ -155,6 +203,193 @@ const Header = () => {
       {menuOpen && (
         <div className="backdrop" onClick={() => setMenuOpen(false)} />
       )}
+
+      <BaseModal
+        isOpen={openFeedback}
+        onClose={() => setOpenFeedback(false)}
+        classPrefix="contact-modal"
+      >
+        <h2 className="contact-modal__title">
+          Envie suas sugestões e reclamações
+        </h2>
+
+        <p className="contact-modal__text">
+          A JTD Transportes valoriza a opinião de <b>clientes, colaboradores e
+          fornecedores</b>, pois ouvir sugestões e reclamações é essencial para
+          melhorar a qualidade dos serviços, fortalecer relacionamentos e
+          aprimorar o ambiente interno e as parcerias. A comunicação aberta
+          contribui para a construção de confiança, fidelização e melhoria
+          contínua.
+          <br />
+          <br />
+          Deixe abaixo sua sugestão e/ou reclamação. O envio é anônimo.
+        </p>
+
+        <StatusBox
+          type={feedbackStatus.type}
+          text={feedbackStatus.text}
+          onClose={() => setFeedbackStatus({ type: "", text: "" })}
+        />
+
+        <form
+          className="contact-modal__form"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (sendingFeedback) return;
+
+            setSendingFeedback(true);
+            try {
+              const form = e.currentTarget;
+              const fd = new FormData(form);
+
+              const payload = {
+                name: String(fd.get("name") || ""),
+                email: String(fd.get("email") || ""),
+                message: String(fd.get("message") || ""),
+              };
+
+              const res = await fetch(`${API_URL}/api/feedback`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
+
+              if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setFeedbackStatus({
+                  type: "error",
+                  text:
+                    data?.message ||
+                    "Não foi possível enviar o e-mail, tente novamente.",
+                });
+                return;
+              }
+
+              setFeedbackStatus({
+                type: "success",
+                text: "Enviado com sucesso.",
+              });
+              form.reset();
+            } catch (err) {
+              console.error(err);
+              setFeedbackStatus({
+                type: "error",
+                text: "Erro de conexão com o servidor. Tente novamente.",
+              });
+            } finally {
+              setSendingFeedback(false);
+            }
+          }}
+        >
+          <div className="contact-modal__form-row">
+            <input name="name" type="text" placeholder="Nome (opcional)" />
+            <input name="email" type="email" placeholder="E-mail (opcional)" />
+          </div>
+
+          <textarea name="message" placeholder="Mensagem" rows="6" required />
+
+          <button
+            type="submit"
+            className="contact-modal__submit"
+            disabled={sendingFeedback}
+          >
+            {sendingFeedback ? "Enviando..." : "Enviar e-mail"}
+          </button>
+        </form>
+      </BaseModal>
+
+      <BaseModal
+        isOpen={openContact}
+        onClose={() => setOpenContact(false)}
+        classPrefix="contactModal"
+      >
+        <h2 className="contactModal__title">
+          Entre em contato com a nossa equipe
+        </h2>
+
+        <p className="contactModal__text">
+          Utilize o formulário abaixo para falar diretamente com a JTD
+          Transportes. Retornaremos o mais breve possível.
+        </p>
+
+        <StatusBox
+          type={contactStatus.type}
+          text={contactStatus.text}
+          onClose={() => setContactStatus({ type: "", text: "" })}
+        />
+
+        <form
+          className="contactModal__form"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (sendingContact) return;
+
+            setSendingContact(true);
+            try {
+              const form = e.currentTarget;
+              const fd = new FormData(form);
+
+              const payload = {
+                name: String(fd.get("name") || ""),
+                email: String(fd.get("email") || ""),
+                company: String(fd.get("company") || ""),
+                role: String(fd.get("role") || ""),
+                phone: String(fd.get("phone") || ""),
+                message: String(fd.get("message") || ""),
+              };
+
+              const res = await fetch(`${API_URL}/api/contact`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
+
+              if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setContactStatus({
+                  type: "error",
+                  text:
+                    data?.message ||
+                    "Não foi possível enviar o e-mail, tente novamente.",
+                });
+                return;
+              }
+
+              setContactStatus({
+                type: "success",
+                text: "Enviado com sucesso.",
+              });
+              form.reset();
+            } catch (err) {
+              console.error(err);
+              setContactStatus({
+                type: "error",
+                text: "Erro de conexão com o servidor. Tente novamente.",
+              });
+            } finally {
+              setSendingContact(false);
+            }
+          }}
+        >
+          <div className="contactModal__form_row">
+            <input name="name" type="text" placeholder="Nome" required />
+            <input name="email" type="email" placeholder="E-mail" required />
+            <input name="company" type="text" placeholder="Empresa" />
+            <input name="role" type="text" placeholder="Cargo" />
+            <input name="phone" type="text" placeholder="Telefone" />
+          </div>
+
+          <textarea name="message" placeholder="Mensagem" rows="6" required />
+
+          <button
+            type="submit"
+            className="contactModal__submit"
+            disabled={sendingContact}
+          >
+            {sendingContact ? "Enviando..." : "Enviar mensagem"}
+          </button>
+        </form>
+      </BaseModal>
     </>
   );
 };
