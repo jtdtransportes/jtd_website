@@ -5,7 +5,7 @@ import BaseModal from "../ModalContact/BaseModal";
 const Contact = () => {
   const [openFeedback, setOpenFeedback] = useState(false);
   const [openContact, setOpenContact] = useState(false);
-  const API_URL = "http://localhost:4000";
+  const API_URL = "https://jtd-website.onrender.com";
 
   const [sendingFeedback, setSendingFeedback] = useState(false);
   const [sendingContact, setSendingContact] = useState(false);
