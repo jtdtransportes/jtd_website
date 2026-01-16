@@ -34,7 +34,6 @@ app.use(
     optionsSuccessStatus: 204,
   })
 );
-
 app.options(/^\/api\/.*$/, cors());
 
 app.use(
