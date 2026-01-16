@@ -214,12 +214,12 @@ const Header = () => {
         </h2>
 
         <p className="contact-modal__text">
-          A JTD Transportes valoriza a opinião de <b>clientes, colaboradores e
-          fornecedores</b>, pois ouvir sugestões e reclamações é essencial para
-          melhorar a qualidade dos serviços, fortalecer relacionamentos e
-          aprimorar o ambiente interno e as parcerias. A comunicação aberta
-          contribui para a construção de confiança, fidelização e melhoria
-          contínua.
+          A JTD Transportes valoriza a opinião de{" "}
+          <b>clientes, colaboradores e fornecedores</b>, pois ouvir sugestões e
+          reclamações é essencial para melhorar a qualidade dos serviços,
+          fortalecer relacionamentos e aprimorar o ambiente interno e as
+          parcerias. A comunicação aberta contribui para a construção de
+          confiança, fidelização e melhoria contínua.
           <br />
           <br />
           Deixe abaixo sua sugestão e/ou reclamação. O envio é anônimo.
@@ -238,6 +238,10 @@ const Header = () => {
             if (sendingFeedback) return;
 
             setSendingFeedback(true);
+
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 15000);
+
             try {
               const form = e.currentTarget;
               const fd = new FormData(form);
@@ -252,6 +256,7 @@ const Header = () => {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
+                signal: controller.signal,
               });
 
               if (!res.ok) {
@@ -271,12 +276,19 @@ const Header = () => {
               });
               form.reset();
             } catch (err) {
-              console.error(err);
-              setFeedbackStatus({
-                type: "error",
-                text: "Erro de conexão com o servidor. Tente novamente.",
-              });
+              if (err.name === "AbortError") {
+                setFeedbackStatus({
+                  type: "error",
+                  text: "Tempo esgotado. Tente novamente.",
+                });
+              } else {
+                setFeedbackStatus({
+                  type: "error",
+                  text: "Erro de conexão com o servidor.",
+                });
+              }
             } finally {
+              clearTimeout(timer);
               setSendingFeedback(false);
             }
           }}
