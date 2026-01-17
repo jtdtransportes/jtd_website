@@ -16,19 +16,19 @@ const cards = [
   {
     id: 2,
     card: LocationIcon,
-    info: "+ 2874",
+    info: "+ 5000",
     description: "Cargas transportadas",
   },
   {
     id: 3,
     card: BoxIcon,
-    info: "+ 126",
+    info: "+ 100",
     description: "Empresas atendidas",
   },
   {
     id: 4,
     card: CarIcon,
-    info: "+ 23.468",
+    info: "+ 1 milhão",
     description: "Kilômetros rodados",
   },
 ];

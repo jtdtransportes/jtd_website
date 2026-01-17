@@ -17,6 +17,8 @@ const Header = () => {
   const [feedbackStatus, setFeedbackStatus] = useState({ type: "", text: "" });
   const [contactStatus, setContactStatus] = useState({ type: "", text: "" });
 
+  const EM_MANUTENCAO = true;
+
   const toggleDropdown = (menu) => {
     setOpenDropdown(openDropdown === menu ? null : menu);
   };
@@ -37,6 +39,9 @@ const Header = () => {
   return (
     <>
       <div className="header-container">
+        {EM_MANUTENCAO && (
+          <div className="maintenance-tag">Site em manutenção</div>
+        )}
         <div className="jtd_logo_container">
           <Link to="/">
             <img
@@ -214,15 +219,10 @@ const Header = () => {
         </h2>
 
         <p className="contact-modal__text">
-          A JTD Transportes valoriza a opinião de{" "}
-          <b>clientes, colaboradores e fornecedores</b>, pois ouvir sugestões e
-          reclamações é essencial para melhorar a qualidade dos serviços,
-          fortalecer relacionamentos e aprimorar o ambiente interno e as
-          parcerias. A comunicação aberta contribui para a construção de
-          confiança, fidelização e melhoria contínua.
-          <br />
-          <br />
-          Deixe abaixo sua sugestão e/ou reclamação. O envio é anônimo.
+          A JTD valoriza a opinião de todos e oferece este canal para que você
+          possa enviar sua sugestão ou reclamação de forma totalmente anônima.
+          Sua mensagem será recebida e analisada com respeito e seriedade,
+          garantindo o sigilo absoluto sobre sua identidade.
         </p>
 
         <StatusBox

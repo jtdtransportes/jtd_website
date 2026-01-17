@@ -58,7 +58,10 @@ const Contact = () => {
         </h2>
 
         <p className="contact-modal__text">
-          A JTD Transportes acredita que ouvir os clientes...
+          A JTD valoriza a opinião de todos e oferece este canal para que você
+          possa enviar sua sugestão ou reclamação de forma totalmente anônima.
+          Sua mensagem será recebida e analisada com respeito e seriedade,
+          garantindo o sigilo absoluto sobre sua identidade.
         </p>
 
         <StatusBox
@@ -106,7 +109,6 @@ const Contact = () => {
                 text: "Enviado com sucesso.",
               });
               form.reset();
-
             } catch (err) {
               console.error(err);
               setFeedbackStatus({
@@ -197,7 +199,6 @@ const Contact = () => {
                 text: "Enviado com sucesso.",
               });
               form.reset();
-
             } catch (err) {
               console.error(err);
               setContactStatus({

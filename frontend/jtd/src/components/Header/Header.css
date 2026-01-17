@@ -7,6 +7,21 @@
     font-family: Arial, Helvetica, sans-serif;
     align-items: center;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    position: relative;
+}
+
+.maintenance-tag {
+    position: absolute;
+    top: 81px;
+    left: 250px;
+    background-color: #0f4c81;
+    color: #fff;
+    padding: 10px 15px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
 }
 
 .jtd_logo_container {
@@ -260,6 +275,11 @@
     word-break: break-word;
 }
 
+.header-container.with-top-banner {
+    margin-top: 32px;
+}
+
+
 
 .status-box--success {
     background: #e8fff1;
@@ -283,6 +303,11 @@
 @media (max-width: 768px) {
     .status-box {
         align-items: flex-start;
+    }
+
+    .maintenance-tag {
+        left: 10px;
+        top: 80px;
     }
 
     .status-box__close {
