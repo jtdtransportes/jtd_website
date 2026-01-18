@@ -26,11 +26,20 @@
   font-weight: bold;
 }
 
-.footer-column a {
+.footer-column a, .footer-column p {
   color: #e3e3e3;
   text-decoration: none;
   font-size: 14px;
 }
+.button-agendar-coleta{
+  background: transparent;
+  color: white;
+  font-size: 14px;
+  border: none;
+  box-shadow: none;
+  text-align: start;
+}
+
 
 .footer-column a:hover {
   color: #ffffff;
@@ -49,7 +58,51 @@
   color: #cccccc;
 }
 
+.status-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin: 10px 0 14px;
+  font-size: 14px;
+}
+
+.status-box--success {
+  background: #e8fff1;
+  border: 1px solid #2ecc71;
+}
+
+.status-box--error {
+  background: #ffecec;
+  border: 1px solid #ff4d4f;
+}
+
+.status-box__close {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.status-box span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
 @media (max-width: 768px) {
+  .status-box {
+    align-items: flex-start;
+  }
+
+  .status-box__close {
+    flex: 0 0 auto;
+  }
 
   .footer {
     padding: 0 0 25px 0;
@@ -82,7 +135,7 @@
     margin-bottom: 14px;
   }
 
-  .footer-column a {
+  .footer-column a, .footer-column p, .button-agendar-coleta {
     font-size: 18px;
     margin-bottom: 10px;
   }
