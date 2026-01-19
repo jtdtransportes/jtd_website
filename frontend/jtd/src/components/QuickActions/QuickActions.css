@@ -136,9 +136,7 @@
 }
 
 @media (min-width: 1920px) {
-
-.quick-background-linear {
-    height: 250px;
-    
-}
+    .quick-background-linear {
+        height: 250px;
+    }
 }

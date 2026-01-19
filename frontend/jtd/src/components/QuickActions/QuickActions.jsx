@@ -12,7 +12,7 @@ import Divider from "../Divider/Divider";
 
 const quickItems = [
   { id: 1, icon: CargasLotacaoIcon, info: "Cargas Lotação" },
-  { id: 2, icon: DistributionIcon, info: "Distribuição" },
+  { id: 2, icon: DistributionIcon, info: "teste de visualização" },
   { id: 3, icon: ArmazenagemIcon, info: "Armazenagem" },
   { id: 4, icon: CrossDockingIcon, info: "Cross-docking" },
   { id: 5, icon: PalletIcon, info: "Paletização" },
