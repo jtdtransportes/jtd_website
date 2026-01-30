@@ -17,7 +17,7 @@ const Header = () => {
   const [feedbackStatus, setFeedbackStatus] = useState({ type: "", text: "" });
   const [contactStatus, setContactStatus] = useState({ type: "", text: "" });
 
-  const EM_MANUTENCAO = true;
+  const EM_MANUTENCAO = false;
 
   const toggleDropdown = (menu) => {
     setOpenDropdown(openDropdown === menu ? null : menu);
