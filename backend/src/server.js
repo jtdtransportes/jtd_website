@@ -170,6 +170,10 @@ app.post("/api/feedback", async (req, res) => {
   }
 });
 
+app.get("/api/pega", async(req, res) => {
+  console.log("olá")
+})
+
 app.post("/api/contact", async (req, res) => {
   const parsed = contactSchema.safeParse(req.body);
   if (!parsed.success) {
