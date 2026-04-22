@@ -1,4 +1,4 @@
-const API_URL = "https://jtd-website.onrender.com/apihttps://jtd-website.onrender.com/apiusers";
+const API_URL = "https://jtd-website.onrender.com/api/users";
 
 async function parseResponse(response) {
   const contentType = response.headers.get("content-type") || "";
@@ -134,7 +134,7 @@ export async function changePassword(token, data) {
 
 export async function uploadContracheque(token, formData) {
   try {
-    const response = await fetch("https://jtd-website.onrender.com/apihttps://jtd-website.onrender.com/apicontracheques/upload", {
+    const response = await fetch("https://jtd-website.onrender.com/api/contracheques/upload", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -161,7 +161,7 @@ export async function uploadContracheque(token, formData) {
 }
 export async function getUsers(token) {
   try {
-    const response = await fetch("https://jtd-website.onrender.com/apihttps://jtd-website.onrender.com/apiusers", {
+    const response = await fetch("https://jtd-website.onrender.com/api/users", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -179,7 +179,7 @@ export async function getUsers(token) {
 }
 export async function getMyContracheques(token) {
   try {
-    const response = await fetch("https://jtd-website.onrender.com/apihttps://jtd-website.onrender.com/apicontracheques", {
+    const response = await fetch("https://jtd-website.onrender.com/api/contracheques", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -196,7 +196,7 @@ export async function getMyContracheques(token) {
 }
 export async function getAllUsers(token) {
   try {
-    const response = await fetch("https://jtd-website.onrender.com/apihttps://jtd-website.onrender.com/apiusers/admin/all", {
+    const response = await fetch("https://jtd-website.onrender.com/api/users/admin/all", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -214,7 +214,7 @@ export async function getAllUsers(token) {
 
 export async function deactivateUserByAdmin(token, userId) {
   try {
-    const response = await fetch(`https://jtd-website.onrender.com/apihttps://jtd-website.onrender.com/apiusers/${userId}/deactivate`, {
+    const response = await fetch(`https://jtd-website.onrender.com/api/users/${userId}/deactivate`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -232,7 +232,7 @@ export async function deactivateUserByAdmin(token, userId) {
 export async function activateUserByAdmin(token, userId) {
   try {
     const response = await fetch(
-      `https://jtd-website.onrender.com/apihttps://jtd-website.onrender.com/apiusers/${userId}/activate`,
+      `https://jtd-website.onrender.com/api/users/${userId}/activate`,
       {
         method: "PATCH",
         headers: {
@@ -252,7 +252,7 @@ export async function activateUserByAdmin(token, userId) {
 }
 export async function getAllContrachequesForAdmin(token) {
   try {
-    const response = await fetch("https://jtd-website.onrender.com/apihttps://jtd-website.onrender.com/apicontracheques/admin/all", {
+    const response = await fetch("https://jtd-website.onrender.com/api/contracheques/admin/all", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -271,7 +271,7 @@ export async function getAllContrachequesForAdmin(token) {
 export async function removeContrachequeByAdmin(token, contrachequeId) {
   try {
     const response = await fetch(
-      `https://jtd-website.onrender.com/apihttps://jtd-website.onrender.com/apicontracheques/${contrachequeId}`,
+      `https://jtd-website.onrender.com/api/contracheques/${contrachequeId}`,
       {
         method: "DELETE",
         headers: {
