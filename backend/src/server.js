@@ -5,6 +5,11 @@ import rateLimit from "express-rate-limit";
 import { Resend } from "resend";
 import dotenv from "dotenv";
 import { z } from "zod";
+import userRoutes from "./routes/user.routes.js";
+import contrachequeRoutes from "./routes/contracheque.routes.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
 
 dotenv.config();
 
@@ -30,7 +35,7 @@ app.use(
       return cb(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type"],
+    allowedHeaders: ["Content-Type", "Authorization"],methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     optionsSuccessStatus: 204,
   })
 );
@@ -208,6 +213,14 @@ app.post("/api/contact", async (req, res) => {
     });
   }
 });
+app.use("/api/contracheques", contrachequeRoutes);
+app.use("/api/users", userRoutes);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const port = Number(process.env.PORT || 4000);
+
+
 app.listen(port, () => console.log(`API rodando em http://localhost:${port}`));

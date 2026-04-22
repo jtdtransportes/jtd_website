@@ -1,0 +1,325 @@
+.profile-page {
+  display: flex;
+  min-height: calc(100vh - 160px);
+  background-color: #f5f5f5;
+}
+
+.profile-sidebar {
+  width: 260px;
+  background-color: #e5e5e5;
+  padding: 40px 20px;
+}
+
+.sidebar-title {
+  font-size: 18px;
+  margin-bottom: 20px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: #000;
+}
+
+.sidebar-title:hover {
+  text-decoration: underline;
+}
+
+.profile-content {
+  flex: 1;
+  padding: 40px;
+}
+
+.profile-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 30px;
+}
+
+.profile-header h2 {
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.profile-box {
+  width: 100%;
+  min-height: 600px;
+  background-color: #dcdcdc;
+  border-radius: 40px;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.action-button,
+.danger-button,
+.logout-button {
+  border: none;
+  border-radius: 30px;
+  padding: 12px 22px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.action-button {
+  background: #0f4a6d;
+  color: white;
+}
+
+.danger-button {
+  background: #b22222;
+  color: white;
+}
+
+.logout-button {
+  margin-top: 30px;
+  background: #444;
+  color: white;
+}
+
+.profile-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.profile-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+  gap: 8px;
+}
+
+.profile-form input,
+.profile-form select {
+  height: 48px;
+  border: none;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 15px;
+  background: #f3f3f3;
+}
+
+.profile-form input:disabled,
+.profile-form select:disabled {
+  background: #e8e8e8;
+  color: #555;
+}
+
+.profile-message {
+  margin-top: 20px;
+  font-size: 15px;
+  color: #0f4a6d;
+}
+.password-section h3 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.password-save-button {
+  margin-top: 20px;
+}
+.upload-section h3 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.profile-form input[type="file"] {
+  height: auto;
+  padding: 12px;
+  background: #f3f3f3;
+}
+.contracheque-section h3 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.contracheque-year-block {
+  margin-bottom: 28px;
+}
+
+.contracheque-year-block h4 {
+  margin-bottom: 14px;
+  font-size: 22px;
+  color: #0f4a6d;
+}
+
+.contracheque-month-block {
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  background: #e9e9e9;
+  border-radius: 14px;
+}
+
+.contracheque-month-block h5 {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.contracheque-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contracheque-link {
+  display: inline-block;
+  width: fit-content;
+  padding: 10px 16px;
+  background: #0f4a6d;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+
+.contracheque-link:hover {
+  opacity: 0.9;
+}
+.admin-users-section h3 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.admin-users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: #e9e9e9;
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.admin-user-info p {
+  margin: 4px 0;
+}
+.success-button {
+  background: #1e8e3e;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.success-button:hover {
+  opacity: 0.9;
+}
+.admin-contracheque-section h3 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.admin-contracheque-user-block {
+  background: #e9e9e9;
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+
+.admin-contracheque-user-block h4 {
+  margin-bottom: 8px;
+  font-size: 22px;
+  color: #0f4a6d;
+}
+
+.admin-contracheque-user-block p {
+  margin: 4px 0;
+}
+
+.admin-contracheque-year-block {
+  margin-top: 16px;
+}
+
+.admin-contracheque-year-block h5 {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.admin-contracheque-month-block {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: #f3f3f3;
+  border-radius: 12px;
+}
+
+.admin-contracheque-month-block h6 {
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.admin-contracheque-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-contracheque-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.search-colaborador-input {
+  width: 100%;
+  max-width: 420px;
+  height: 46px;
+  border: none;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 15px;
+  margin-bottom: 20px;
+  background: #f3f3f3;
+  outline: none;
+}
+.search-colaborador-input {
+  width: 100%;
+  max-width: 420px;
+  height: 46px;
+  border: none;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 15px;
+  margin-bottom: 20px;
+  background: #f3f3f3;
+  outline: none;
+}
+.admin-contracheque-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.download-button {
+  background: #0f4a6d;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.download-button:hover {
+  opacity: 0.9;
+}
