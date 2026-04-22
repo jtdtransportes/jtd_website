@@ -1,11 +1,12 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
+//colocar useCallback de volta pão de alho
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import {
   getProfile,
   updateProfile,
-  deactivateAccount,
+  // deactivateAccount, //pão de alho
   changePassword,
   getUsers,
   uploadContracheque,
@@ -148,25 +149,26 @@ export default function Profile() {
     setEditing(false);
   }
 
-  async function handleDeactivate() {
-    const confirmDeactivate = window.confirm(
-      "Tem certeza que deseja desativar sua conta?"
-    );
+  //pão de alho
+  // async function handleDeactivate() {
+  //   const confirmDeactivate = window.confirm(
+  //     "Tem certeza que deseja desativar sua conta?"
+  //   );
 
-    if (!confirmDeactivate) return;
+  //   if (!confirmDeactivate) return;
 
-    const token = localStorage.getItem("token");
-    const result = await deactivateAccount(token);
+  //   const token = localStorage.getItem("token");
+  //   const result = await deactivateAccount(token);
 
-    if (!result.ok) {
-      setMessage(result.message || "Erro ao desativar conta.");
-      return;
-    }
+  //   if (!result.ok) {
+  //     setMessage(result.message || "Erro ao desativar conta.");
+  //     return;
+  //   }
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  }
+  //   localStorage.removeItem("token");
+  //   localStorage.removeItem("user");
+  //   navigate("/login");
+  // }
   function handlePasswordChange(e) {
     const { name, value } = e.target;
 
@@ -282,7 +284,7 @@ export default function Profile() {
 
   const anoAtual = new Date().getFullYear();
   const anos = Array.from({ length: 6 }, (_, i) => String(anoAtual - 2 + i));
-
+  //pão de alho
   const mesesNomes = {
     1: "Janeiro",
     2: "Fevereiro",
@@ -393,20 +395,20 @@ export default function Profile() {
       }
     }
 
-    const mesesNomes = {
-      1: "Janeiro",
-      2: "Fevereiro",
-      3: "Março",
-      4: "Abril",
-      5: "Maio",
-      6: "Junho",
-      7: "Julho",
-      8: "Agosto",
-      9: "Setembro",
-      10: "Outubro",
-      11: "Novembro",
-      12: "Dezembro",
-    };
+    // const mesesNomes = {
+    //   1: "Janeiro",
+    //   2: "Fevereiro",
+    //   3: "Março",
+    //   4: "Abril",
+    //   5: "Maio",
+    //   6: "Junho",
+    //   7: "Julho",
+    //   8: "Agosto",
+    //   9: "Setembro",
+    //   10: "Outubro",
+    //   11: "Novembro",
+    //   12: "Dezembro",
+    // };
 
 
   }
@@ -458,72 +460,73 @@ export default function Profile() {
   }
 
 
+  //pão de alho
+  // const loadProfileData = useCallback(async () => {
+  //   const token = localStorage.getItem("token");
 
-  const loadProfileData = useCallback(async () => {
-    const token = localStorage.getItem("token");
+  //   if (!token) {
+  //     navigate("/login");
+  //     return;
+  //   }
 
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+  //   const result = await getProfile(token);
 
-    const result = await getProfile(token);
+  //   if (!result.ok) {
+  //     localStorage.removeItem("token");
+  //     localStorage.removeItem("user");
+  //     navigate("/login");
+  //     return;
+  //   }
 
-    if (!result.ok) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      navigate("/login");
-      return;
-    }
+  //   setUser(result.user);
+  //   setFormData({
+  //     nome: result.user.nome || "",
+  //     email: result.user.email || "",
+  //     cpf: result.user.cpf || "",
+  //     telefone: result.user.telefone || "",
+  //     sexo: result.user.sexo || "",
+  //     data_nascimento: result.user.data_nascimento
+  //       ? String(result.user.data_nascimento).slice(0, 10)
+  //       : "",
+  //   });
+  // }, [navigate]);
 
-    setUser(result.user);
-    setFormData({
-      nome: result.user.nome || "",
-      email: result.user.email || "",
-      cpf: result.user.cpf || "",
-      telefone: result.user.telefone || "",
-      sexo: result.user.sexo || "",
-      data_nascimento: result.user.data_nascimento
-        ? String(result.user.data_nascimento).slice(0, 10)
-        : "",
-    });
-  }, [navigate]);
+  //pão de alho
+  // const loadUsers = useCallback(async () => {
+  //   const token = localStorage.getItem("token");
+  //   const usersResult = await getUsers(token);
 
-  const loadUsers = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    const usersResult = await getUsers(token);
+  //   if (usersResult.ok) {
+  //     setUsers(usersResult.users || []);
+  //   }
+  // }, []);
 
-    if (usersResult.ok) {
-      setUsers(usersResult.users || []);
-    }
-  }, []);
+  // const loadMyContracheques = useCallback(async () => {
+  //   const token = localStorage.getItem("token");
+  //   const contrachequesResult = await getMyContracheques(token);
 
-  const loadMyContracheques = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    const contrachequesResult = await getMyContracheques(token);
+  //   if (contrachequesResult.ok) {
+  //     setContracheques(contrachequesResult.contracheques || []);
+  //   }
+  // }, []);
 
-    if (contrachequesResult.ok) {
-      setContracheques(contrachequesResult.contracheques || []);
-    }
-  }, []);
+  // const loadAllUsers = useCallback(async () => {
+  //   const token = localStorage.getItem("token");
+  //   const allUsersResult = await getAllUsers(token);
 
-  const loadAllUsers = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    const allUsersResult = await getAllUsers(token);
+  //   if (allUsersResult.ok) {
+  //     setAllUsers(allUsersResult.users || []);
+  //   }
+  // }, []);
 
-    if (allUsersResult.ok) {
-      setAllUsers(allUsersResult.users || []);
-    }
-  }, []);
+  // const loadAllContracheques = useCallback(async () => {
+  //   const token = localStorage.getItem("token");
+  //   const allContrachequesResult = await getAllContrachequesForAdmin(token);
 
-  const loadAllContracheques = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    const allContrachequesResult = await getAllContrachequesForAdmin(token);
-
-    if (allContrachequesResult.ok) {
-      setAllContracheques(allContrachequesResult.contracheques || []);
-    }
-  }, []);
+  //   if (allContrachequesResult.ok) {
+  //     setAllContracheques(allContrachequesResult.contracheques || []);
+  //   }
+  // }, []);
   
   return (
     <>

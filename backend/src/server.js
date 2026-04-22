@@ -170,8 +170,9 @@ app.post("/api/feedback", async (req, res) => {
   }
 });
 
-app.get("/api/pega", async(req, res) => {
+app.get("/api/pega", async (req, res) => {
   console.log("olá")
+  res.send("Funcionou 🚀")
 })
 
 app.post("/api/contact", async (req, res) => {
@@ -227,4 +228,6 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const port = Number(process.env.PORT || 4000);
 
 
-app.listen(port, () => console.log(`API rodando em http://localhost:${port}`));
+app.listen(port, "0.0.0.0", () => {
+  console.log(`API rodando na porta ${port}`);
+});
