@@ -3,7 +3,7 @@ import pool from "../config/db.js";
 class UserRepository {
   async findByEmail(email) {
     const [rows] = await pool.execute(
-      "SELECT * FROM Users WHERE email = ? LIMIT 1",
+      "SELECT * FROM users WHERE email = ? LIMIT 1",
       [email]
     );
     return rows[0] || null;
@@ -11,7 +11,7 @@ class UserRepository {
 
   async findByCpf(cpf) {
     const [rows] = await pool.execute(
-      "SELECT * FROM Users WHERE cpf = ? LIMIT 1",
+      "SELECT * FROM users WHERE cpf = ? LIMIT 1",
       [cpf]
     );
     return rows[0] || null;
@@ -22,7 +22,7 @@ class UserRepository {
       `SELECT 
         id, nome, email, cpf, data_nascimento, sexo, telefone, role, is_active,
         last_login, created_at, updated_at
-       FROM Users
+       FROM users
        WHERE id = ?
        LIMIT 1`,
       [id]
@@ -44,7 +44,7 @@ class UserRepository {
     } = data;
 
     const [result] = await pool.execute(
-      `INSERT INTO Users
+      `INSERT INTO users
         (nome, email, password_hash, cpf, data_nascimento, sexo, telefone, role, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -65,7 +65,7 @@ class UserRepository {
 
   async updateLastLogin(id) {
     await pool.execute(
-      "UPDATE Users SET last_login = NOW() WHERE id = ?",
+      "UPDATE users SET last_login = NOW() WHERE id = ?",
       [id]
     );
   }
@@ -76,7 +76,7 @@ class UserRepository {
   const { nome, email, telefone, sexo, data_nascimento } = data;
 
   await pool.execute(
-    `UPDATE Users
+    `UPDATE users
      SET nome = ?, email = ?, telefone = ?, sexo = ?, data_nascimento = ?
      WHERE id = ?`,
     [nome, email, telefone || null, sexo, data_nascimento, id]
@@ -87,7 +87,7 @@ class UserRepository {
 
 async deactivateAccount(id) {
   await pool.execute(
-    `UPDATE Users
+    `UPDATE users
      SET is_active = 0
      WHERE id = ?`,
     [id]
@@ -96,14 +96,14 @@ async deactivateAccount(id) {
 
 async findByEmailExcludingId(email, id) {
   const [rows] = await pool.execute(
-    "SELECT * FROM Users WHERE email = ? AND id <> ? LIMIT 1",
+    "SELECT * FROM users WHERE email = ? AND id <> ? LIMIT 1",
     [email, id]
   );
   return rows[0] || null;
 }
 async findWithPasswordById(id) {
   const [rows] = await pool.execute(
-    "SELECT * FROM Users WHERE id = ? LIMIT 1",
+    "SELECT * FROM users WHERE id = ? LIMIT 1",
     [id]
   );
   return rows[0] || null;
@@ -111,7 +111,7 @@ async findWithPasswordById(id) {
 
 async updatePassword(id, passwordHash) {
   await pool.execute(
-    `UPDATE Users
+    `UPDATE users
      SET password_hash = ?
      WHERE id = ?`,
     [passwordHash, id]
@@ -120,7 +120,7 @@ async updatePassword(id, passwordHash) {
 async findAll() {
   const [rows] = await pool.execute(
     `SELECT id, nome
-     FROM Users
+     FROM users
      WHERE is_active = 1
      ORDER BY nome ASC`
   );
@@ -130,7 +130,7 @@ async findAll() {
 async findAllForAdmin() {
   const [rows] = await pool.execute(
     `SELECT id, nome, email, cpf, is_active
-     FROM Users
+     FROM users
      ORDER BY nome ASC`
   );
 
@@ -138,7 +138,7 @@ async findAllForAdmin() {
 }
 async adminDeactivateUser(userId) {
   await pool.execute(
-    `UPDATE Users
+    `UPDATE users
      SET is_active = 0
      WHERE id = ?`,
     [userId]
@@ -148,7 +148,7 @@ async adminDeactivateUser(userId) {
 
 async adminActivateUser(userId) {
   await pool.execute(
-    `UPDATE Users
+    `UPDATE users
      SET is_active = 1
      WHERE id = ?`,
     [userId]

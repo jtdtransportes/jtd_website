@@ -5,7 +5,7 @@ class ContrachequeRepository {
     const { user_id, mes, ano, file_name, original_name, file_path } = data;
 
     const [result] = await pool.execute(
-      `INSERT INTO Contracheques
+      `INSERT INTO contracheques
         (user_id, mes, ano, file_name, original_name, file_path)
        VALUES (?, ?, ?, ?, ?, ?)`,
       [user_id, mes, ano, file_name, original_name, file_path]
@@ -18,7 +18,7 @@ class ContrachequeRepository {
     const [rows] = await pool.execute(
       `SELECT 
         id, user_id, mes, ano, file_name, original_name, file_path, created_at, is_active
-       FROM Contracheques
+       FROM contracheques
        WHERE id = ?
        LIMIT 1`,
       [id]
@@ -29,7 +29,7 @@ class ContrachequeRepository {
 
   async updateFileData(id, file_name, file_path) {
     await pool.execute(
-      `UPDATE Contracheques
+      `UPDATE contracheques
        SET file_name = ?, file_path = ?
        WHERE id = ?`,
       [file_name, file_path, id]
@@ -42,7 +42,7 @@ class ContrachequeRepository {
 
   async deactivate(id, userId) {
     await pool.execute(
-      `UPDATE Contracheques
+      `UPDATE contracheques
        SET is_active = 0
        WHERE id = ? AND user_id = ?`,
       [id, userId]
@@ -60,7 +60,7 @@ class ContrachequeRepository {
       file_path,
       created_at,
       is_active
-     FROM Contracheques
+     FROM contracheques
      WHERE user_id = ? AND is_active = 1
      ORDER BY ano DESC, mes DESC, created_at DESC`,
     [userId]
@@ -83,8 +83,8 @@ async findAllDetailed() {
       u.nome AS user_nome,
       u.email AS user_email,
       u.cpf AS user_cpf
-     FROM Contracheques c
-     INNER JOIN Users u ON u.id = c.user_id
+     FROM contracheques c
+     INNER JOIN users u ON u.id = c.user_id
      ORDER BY u.nome ASC, c.ano DESC, c.mes DESC, c.created_at DESC`
   );
 
@@ -103,7 +103,7 @@ async findById(id) {
       file_path,
       created_at,
       is_active
-     FROM Contracheques
+     FROM contracheques
      WHERE id = ?
      LIMIT 1`,
     [id]
@@ -114,7 +114,7 @@ async findById(id) {
 
 async deleteById(id) {
   await pool.execute(
-    `DELETE FROM Contracheques
+    `DELETE FROM contracheques
      WHERE id = ?`,
     [id]
   );
