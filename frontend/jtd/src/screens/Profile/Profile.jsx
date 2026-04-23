@@ -28,6 +28,7 @@ export default function Profile() {
   const [searchColaborador, setSearchColaborador] = useState("");
   const [searchUsuario, setSearchUsuario] = useState("");
   const [users, setUsers] = useState([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [uploadData, setUploadData] = useState({
     user_id: "",
     ano: "",
@@ -112,7 +113,6 @@ export default function Profile() {
     }
   }
 
-
   useEffect(() => {
     async function loadProfile() {
       const token = localStorage.getItem("token");
@@ -155,7 +155,16 @@ export default function Profile() {
     loadProfile();
   }, [navigate]);
 
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth > 768) {
+        setMobileMenuOpen(false);
+      }
+    }
 
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   function handleLogout() {
     localStorage.removeItem("token");
@@ -166,6 +175,7 @@ export default function Profile() {
   async function changeTab(tab) {
     setMessage("");
     setActiveTab(tab);
+    setMobileMenuOpen(false);
 
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -354,12 +364,8 @@ export default function Profile() {
 
   const contrachequesSeguros = Array.isArray(contracheques)
     ? contracheques.filter(
-      (item) =>
-        item &&
-        item.id != null &&
-        item.ano != null &&
-        item.mes != null
-    )
+        (item) => item && item.id != null && item.ano != null && item.mes != null
+      )
     : [];
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
@@ -467,9 +473,7 @@ export default function Profile() {
   const contrachequesAdminFiltrados = Object.values(
     contrachequesAdminAgrupados
   ).filter((usuario) =>
-    usuario.user_nome
-      ?.toLowerCase()
-      .includes(searchColaborador.toLowerCase().trim())
+    usuario.user_nome?.toLowerCase().includes(searchColaborador.toLowerCase().trim())
   );
 
   const allUsersFiltrados = allUsers.filter((item) =>
@@ -500,7 +504,7 @@ export default function Profile() {
           if (errorData?.message) {
             errorMessage = errorData.message;
           }
-        } catch { }
+        } catch {}
 
         throw new Error(errorMessage);
       }
@@ -537,12 +541,37 @@ export default function Profile() {
       <Header />
 
       <main className="profile-page">
-        <aside className="profile-sidebar">
+        {mobileMenuOpen && (
+          <button
+            className="sidebar-overlay"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Fechar menu"
+          />
+        )}
+
+        <button
+          className="mobile-menu-toggle"
+          onClick={() => setMobileMenuOpen(true)}
+          aria-label="Abrir menu"
+        >
+          ☰
+        </button>
+
+        <aside className={`profile-sidebar ${mobileMenuOpen ? "open" : ""}`}>
+          <div className="sidebar-mobile-header">
+            <span>Menu</span>
+            <button
+              className="sidebar-close"
+              onClick={() => setMobileMenuOpen(false)}
+              aria-label="Fechar menu"
+            >
+              ×
+            </button>
+          </div>
+
           <button className="sidebar-title" onClick={() => changeTab("perfil")}>
             Perfil
           </button>
-
-          <br />
 
           <button
             className="sidebar-title"
@@ -550,13 +579,10 @@ export default function Profile() {
           >
             Baixar Contracheque
           </button>
-          <br />
 
           <button className="sidebar-title" onClick={() => changeTab("senha")}>
             Alterar Senha
           </button>
-
-          <br />
 
           {user?.role === "admin" && (
             <>
@@ -573,7 +599,6 @@ export default function Profile() {
               >
                 Remover Contracheque
               </button>
-              <br />
 
               <button
                 className="sidebar-title"
@@ -581,7 +606,6 @@ export default function Profile() {
               >
                 Desativar/Ativar Usuários
               </button>
-              <br />
             </>
           )}
         </aside>
@@ -894,12 +918,7 @@ export default function Profile() {
 
                   <label>
                     CPF
-                    <input
-                      type="text"
-                      name="cpf"
-                      value={formData.cpf}
-                      disabled
-                    />
+                    <input type="text" name="cpf" value={formData.cpf} disabled />
                   </label>
 
                   <label>
