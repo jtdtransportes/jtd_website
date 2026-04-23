@@ -795,7 +795,7 @@ export default function Profile() {
                                         <div className="admin-contracheque-actions">
                                           <button
                                             className="download-button"
-                                            onClick={() => handleDownloadContracheque(item.file_path)}
+                                            onClick={() => handleDownloadContracheque(item.id)}
                                           >
                                             Baixar
                                           </button>
@@ -988,7 +988,7 @@ export default function Profile() {
                                 {contrachequesAgrupados[ano][mes].map((item) => (
                                   <a
                                     key={item.id}
-                                    href={`http://localhost:4000/${item.file_path.replace(/^src\//, "")}`}
+                                    href={`http://localhost:4000/contracheques/${item.id}/download`}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="contracheque-link"
