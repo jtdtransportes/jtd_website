@@ -112,35 +112,6 @@ export default function Profile() {
     }
   }
 
-  async function refreshTabData(tab = activeTab) {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    if (tab === "contracheque") {
-      await reloadMyContrachequesData(token);
-      return;
-    }
-
-    if (tab === "enviar-contracheque") {
-      await reloadUsersData(token);
-      await reloadMyContrachequesData(token);
-
-      if (user?.role === "admin") {
-        await reloadAdminContrachequesData(token);
-      }
-      return;
-    }
-
-    if (tab === "remover-contracheque" && user?.role === "admin") {
-      await reloadAdminContrachequesData(token);
-      return;
-    }
-
-    if (tab === "editar-usuarios" && user?.role === "admin") {
-      await reloadAdminUsersData(token);
-      return;
-    }
-  }
 
   useEffect(() => {
     async function loadProfile() {
