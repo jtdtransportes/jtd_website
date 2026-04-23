@@ -18,9 +18,14 @@ router.get("/", authMiddleware, (req, res) =>
   contrachequeController.list(req, res)
 );
 
+router.get("/:id/download", authMiddleware, (req, res) =>
+  contrachequeController.download(req, res)
+);
+
 router.patch("/:id/deactivate", authMiddleware, (req, res) =>
   contrachequeController.deactivate(req, res)
 );
+
 router.get("/admin/all", authMiddleware, adminMiddleware, (req, res) =>
   contrachequeController.listAllForAdmin(req, res)
 );

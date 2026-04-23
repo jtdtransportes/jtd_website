@@ -1,11 +1,7 @@
-import fs from "fs";
-import path from "path";
+import { Readable } from "stream";
 import contrachequeRepository from "../repositories/contracheque.repository.js";
 import userRepository from "../repositories/user.repository.js";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import drive from "../config/googleDrive.js";
 
 class ContrachequeService {
   sanitizeName(name) {
@@ -44,38 +40,32 @@ class ContrachequeService {
       throw new Error("Usuário não encontrado.");
     }
 
-    const tempRelativePath = `uploads/contracheques/${file.filename}`;
+    const safeUserName = this.sanitizeName(user.nome);
+    const finalFileName = `Contracheque-${safeUserName}-${ano}-${String(mes).padStart(2, "0")}.pdf`;
+
+    const uploaded = await drive.files.create({
+      requestBody: {
+        name: finalFileName,
+        parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
+      },
+      media: {
+        mimeType: file.mimetype,
+        body: Readable.from(file.buffer),
+      },
+      fields: "id,name,mimeType",
+    });
 
     const created = await contrachequeRepository.create({
       user_id: userId,
       mes,
       ano,
-      file_name: file.filename,
+      file_name: uploaded.data.name || finalFileName,
       original_name: file.originalname,
-      file_path: tempRelativePath,
+      drive_file_id: uploaded.data.id,
+      mime_type: uploaded.data.mimeType || file.mimetype,
     });
 
-    const safeUserName = this.sanitizeName(user.nome);
-    const finalFileName = `${created.id}-Contracheque-${safeUserName}-${ano}-${String(mes).padStart(2, "0")}.pdf`;
-
-    const oldPath = path.resolve(file.path);
-    const newPath = path.join(
-  path.resolve(),
-  "src",
-  "uploads",
-  "contracheques",
-  finalFileName
-);
-
-    fs.renameSync(oldPath, newPath);
-
-    const updated = await contrachequeRepository.updateFileData(
-      created.id,
-      finalFileName,
-      `uploads/contracheques/${finalFileName}`
-    );
-
-    return updated;
+    return created;
   }
 
   async listByUser(userId) {
@@ -83,8 +73,18 @@ class ContrachequeService {
   }
 
   async deactivate(userId, contrachequeId) {
+    const contracheque = await contrachequeRepository.findByIdAndUserId(
+      contrachequeId,
+      userId
+    );
+
+    if (!contracheque) {
+      throw new Error("Contracheque não encontrado.");
+    }
+
     await contrachequeRepository.deactivate(contrachequeId, userId);
   }
+
   async listAllForAdmin() {
     return contrachequeRepository.findAllDetailed();
   }
@@ -96,16 +96,43 @@ class ContrachequeService {
       throw new Error("Contracheque não encontrado.");
     }
 
-    const normalizedPath = String(contracheque.file_path || "").replace(/^\/+/, "");
-    const absolutePath = path.join(__dirname, "..", normalizedPath);
-
-    if (fs.existsSync(absolutePath)) {
-      fs.unlinkSync(absolutePath);
+    if (contracheque.drive_file_id) {
+      await drive.files.delete({
+        fileId: contracheque.drive_file_id,
+      });
     }
 
     await contrachequeRepository.deleteById(contrachequeId);
   }
 
+  async getDownloadStream(userId, contrachequeId, isAdmin = false) {
+    const contracheque = isAdmin
+      ? await contrachequeRepository.findById(contrachequeId)
+      : await contrachequeRepository.findByIdAndUserId(contrachequeId, userId);
+
+    if (!contracheque) {
+      throw new Error("Contracheque não encontrado.");
+    }
+
+    if (!contracheque.drive_file_id) {
+      throw new Error("Arquivo não encontrado no Google Drive.");
+    }
+
+    const response = await drive.files.get(
+      {
+        fileId: contracheque.drive_file_id,
+        alt: "media",
+      },
+      {
+        responseType: "stream",
+      }
+    );
+
+    return {
+      contracheque,
+      stream: response.data,
+    };
+  }
 }
 
 export default new ContrachequeService();
