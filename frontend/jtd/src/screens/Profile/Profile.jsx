@@ -166,6 +166,18 @@ export default function Profile() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -549,13 +561,15 @@ export default function Profile() {
           />
         )}
 
-        <button
-          className="mobile-menu-toggle"
-          onClick={() => setMobileMenuOpen(true)}
-          aria-label="Abrir menu"
-        >
-          ☰
-        </button>
+        {!mobileMenuOpen && (
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Abrir menu"
+          >
+            ☰
+          </button>
+        )}
 
         <aside className={`profile-sidebar ${mobileMenuOpen ? "open" : ""}`}>
           <div className="sidebar-mobile-header">
