@@ -184,10 +184,7 @@ export default function Profile() {
     loadProfile();
   }, [navigate]);
 
-  useEffect(() => {
-    if (!user) return;
-    refreshTabData(activeTab);
-  }, [activeTab, user]);
+
 
   function handleLogout() {
     localStorage.removeItem("token");
@@ -195,9 +192,28 @@ export default function Profile() {
     navigate("/login");
   }
 
-  function changeTab(tab) {
-    setActiveTab(tab);
+  async function changeTab(tab) {
     setMessage("");
+    setActiveTab(tab);
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    if (tab === "contracheque") {
+      await reloadMyContrachequesData(token);
+    }
+
+    if (tab === "enviar-contracheque") {
+      await reloadUsersData(token);
+    }
+
+    if (tab === "remover-contracheque" && user?.role === "admin") {
+      await reloadAdminContrachequesData(token);
+    }
+
+    if (tab === "editar-usuarios" && user?.role === "admin") {
+      await reloadAdminUsersData(token);
+    }
   }
 
   function handleChange(e) {
@@ -313,6 +329,8 @@ export default function Profile() {
       return;
     }
 
+    const userIdSelecionado = Number(uploadData.user_id);
+
     const form = new FormData();
     form.append("user_id", uploadData.user_id);
     form.append("ano", uploadData.ano);
@@ -326,6 +344,8 @@ export default function Profile() {
       return;
     }
 
+    const novoContracheque = result.contracheque;
+
     setMessage("Contracheque enviado com sucesso.");
     setUploadData({
       user_id: "",
@@ -334,21 +354,41 @@ export default function Profile() {
       contracheque: null,
     });
 
-    await reloadMyContrachequesData(token);
+    if (novoContracheque) {
+      if (Number(user?.id) === userIdSelecionado) {
+        setContracheques((prev) => [novoContracheque, ...prev]);
+      }
 
-    if (user?.role === "admin") {
-      await reloadAdminContrachequesData(token);
+      if (user?.role === "admin") {
+        const itemAdmin = {
+          ...novoContracheque,
+          user_nome:
+            users.find((u) => Number(u.id) === userIdSelecionado)?.nome || "",
+          user_email:
+            users.find((u) => Number(u.id) === userIdSelecionado)?.email || "",
+          user_cpf:
+            users.find((u) => Number(u.id) === userIdSelecionado)?.cpf || "",
+        };
+
+        setAllContracheques((prev) => [itemAdmin, ...prev]);
+      }
+    } else {
+      await reloadMyContrachequesData(token);
+
+      if (user?.role === "admin") {
+        await reloadAdminContrachequesData(token);
+      }
     }
   }
 
   const contrachequesSeguros = Array.isArray(contracheques)
     ? contracheques.filter(
-        (item) =>
-          item &&
-          item.id != null &&
-          item.ano != null &&
-          item.mes != null
-      )
+      (item) =>
+        item &&
+        item.id != null &&
+        item.ano != null &&
+        item.mes != null
+    )
     : [];
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
@@ -397,8 +437,14 @@ export default function Profile() {
     }
 
     setMessage("Contracheque removido com sucesso.");
-    await reloadAdminContrachequesData(token);
-    await reloadMyContrachequesData(token);
+
+    setAllContracheques((prev) =>
+      prev.filter((item) => Number(item.id) !== Number(contrachequeId))
+    );
+
+    setContracheques((prev) =>
+      prev.filter((item) => Number(item.id) !== Number(contrachequeId))
+    );
   }
 
   async function handleAdminActivateUser(userId) {
@@ -483,7 +529,7 @@ export default function Profile() {
           if (errorData?.message) {
             errorMessage = errorData.message;
           }
-        } catch {}
+        } catch { }
 
         throw new Error(errorMessage);
       }
@@ -531,7 +577,7 @@ export default function Profile() {
             className="sidebar-title"
             onClick={() => changeTab("contracheque")}
           >
-            Baixar ContraCheque
+            Baixar Contracheque
           </button>
           <br />
 
@@ -547,14 +593,14 @@ export default function Profile() {
                 className="sidebar-title"
                 onClick={() => changeTab("enviar-contracheque")}
               >
-                Adicionar ContraCheque
+                Adicionar Contracheque
               </button>
 
               <button
                 className="sidebar-title"
                 onClick={() => changeTab("remover-contracheque")}
               >
-                Remover ContraCheque
+                Remover Contracheque
               </button>
               <br />
 
@@ -577,7 +623,7 @@ export default function Profile() {
           <div className="profile-box">
             {activeTab === "enviar-contracheque" && user?.role === "admin" && (
               <div className="upload-section">
-                <h3>Adicionar ContraCheque</h3>
+                <h3>Adicionar Contracheque</h3>
 
                 <div className="profile-form">
                   <label>
@@ -643,7 +689,7 @@ export default function Profile() {
                   className="action-button password-save-button"
                   onClick={handleUploadContracheque}
                 >
-                  Adicionar ContraCheque
+                  Adicionar Contracheque
                 </button>
               </div>
             )}
@@ -702,7 +748,7 @@ export default function Profile() {
 
             {activeTab === "remover-contracheque" && user?.role === "admin" && (
               <div className="admin-contracheque-section">
-                <h3>Remover ContraCheque</h3>
+                <h3>Remover Contracheque</h3>
 
                 <input
                   type="text"
@@ -930,7 +976,7 @@ export default function Profile() {
 
             {activeTab === "contracheque" && (
               <div className="contracheque-section">
-                <h3>Baixar ContraCheque</h3>
+                <h3>Baixar Contracheque</h3>
 
                 {contrachequesSeguros.length === 0 ? (
                   <p>Nenhum contracheque disponível.</p>
