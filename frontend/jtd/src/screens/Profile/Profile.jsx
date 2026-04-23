@@ -19,6 +19,77 @@ import {
 } from "../../services/authService";
 import "./Profile.css";
 
+const API_URL = "https://jtd-website.onrender.com/api/contracheques";
+function SecaoContracheques({
+  contracheques,
+  contrachequesAgrupados,
+  mesesNomes,
+}) {
+  const [baixandoId, setBaixandoId] = useState(null);
+
+  async function handleDownloadContracheque(id) {
+    try {
+      setBaixandoId(id);
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Usuário não autenticado.");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/${id}/download`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Erro ao baixar contracheque.";
+
+        try {
+          const errorData = await response.json();
+          if (errorData?.message) {
+            errorMessage = errorData.message;
+          }
+        } catch {
+          //
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const blob = await response.blob();
+      const fileURL = window.URL.createObjectURL(blob);
+
+      let fileName = "contracheque.pdf";
+      const disposition = response.headers.get("Content-Disposition");
+
+      if (disposition) {
+        const match = disposition.match(/filename="?([^"]+)"?/i);
+        if (match?.[1]) {
+          fileName = match[1];
+        }
+      }
+
+      const link = document.createElement("a");
+      link.href = fileURL;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(fileURL);
+    } catch (error) {
+      console.error("Erro ao baixar contracheque:", error);
+      alert(error.message || "Erro ao baixar contracheque.");
+    } finally {
+      setBaixandoId(null);
+    }
+  }
+}
+
 export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -43,7 +114,7 @@ export default function Profile() {
   });
 
   useEffect(() => {
-    
+
 
 
 
@@ -453,6 +524,7 @@ export default function Profile() {
 
 
 
+
   function handleDownloadContracheque(filePath) {
     const url = `http://localhost:4000/${filePath}`;
 
@@ -527,7 +599,11 @@ export default function Profile() {
   //     setAllContracheques(allContrachequesResult.contracheques || []);
   //   }
   // }, []);
-  
+
+
+
+
+
   return (
     <>
       <Header />
@@ -964,12 +1040,12 @@ export default function Profile() {
                 </div>
               </>
             )}
-
+            {/* pãodealho */}
             {activeTab === "contracheque" && (
               <div className="contracheque-section">
                 <h3>Baixar ContraCheque</h3>
 
-                {contracheques.length === 0 ? (
+                {!contracheques || contracheques.length === 0 ? (
                   <p>Nenhum contracheque disponível.</p>
                 ) : (
                   Object.keys(contrachequesAgrupados)
@@ -981,21 +1057,25 @@ export default function Profile() {
                         {Object.keys(contrachequesAgrupados[ano])
                           .sort((a, b) => Number(b) - Number(a))
                           .map((mes) => (
-                            <div key={`${ano}-${mes}`} className="contracheque-month-block">
+                            <div
+                              key={`${ano}-${mes}`}
+                              className="contracheque-month-block"
+                            >
                               <h5>{mesesNomes[Number(mes)]}</h5>
 
                               <div className="contracheque-list">
                                 {contrachequesAgrupados[ano][mes].map((item) => (
-                                  <a
+                                  <button
                                     key={item.id}
-                                    href={`http://localhost:4000/contracheques/${item.id}/download`}
-                                    target="_blank"
-                                    rel="noreferrer"
+                                    type="button"
                                     className="contracheque-link"
-                                    download
+                                    onClick={() => handleDownloadContracheque(item.id)}
+                                    disabled={baixandoId === item.id}
                                   >
-                                    Baixar {mesesNomes[Number(item.mes)]}/{item.ano}
-                                  </a>
+                                    {baixandoId === item.id
+                                      ? "Baixando..."
+                                      : `Baixar ${mesesNomes[Number(item.mes)]}/${item.ano}`}
+                                  </button>
                                 ))}
                               </div>
                             </div>
