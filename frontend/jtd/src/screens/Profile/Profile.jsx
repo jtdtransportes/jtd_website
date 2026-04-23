@@ -51,6 +51,97 @@ export default function Profile() {
     data_nascimento: "",
   });
 
+  const meses = [
+    { value: "1", label: "Janeiro" },
+    { value: "2", label: "Fevereiro" },
+    { value: "3", label: "Março" },
+    { value: "4", label: "Abril" },
+    { value: "5", label: "Maio" },
+    { value: "6", label: "Junho" },
+    { value: "7", label: "Julho" },
+    { value: "8", label: "Agosto" },
+    { value: "9", label: "Setembro" },
+    { value: "10", label: "Outubro" },
+    { value: "11", label: "Novembro" },
+    { value: "12", label: "Dezembro" },
+  ];
+
+  const anoAtual = new Date().getFullYear();
+  const anos = Array.from({ length: 6 }, (_, i) => String(anoAtual - 2 + i));
+
+  const mesesNomes = {
+    1: "Janeiro",
+    2: "Fevereiro",
+    3: "Março",
+    4: "Abril",
+    5: "Maio",
+    6: "Junho",
+    7: "Julho",
+    8: "Agosto",
+    9: "Setembro",
+    10: "Outubro",
+    11: "Novembro",
+    12: "Dezembro",
+  };
+
+  async function reloadUsersData(token) {
+    const usersResult = await getUsers(token);
+    if (usersResult.ok) {
+      setUsers(usersResult.users || []);
+    }
+  }
+
+  async function reloadMyContrachequesData(token) {
+    const contrachequesResult = await getMyContracheques(token);
+    if (contrachequesResult.ok) {
+      setContracheques(contrachequesResult.contracheques || []);
+    }
+  }
+
+  async function reloadAdminUsersData(token) {
+    const allUsersResult = await getAllUsers(token);
+    if (allUsersResult.ok) {
+      setAllUsers(allUsersResult.users || []);
+    }
+  }
+
+  async function reloadAdminContrachequesData(token) {
+    const allContrachequesResult = await getAllContrachequesForAdmin(token);
+    if (allContrachequesResult.ok) {
+      setAllContracheques(allContrachequesResult.contracheques || []);
+    }
+  }
+
+  async function refreshTabData(tab = activeTab) {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    if (tab === "contracheque") {
+      await reloadMyContrachequesData(token);
+      return;
+    }
+
+    if (tab === "enviar-contracheque") {
+      await reloadUsersData(token);
+      await reloadMyContrachequesData(token);
+
+      if (user?.role === "admin") {
+        await reloadAdminContrachequesData(token);
+      }
+      return;
+    }
+
+    if (tab === "remover-contracheque" && user?.role === "admin") {
+      await reloadAdminContrachequesData(token);
+      return;
+    }
+
+    if (tab === "editar-usuarios" && user?.role === "admin") {
+      await reloadAdminUsersData(token);
+      return;
+    }
+  }
+
   useEffect(() => {
     async function loadProfile() {
       const token = localStorage.getItem("token");
@@ -81,36 +172,32 @@ export default function Profile() {
           : "",
       });
 
+      await reloadUsersData(token);
+      await reloadMyContrachequesData(token);
+
       if (result.user.role === "admin") {
-        const allUsersResult = await getAllUsers(token);
-        if (allUsersResult.ok) {
-          setAllUsers(allUsersResult.users || []);
-        }
-
-        const allContrachequesResult = await getAllContrachequesForAdmin(token);
-        if (allContrachequesResult.ok) {
-          setAllContracheques(allContrachequesResult.contracheques || []);
-        }
-      }
-
-      const usersResult = await getUsers(token);
-      if (usersResult.ok) {
-        setUsers(usersResult.users || []);
-      }
-
-      const contrachequesResult = await getMyContracheques(token);
-      if (contrachequesResult.ok) {
-        setContracheques(contrachequesResult.contracheques || []);
+        await reloadAdminUsersData(token);
+        await reloadAdminContrachequesData(token);
       }
     }
 
     loadProfile();
   }, [navigate]);
 
+  useEffect(() => {
+    if (!user) return;
+    refreshTabData(activeTab);
+  }, [activeTab, user]);
+
   function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
+  }
+
+  function changeTab(tab) {
+    setActiveTab(tab);
+    setMessage("");
   }
 
   function handleChange(e) {
@@ -246,40 +333,13 @@ export default function Profile() {
       mes: "",
       contracheque: null,
     });
+
+    await reloadMyContrachequesData(token);
+
+    if (user?.role === "admin") {
+      await reloadAdminContrachequesData(token);
+    }
   }
-
-  const meses = [
-    { value: "1", label: "Janeiro" },
-    { value: "2", label: "Fevereiro" },
-    { value: "3", label: "Março" },
-    { value: "4", label: "Abril" },
-    { value: "5", label: "Maio" },
-    { value: "6", label: "Junho" },
-    { value: "7", label: "Julho" },
-    { value: "8", label: "Agosto" },
-    { value: "9", label: "Setembro" },
-    { value: "10", label: "Outubro" },
-    { value: "11", label: "Novembro" },
-    { value: "12", label: "Dezembro" },
-  ];
-
-  const anoAtual = new Date().getFullYear();
-  const anos = Array.from({ length: 6 }, (_, i) => String(anoAtual - 2 + i));
-
-  const mesesNomes = {
-    1: "Janeiro",
-    2: "Fevereiro",
-    3: "Março",
-    4: "Abril",
-    5: "Maio",
-    6: "Junho",
-    7: "Julho",
-    8: "Agosto",
-    9: "Setembro",
-    10: "Outubro",
-    11: "Novembro",
-    12: "Dezembro",
-  };
 
   const contrachequesSeguros = Array.isArray(contracheques)
     ? contracheques.filter(
@@ -318,12 +378,7 @@ export default function Profile() {
     }
 
     setMessage("Usuário desativado com sucesso.");
-
-    setAllUsers((prev) =>
-      prev.map((item) =>
-        item.id === userId ? { ...item, is_active: 0 } : item
-      )
-    );
+    await reloadAdminUsersData(token);
   }
 
   async function handleRemoveContracheque(contrachequeId) {
@@ -342,10 +397,8 @@ export default function Profile() {
     }
 
     setMessage("Contracheque removido com sucesso.");
-
-    setAllContracheques((prev) =>
-      prev.filter((item) => item.id !== contrachequeId)
-    );
+    await reloadAdminContrachequesData(token);
+    await reloadMyContrachequesData(token);
   }
 
   async function handleAdminActivateUser(userId) {
@@ -362,20 +415,7 @@ export default function Profile() {
     }
 
     setMessage("Usuário ativado com sucesso.");
-
-    setAllUsers((prev) =>
-      prev.map((item) =>
-        item.id === userId ? { ...item, is_active: 1 } : item
-      )
-    );
-
-    if (user?.role === "admin") {
-      const allUsersResult = await getAllUsers(token);
-
-      if (allUsersResult.ok) {
-        setAllUsers(allUsersResult.users || []);
-      }
-    }
+    await reloadAdminUsersData(token);
   }
 
   const contrachequesAdminAgrupados = allContracheques.reduce((acc, item) => {
@@ -481,13 +521,7 @@ export default function Profile() {
 
       <main className="profile-page">
         <aside className="profile-sidebar">
-          <button
-            className="sidebar-title"
-            onClick={() => {
-              setActiveTab("perfil");
-              setMessage("");
-            }}
-          >
+          <button className="sidebar-title" onClick={() => changeTab("perfil")}>
             Perfil
           </button>
 
@@ -495,22 +529,13 @@ export default function Profile() {
 
           <button
             className="sidebar-title"
-            onClick={() => {
-              setActiveTab("contracheque");
-              setMessage("");
-            }}
+            onClick={() => changeTab("contracheque")}
           >
             Baixar ContraCheque
           </button>
           <br />
 
-          <button
-            className="sidebar-title"
-            onClick={() => {
-              setActiveTab("senha");
-              setMessage("");
-            }}
-          >
+          <button className="sidebar-title" onClick={() => changeTab("senha")}>
             Alterar Senha
           </button>
 
@@ -520,20 +545,14 @@ export default function Profile() {
             <>
               <button
                 className="sidebar-title"
-                onClick={() => {
-                  setActiveTab("enviar-contracheque");
-                  setMessage("");
-                }}
+                onClick={() => changeTab("enviar-contracheque")}
               >
                 Adicionar ContraCheque
               </button>
 
               <button
                 className="sidebar-title"
-                onClick={() => {
-                  setActiveTab("remover-contracheque");
-                  setMessage("");
-                }}
+                onClick={() => changeTab("remover-contracheque")}
               >
                 Remover ContraCheque
               </button>
@@ -541,10 +560,7 @@ export default function Profile() {
 
               <button
                 className="sidebar-title"
-                onClick={() => {
-                  setActiveTab("editar-usuarios");
-                  setMessage("");
-                }}
+                onClick={() => changeTab("editar-usuarios")}
               >
                 Desativar/Ativar Usuários
               </button>
@@ -702,7 +718,10 @@ export default function Profile() {
                   <p>Nenhum colaborador encontrado.</p>
                 ) : (
                   contrachequesAdminFiltrados.map((usuario) => (
-                    <div key={usuario.user_id} className="admin-contracheque-user-block">
+                    <div
+                      key={usuario.user_id}
+                      className="admin-contracheque-user-block"
+                    >
                       <h4>{usuario.user_nome}</h4>
                       <p><strong>Email:</strong> {usuario.user_email}</p>
                       <p><strong>CPF:</strong> {usuario.user_cpf}</p>
@@ -727,20 +746,27 @@ export default function Profile() {
 
                                   <div className="admin-contracheque-list">
                                     {usuario.anos[ano][mes].map((item) => (
-                                      <div key={item.id} className="admin-contracheque-card">
+                                      <div
+                                        key={item.id}
+                                        className="admin-contracheque-card"
+                                      >
                                         <span>{item.file_name}</span>
 
                                         <div className="admin-contracheque-actions">
                                           <button
                                             className="download-button"
-                                            onClick={() => handleDownloadContracheque(item.id)}
+                                            onClick={() =>
+                                              handleDownloadContracheque(item.id)
+                                            }
                                           >
                                             Baixar
                                           </button>
 
                                           <button
                                             className="danger-button"
-                                            onClick={() => handleRemoveContracheque(item.id)}
+                                            onClick={() =>
+                                              handleRemoveContracheque(item.id)
+                                            }
                                           >
                                             Remover
                                           </button>
@@ -930,9 +956,13 @@ export default function Profile() {
                                     key={item.id}
                                     type="button"
                                     className="contracheque-link"
-                                    onClick={() => handleDownloadContracheque(item.id)}
+                                    onClick={() =>
+                                      handleDownloadContracheque(item.id)
+                                    }
                                   >
-                                    Baixar {mesesNomes[Number(item.mes)] || item.mes}/{item.ano}
+                                    Baixar{" "}
+                                    {mesesNomes[Number(item.mes)] || item.mes}/
+                                    {item.ano}
                                   </button>
                                 ))}
                               </div>
