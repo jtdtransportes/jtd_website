@@ -376,8 +376,8 @@ export default function Profile() {
 
   const contrachequesSeguros = Array.isArray(contracheques)
     ? contracheques.filter(
-        (item) => item && item.id != null && item.ano != null && item.mes != null
-      )
+      (item) => item && item.id != null && item.ano != null && item.mes != null
+    )
     : [];
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
@@ -516,7 +516,7 @@ export default function Profile() {
           if (errorData?.message) {
             errorMessage = errorData.message;
           }
-        } catch {}
+        } catch { }
 
         throw new Error(errorMessage);
       }
@@ -561,14 +561,16 @@ export default function Profile() {
       )}
 
       {!mobileMenuOpen && (
-        <button
-          className="mobile-menu-toggle"
-          onClick={() => setMobileMenuOpen(true)}
-          aria-label="Abrir menu"
-          type="button"
-        >
-          ☰
-        </button>
+        <div className="mobile-menu-anchor">
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Abrir menu"
+            type="button"
+          >
+            ☰
+          </button>
+        </div>
       )}
 
       <main className="profile-page">

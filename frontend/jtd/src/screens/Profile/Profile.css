@@ -354,11 +354,10 @@
   opacity: 0.9;
 }
 
-.mobile-menu-toggle {
-  display: none;
-}
-
-.sidebar-mobile-header {
+.mobile-menu-anchor,
+.mobile-menu-toggle,
+.sidebar-mobile-header,
+.sidebar-overlay {
   display: none;
 }
 
@@ -371,23 +370,24 @@
   color: #000;
 }
 
-.sidebar-overlay {
-  display: none;
-}
-
 @media (max-width: 768px) {
   .profile-page {
     display: block;
     min-height: auto;
   }
 
+  .mobile-menu-anchor {
+    display: block;
+    position: fixed;
+    top: 140px;
+    left: 12px;
+    z-index: 3000;
+  }
+
   .mobile-menu-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
-    position: fixed !important;
-    top: 92px !important;
-    left: 12px !important;
     width: 46px;
     height: 46px;
     border: none;
@@ -396,9 +396,7 @@
     color: #fff;
     font-size: 24px;
     cursor: pointer;
-    z-index: 3000;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-    transform: none !important;
   }
 
   .sidebar-overlay {
