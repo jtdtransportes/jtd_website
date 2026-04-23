@@ -385,9 +385,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    position: fixed;
-    top: 90px;
-    left: 12px;
+    position: fixed !important;
+    top: 92px !important;
+    left: 12px !important;
     width: 46px;
     height: 46px;
     border: none;
@@ -396,8 +396,9 @@
     color: #fff;
     font-size: 24px;
     cursor: pointer;
-    z-index: 1200;
+    z-index: 3000;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+    transform: none !important;
   }
 
   .sidebar-overlay {
@@ -406,7 +407,7 @@
     inset: 0;
     background: rgba(0, 0, 0, 0.35);
     border: none;
-    z-index: 1090;
+    z-index: 1990;
   }
 
   .profile-sidebar {
@@ -420,7 +421,7 @@
     padding: 20px 16px 24px;
     transform: translateX(-105%);
     overflow-y: auto;
-    z-index: 1100;
+    z-index: 2000;
   }
 
   .profile-sidebar.open {

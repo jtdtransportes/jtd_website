@@ -552,25 +552,26 @@ export default function Profile() {
     <>
       <Header />
 
+      {mobileMenuOpen && (
+        <button
+          className="sidebar-overlay"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-label="Fechar menu"
+        />
+      )}
+
+      {!mobileMenuOpen && (
+        <button
+          className="mobile-menu-toggle"
+          onClick={() => setMobileMenuOpen(true)}
+          aria-label="Abrir menu"
+          type="button"
+        >
+          ☰
+        </button>
+      )}
+
       <main className="profile-page">
-        {mobileMenuOpen && (
-          <button
-            className="sidebar-overlay"
-            onClick={() => setMobileMenuOpen(false)}
-            aria-label="Fechar menu"
-          />
-        )}
-
-        {!mobileMenuOpen && (
-          <button
-            className="mobile-menu-toggle"
-            onClick={() => setMobileMenuOpen(true)}
-            aria-label="Abrir menu"
-          >
-            ☰
-          </button>
-        )}
-
         <aside className={`profile-sidebar ${mobileMenuOpen ? "open" : ""}`}>
           <div className="sidebar-mobile-header">
             <span>Menu</span>
@@ -578,6 +579,7 @@ export default function Profile() {
               className="sidebar-close"
               onClick={() => setMobileMenuOpen(false)}
               aria-label="Fechar menu"
+              type="button"
             >
               ×
             </button>
