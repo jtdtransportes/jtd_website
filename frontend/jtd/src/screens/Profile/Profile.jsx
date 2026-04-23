@@ -20,6 +20,15 @@ import {
 import "./Profile.css";
 
 const API_URL = "https://jtd-website.onrender.com/api/contracheques";
+const contrachequesSeguros = Array.isArray(contracheques)
+  ? contracheques.filter(
+    (item) =>
+      item &&
+      item.id != null &&
+      item.ano != null &&
+      item.mes != null
+  )
+  : [];
 function SecaoContracheques({
   contracheques,
   contrachequesAgrupados,
@@ -371,20 +380,14 @@ export default function Profile() {
     12: "Dezembro",
   };
 
-  const contrachequesAgrupados = contracheques.reduce((acc, item) => {
-    const ano = item.ano;
-    const mes = item.mes;
+  const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
+    const ano = String(item.ano);
+    const mes = String(item.mes);
 
-    if (!acc[ano]) {
-      acc[ano] = {};
-    }
-
-    if (!acc[ano][mes]) {
-      acc[ano][mes] = [];
-    }
+    if (!acc[ano]) acc[ano] = {};
+    if (!acc[ano][mes]) acc[ano][mes] = [];
 
     acc[ano][mes].push(item);
-
     return acc;
   }, {});
 
@@ -525,10 +528,60 @@ export default function Profile() {
 
 
 
-  function handleDownloadContracheque(filePath) {
-    const url = `http://localhost:4000/${filePath}`;
+  async function handleDownloadContracheque(id) {
+    try {
+      const token = localStorage.getItem("token");
 
-    window.open(url, "_blank");
+      if (!token) {
+        alert("Usuário não autenticado.");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/${id}/download`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Erro ao baixar contracheque.";
+
+        try {
+          const errorData = await response.json();
+          if (errorData?.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (_) { }
+
+        throw new Error(errorMessage);
+      }
+
+      const blob = await response.blob();
+      const fileURL = window.URL.createObjectURL(blob);
+
+      let fileName = "contracheque.pdf";
+      const disposition = response.headers.get("content-disposition");
+
+      if (disposition) {
+        const match = disposition.match(/filename="?([^"]+)"?/i);
+        if (match && match[1]) {
+          fileName = match[1];
+        }
+      }
+
+      const link = document.createElement("a");
+      link.href = fileURL;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(fileURL);
+    } catch (error) {
+      console.error("Erro ao baixar contracheque:", error);
+      alert(error.message || "Erro ao baixar contracheque.");
+    }
   }
 
 
@@ -1045,7 +1098,7 @@ export default function Profile() {
               <div className="contracheque-section">
                 <h3>Baixar ContraCheque</h3>
 
-                {!contracheques || contracheques.length === 0 ? (
+                {contrachequesSeguros.length === 0 ? (
                   <p>Nenhum contracheque disponível.</p>
                 ) : (
                   Object.keys(contrachequesAgrupados)
@@ -1061,7 +1114,7 @@ export default function Profile() {
                               key={`${ano}-${mes}`}
                               className="contracheque-month-block"
                             >
-                              <h5>{mesesNomes[Number(mes)]}</h5>
+                              <h5>{mesesNomes[Number(mes)] || `Mês ${mes}`}</h5>
 
                               <div className="contracheque-list">
                                 {contrachequesAgrupados[ano][mes].map((item) => (
@@ -1070,11 +1123,8 @@ export default function Profile() {
                                     type="button"
                                     className="contracheque-link"
                                     onClick={() => handleDownloadContracheque(item.id)}
-                                    disabled={baixandoId === item.id}
                                   >
-                                    {baixandoId === item.id
-                                      ? "Baixando..."
-                                      : `Baixar ${mesesNomes[Number(item.mes)]}/${item.ano}`}
+                                    Baixar {mesesNomes[Number(item.mes)] || item.mes}/{item.ano}
                                   </button>
                                 ))}
                               </div>
