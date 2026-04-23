@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-//colocar useCallback de volta pão de alho
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import {
   getProfile,
   updateProfile,
-  // deactivateAccount, //pão de alho
   changePassword,
   getUsers,
   uploadContracheque,
@@ -19,86 +17,7 @@ import {
 } from "../../services/authService";
 import "./Profile.css";
 
-// Novo código
 const API_URL = "https://jtd-website.onrender.com/api/contracheques";
-const contrachequesSeguros = Array.isArray(contracheques)
-  ? contracheques.filter(
-    (item) =>
-      item &&
-      item.id != null &&
-      item.ano != null &&
-      item.mes != null
-  )
-  : [];
-function SecaoContracheques({
-  contracheques,
-  contrachequesAgrupados,
-  mesesNomes,
-}) {
-  const [baixandoId, setBaixandoId] = useState(null);
-
-  async function handleDownloadContracheque(id) {
-    try {
-      setBaixandoId(id);
-
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        alert("Usuário não autenticado.");
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/${id}/download`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        let errorMessage = "Erro ao baixar contracheque.";
-
-        try {
-          const errorData = await response.json();
-          if (errorData?.message) {
-            errorMessage = errorData.message;
-          }
-        } catch {
-          //
-        }
-
-        throw new Error(errorMessage);
-      }
-
-      const blob = await response.blob();
-      const fileURL = window.URL.createObjectURL(blob);
-
-      let fileName = "contracheque.pdf";
-      const disposition = response.headers.get("Content-Disposition");
-
-      if (disposition) {
-        const match = disposition.match(/filename="?([^"]+)"?/i);
-        if (match?.[1]) {
-          fileName = match[1];
-        }
-      }
-
-      const link = document.createElement("a");
-      link.href = fileURL;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      window.URL.revokeObjectURL(fileURL);
-    } catch (error) {
-      console.error("Erro ao baixar contracheque:", error);
-      alert(error.message || "Erro ao baixar contracheque.");
-    } finally {
-      setBaixandoId(null);
-    }
-  }
-}
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -109,11 +28,20 @@ export default function Profile() {
   const [searchColaborador, setSearchColaborador] = useState("");
   const [searchUsuario, setSearchUsuario] = useState("");
   const [users, setUsers] = useState([]);
-  const [uploadData, setUploadData] = useState({ user_id: "", ano: "", mes: "", contracheque: null, });
+  const [uploadData, setUploadData] = useState({
+    user_id: "",
+    ano: "",
+    mes: "",
+    contracheque: null,
+  });
   const [contracheques, setContracheques] = useState([]);
   const [allContracheques, setAllContracheques] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
-  const [passwordData, setPasswordData] = useState({ currentPassword: "", newPassword: "", confirmNewPassword: "", });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: "",
+  });
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
@@ -124,10 +52,6 @@ export default function Profile() {
   });
 
   useEffect(() => {
-
-
-
-
     async function loadProfile() {
       const token = localStorage.getItem("token");
 
@@ -137,7 +61,6 @@ export default function Profile() {
       }
 
       const result = await getProfile(token);
-
 
       if (!result.ok) {
         localStorage.removeItem("token");
@@ -157,32 +80,25 @@ export default function Profile() {
           ? String(result.user.data_nascimento).slice(0, 10)
           : "",
       });
+
       if (result.user.role === "admin") {
         const allUsersResult = await getAllUsers(token);
-
         if (allUsersResult.ok) {
           setAllUsers(allUsersResult.users || []);
         }
 
         const allContrachequesResult = await getAllContrachequesForAdmin(token);
-        console.log("allContrachequesResult:", allContrachequesResult);
-
         if (allContrachequesResult.ok) {
           setAllContracheques(allContrachequesResult.contracheques || []);
         }
       }
 
-
-
-
-
       const usersResult = await getUsers(token);
-
       if (usersResult.ok) {
         setUsers(usersResult.users || []);
       }
-      const contrachequesResult = await getMyContracheques(token);
 
+      const contrachequesResult = await getMyContracheques(token);
       if (contrachequesResult.ok) {
         setContracheques(contrachequesResult.contracheques || []);
       }
@@ -230,26 +146,6 @@ export default function Profile() {
     setEditing(false);
   }
 
-  //pão de alho
-  // async function handleDeactivate() {
-  //   const confirmDeactivate = window.confirm(
-  //     "Tem certeza que deseja desativar sua conta?"
-  //   );
-
-  //   if (!confirmDeactivate) return;
-
-  //   const token = localStorage.getItem("token");
-  //   const result = await deactivateAccount(token);
-
-  //   if (!result.ok) {
-  //     setMessage(result.message || "Erro ao desativar conta.");
-  //     return;
-  //   }
-
-  //   localStorage.removeItem("token");
-  //   localStorage.removeItem("user");
-  //   navigate("/login");
-  // }
   function handlePasswordChange(e) {
     const { name, value } = e.target;
 
@@ -258,6 +154,7 @@ export default function Profile() {
       [name]: value,
     }));
   }
+
   async function handleChangePassword() {
     if (
       !passwordData.currentPassword ||
@@ -298,6 +195,7 @@ export default function Profile() {
       confirmNewPassword: "",
     });
   }
+
   function handleUploadChange(e) {
     const { name, value, files } = e.target;
 
@@ -318,18 +216,23 @@ export default function Profile() {
   async function handleUploadContracheque() {
     const token = localStorage.getItem("token");
 
-    if (!uploadData.user_id || !uploadData.ano || !uploadData.mes || !uploadData.contracheque) {
+    if (
+      !uploadData.user_id ||
+      !uploadData.ano ||
+      !uploadData.mes ||
+      !uploadData.contracheque
+    ) {
       setMessage("Selecione o usuário, o ano, o mês e o arquivo PDF.");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("user_id", uploadData.user_id);
-    formData.append("ano", uploadData.ano);
-    formData.append("mes", uploadData.mes);
-    formData.append("contracheque", uploadData.contracheque);
+    const form = new FormData();
+    form.append("user_id", uploadData.user_id);
+    form.append("ano", uploadData.ano);
+    form.append("mes", uploadData.mes);
+    form.append("contracheque", uploadData.contracheque);
 
-    const result = await uploadContracheque(token, formData);
+    const result = await uploadContracheque(token, form);
 
     if (!result.ok) {
       setMessage(result.message || "Erro ao enviar contracheque.");
@@ -344,9 +247,6 @@ export default function Profile() {
       contracheque: null,
     });
   }
-
-
-
 
   const meses = [
     { value: "1", label: "Janeiro" },
@@ -365,7 +265,7 @@ export default function Profile() {
 
   const anoAtual = new Date().getFullYear();
   const anos = Array.from({ length: 6 }, (_, i) => String(anoAtual - 2 + i));
-  //pão de alho
+
   const mesesNomes = {
     1: "Janeiro",
     2: "Fevereiro",
@@ -381,6 +281,16 @@ export default function Profile() {
     12: "Dezembro",
   };
 
+  const contrachequesSeguros = Array.isArray(contracheques)
+    ? contracheques.filter(
+        (item) =>
+          item &&
+          item.id != null &&
+          item.ano != null &&
+          item.mes != null
+      )
+    : [];
+
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
     const ano = String(item.ano);
     const mes = String(item.mes);
@@ -391,7 +301,6 @@ export default function Profile() {
     acc[ano][mes].push(item);
     return acc;
   }, {});
-
 
   async function handleAdminDeactivateUser(userId) {
     const confirmAction = window.confirm(
@@ -416,6 +325,7 @@ export default function Profile() {
       )
     );
   }
+
   async function handleRemoveContracheque(contrachequeId) {
     const confirmAction = window.confirm(
       "Tem certeza que deseja remover este contracheque?"
@@ -438,12 +348,8 @@ export default function Profile() {
     );
   }
 
-
-
   async function handleAdminActivateUser(userId) {
-    const confirmAction = window.confirm(
-      "Deseja reativar este usuário?"
-    );
+    const confirmAction = window.confirm("Deseja reativar este usuário?");
 
     if (!confirmAction) return;
 
@@ -462,6 +368,7 @@ export default function Profile() {
         item.id === userId ? { ...item, is_active: 1 } : item
       )
     );
+
     if (user?.role === "admin") {
       const allUsersResult = await getAllUsers(token);
 
@@ -469,24 +376,8 @@ export default function Profile() {
         setAllUsers(allUsersResult.users || []);
       }
     }
-
-    // const mesesNomes = {
-    //   1: "Janeiro",
-    //   2: "Fevereiro",
-    //   3: "Março",
-    //   4: "Abril",
-    //   5: "Maio",
-    //   6: "Junho",
-    //   7: "Julho",
-    //   8: "Agosto",
-    //   9: "Setembro",
-    //   10: "Outubro",
-    //   11: "Novembro",
-    //   12: "Dezembro",
-    // };
-
-
   }
+
   const contrachequesAdminAgrupados = allContracheques.reduce((acc, item) => {
     const userKey = `${item.user_id}`;
     const userNome = item.user_nome || "Usuário";
@@ -516,18 +407,17 @@ export default function Profile() {
     return acc;
   }, {});
 
-  const contrachequesAdminFiltrados = Object.values(contrachequesAdminAgrupados).filter(
-    (usuario) =>
-      usuario.user_nome
-        ?.toLowerCase()
-        .includes(searchColaborador.toLowerCase().trim())
+  const contrachequesAdminFiltrados = Object.values(
+    contrachequesAdminAgrupados
+  ).filter((usuario) =>
+    usuario.user_nome
+      ?.toLowerCase()
+      .includes(searchColaborador.toLowerCase().trim())
   );
+
   const allUsersFiltrados = allUsers.filter((item) =>
     item.nome?.toLowerCase().includes(searchUsuario.toLowerCase().trim())
   );
-
-
-
 
   async function handleDownloadContracheque(id) {
     try {
@@ -553,7 +443,7 @@ export default function Profile() {
           if (errorData?.message) {
             errorMessage = errorData.message;
           }
-        } catch (_) { }
+        } catch {}
 
         throw new Error(errorMessage);
       }
@@ -585,79 +475,6 @@ export default function Profile() {
     }
   }
 
-
-  //pão de alho
-  // const loadProfileData = useCallback(async () => {
-  //   const token = localStorage.getItem("token");
-
-  //   if (!token) {
-  //     navigate("/login");
-  //     return;
-  //   }
-
-  //   const result = await getProfile(token);
-
-  //   if (!result.ok) {
-  //     localStorage.removeItem("token");
-  //     localStorage.removeItem("user");
-  //     navigate("/login");
-  //     return;
-  //   }
-
-  //   setUser(result.user);
-  //   setFormData({
-  //     nome: result.user.nome || "",
-  //     email: result.user.email || "",
-  //     cpf: result.user.cpf || "",
-  //     telefone: result.user.telefone || "",
-  //     sexo: result.user.sexo || "",
-  //     data_nascimento: result.user.data_nascimento
-  //       ? String(result.user.data_nascimento).slice(0, 10)
-  //       : "",
-  //   });
-  // }, [navigate]);
-
-  //pão de alho
-  // const loadUsers = useCallback(async () => {
-  //   const token = localStorage.getItem("token");
-  //   const usersResult = await getUsers(token);
-
-  //   if (usersResult.ok) {
-  //     setUsers(usersResult.users || []);
-  //   }
-  // }, []);
-
-  // const loadMyContracheques = useCallback(async () => {
-  //   const token = localStorage.getItem("token");
-  //   const contrachequesResult = await getMyContracheques(token);
-
-  //   if (contrachequesResult.ok) {
-  //     setContracheques(contrachequesResult.contracheques || []);
-  //   }
-  // }, []);
-
-  // const loadAllUsers = useCallback(async () => {
-  //   const token = localStorage.getItem("token");
-  //   const allUsersResult = await getAllUsers(token);
-
-  //   if (allUsersResult.ok) {
-  //     setAllUsers(allUsersResult.users || []);
-  //   }
-  // }, []);
-
-  // const loadAllContracheques = useCallback(async () => {
-  //   const token = localStorage.getItem("token");
-  //   const allContrachequesResult = await getAllContrachequesForAdmin(token);
-
-  //   if (allContrachequesResult.ok) {
-  //     setAllContracheques(allContrachequesResult.contracheques || []);
-  //   }
-  // }, []);
-
-
-
-
-
   return (
     <>
       <Header />
@@ -684,7 +501,9 @@ export default function Profile() {
             }}
           >
             Baixar ContraCheque
-          </button><br />
+          </button>
+          <br />
+
           <button
             className="sidebar-title"
             onClick={() => {
@@ -696,6 +515,7 @@ export default function Profile() {
           </button>
 
           <br />
+
           {user?.role === "admin" && (
             <>
               <button
@@ -707,52 +527,39 @@ export default function Profile() {
               >
                 Adicionar ContraCheque
               </button>
-              {user?.role === "admin" && (
-                <>
-                  <button
-                    className="sidebar-title"
-                    onClick={() => {
-                      setActiveTab("remover-contracheque");
-                      setMessage("");
-                    }}
-                  >
-                    Remover ContraCheque
-                  </button>
-                  <br />
-                </>
-              )}
-              {user?.role === "admin" && (
-                <>
-                  <button
-                    className="sidebar-title"
-                    onClick={() => {
-                      setActiveTab("editar-usuarios");
-                      setMessage("");
-                    }}
-                  >
-                    Desativar/Ativar Usuários
-                  </button>
-                  <br />
-                </>
-              )}
+
+              <button
+                className="sidebar-title"
+                onClick={() => {
+                  setActiveTab("remover-contracheque");
+                  setMessage("");
+                }}
+              >
+                Remover ContraCheque
+              </button>
+              <br />
+
+              <button
+                className="sidebar-title"
+                onClick={() => {
+                  setActiveTab("editar-usuarios");
+                  setMessage("");
+                }}
+              >
+                Desativar/Ativar Usuários
+              </button>
+              <br />
             </>
-
           )}
-
-
         </aside>
-
 
         <section className="profile-content">
           <div className="profile-header">
             <h2>Olá {user?.nome || "Usuário"}</h2>
           </div>
 
-
           <div className="profile-box">
             {activeTab === "enviar-contracheque" && user?.role === "admin" && (
-
-
               <div className="upload-section">
                 <h3>Adicionar ContraCheque</h3>
 
@@ -876,6 +683,7 @@ export default function Profile() {
                 )}
               </div>
             )}
+
             {activeTab === "remover-contracheque" && user?.role === "admin" && (
               <div className="admin-contracheque-section">
                 <h3>Remover ContraCheque</h3>
@@ -950,8 +758,6 @@ export default function Profile() {
               </div>
             )}
 
-
-
             {activeTab === "senha" && (
               <div className="password-section">
                 <h3>Alterar Senha</h3>
@@ -991,12 +797,14 @@ export default function Profile() {
                   </label>
                 </div>
 
-                <button className="action-button password-save-button" onClick={handleChangePassword}>
+                <button
+                  className="action-button password-save-button"
+                  onClick={handleChangePassword}
+                >
                   Atualizar senha
                 </button>
               </div>
             )}
-
 
             {activeTab === "perfil" && (
               <>
@@ -1016,7 +824,6 @@ export default function Profile() {
                       Salvar alterações
                     </button>
                   )}
-
                 </div>
 
                 <div className="profile-form">
@@ -1094,7 +901,7 @@ export default function Profile() {
                 </div>
               </>
             )}
-            {/* pãodealho */}
+
             {activeTab === "contracheque" && (
               <div className="contracheque-section">
                 <h3>Baixar ContraCheque</h3>
