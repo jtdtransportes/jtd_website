@@ -19,6 +19,7 @@ import {
 } from "../../services/authService";
 import "./Profile.css";
 
+// Novo código
 const API_URL = "https://jtd-website.onrender.com/api/contracheques";
 const contrachequesSeguros = Array.isArray(contracheques)
   ? contracheques.filter(
