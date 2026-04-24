@@ -87,30 +87,22 @@ export default function Profile() {
 
   async function reloadUsersData(token) {
     const usersResult = await getUsers(token);
-    if (usersResult.ok) {
-      setUsers(usersResult.users || []);
-    }
+    if (usersResult.ok) setUsers(usersResult.users || []);
   }
 
   async function reloadMyContrachequesData(token) {
-    const contrachequesResult = await getMyContracheques(token);
-    if (contrachequesResult.ok) {
-      setContracheques(contrachequesResult.contracheques || []);
-    }
+    const result = await getMyContracheques(token);
+    if (result.ok) setContracheques(result.contracheques || []);
   }
 
   async function reloadAdminUsersData(token) {
-    const allUsersResult = await getAllUsers(token);
-    if (allUsersResult.ok) {
-      setAllUsers(allUsersResult.users || []);
-    }
+    const result = await getAllUsers(token);
+    if (result.ok) setAllUsers(result.users || []);
   }
 
   async function reloadAdminContrachequesData(token) {
-    const allContrachequesResult = await getAllContrachequesForAdmin(token);
-    if (allContrachequesResult.ok) {
-      setAllContracheques(allContrachequesResult.contracheques || []);
-    }
+    const result = await getAllContrachequesForAdmin(token);
+    if (result.ok) setAllContracheques(result.contracheques || []);
   }
 
   useEffect(() => {
@@ -132,6 +124,7 @@ export default function Profile() {
       }
 
       setUser(result.user);
+
       setFormData({
         nome: result.user.nome || "",
         email: result.user.email || "",
@@ -157,9 +150,7 @@ export default function Profile() {
 
   useEffect(() => {
     function handleResize() {
-      if (window.innerWidth > 768) {
-        setMobileMenuOpen(false);
-      }
+      if (window.innerWidth > 768) setMobileMenuOpen(false);
     }
 
     window.addEventListener("resize", handleResize);
@@ -167,11 +158,7 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
 
     return () => {
       document.body.style.overflow = "";
@@ -192,26 +179,16 @@ export default function Profile() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    if (tab === "contracheque") {
-      await reloadMyContrachequesData(token);
-    }
-
-    if (tab === "enviar-contracheque") {
-      await reloadUsersData(token);
-    }
-
-    if (tab === "remover-contracheque" && user?.role === "admin") {
+    if (tab === "contracheque") await reloadMyContrachequesData(token);
+    if (tab === "enviar-contracheque") await reloadUsersData(token);
+    if (tab === "remover-contracheque" && user?.role === "admin")
       await reloadAdminContrachequesData(token);
-    }
-
-    if (tab === "editar-usuarios" && user?.role === "admin") {
+    if (tab === "editar-usuarios" && user?.role === "admin")
       await reloadAdminUsersData(token);
-    }
   }
 
   function handleChange(e) {
     const { name, value } = e.target;
-
     if (name === "cpf") return;
 
     setFormData((prev) => ({
@@ -376,8 +353,8 @@ export default function Profile() {
 
   const contrachequesSeguros = Array.isArray(contracheques)
     ? contracheques.filter(
-      (item) => item && item.id != null && item.ano != null && item.mes != null
-    )
+        (item) => item && item.id != null && item.ano != null && item.mes != null
+      )
     : [];
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
@@ -410,6 +387,23 @@ export default function Profile() {
     await reloadAdminUsersData(token);
   }
 
+  async function handleAdminActivateUser(userId) {
+    const confirmAction = window.confirm("Deseja reativar este usuário?");
+
+    if (!confirmAction) return;
+
+    const token = localStorage.getItem("token");
+    const result = await activateUserByAdmin(token, userId);
+
+    if (!result.ok) {
+      setMessage(result.message || "Erro ao ativar usuário.");
+      return;
+    }
+
+    setMessage("Usuário ativado com sucesso.");
+    await reloadAdminUsersData(token);
+  }
+
   async function handleRemoveContracheque(contrachequeId) {
     const confirmAction = window.confirm(
       "Tem certeza que deseja remover este contracheque?"
@@ -436,23 +430,6 @@ export default function Profile() {
     );
   }
 
-  async function handleAdminActivateUser(userId) {
-    const confirmAction = window.confirm("Deseja reativar este usuário?");
-
-    if (!confirmAction) return;
-
-    const token = localStorage.getItem("token");
-    const result = await activateUserByAdmin(token, userId);
-
-    if (!result.ok) {
-      setMessage(result.message || "Erro ao ativar usuário.");
-      return;
-    }
-
-    setMessage("Usuário ativado com sucesso.");
-    await reloadAdminUsersData(token);
-  }
-
   const contrachequesAdminAgrupados = allContracheques.reduce((acc, item) => {
     const userKey = `${item.user_id}`;
     const userNome = item.user_nome || "Usuário";
@@ -469,13 +446,8 @@ export default function Profile() {
       };
     }
 
-    if (!acc[userKey].anos[ano]) {
-      acc[userKey].anos[ano] = {};
-    }
-
-    if (!acc[userKey].anos[ano][mes]) {
-      acc[userKey].anos[ano][mes] = [];
-    }
+    if (!acc[userKey].anos[ano]) acc[userKey].anos[ano] = {};
+    if (!acc[userKey].anos[ano][mes]) acc[userKey].anos[ano][mes] = [];
 
     acc[userKey].anos[ano][mes].push(item);
 
@@ -513,10 +485,8 @@ export default function Profile() {
 
         try {
           const errorData = await response.json();
-          if (errorData?.message) {
-            errorMessage = errorData.message;
-          }
-        } catch { }
+          if (errorData?.message) errorMessage = errorData.message;
+        } catch {}
 
         throw new Error(errorMessage);
       }
@@ -529,9 +499,7 @@ export default function Profile() {
 
       if (disposition) {
         const match = disposition.match(/filename="?([^"]+)"?/i);
-        if (match && match[1]) {
-          fileName = match[1];
-        }
+        if (match && match[1]) fileName = match[1];
       }
 
       const link = document.createElement("a");
@@ -558,19 +526,6 @@ export default function Profile() {
           onClick={() => setMobileMenuOpen(false)}
           aria-label="Fechar menu"
         />
-      )}
-
-      {!mobileMenuOpen && (
-        <div className="mobile-menu-anchor">
-          <button
-            className="mobile-menu-toggle"
-            onClick={() => setMobileMenuOpen(true)}
-            aria-label="Abrir menu"
-            type="button"
-          >
-            ☰
-          </button>
-        </div>
       )}
 
       <main className="profile-page">
@@ -629,268 +584,24 @@ export default function Profile() {
         </aside>
 
         <section className="profile-content">
+          {!mobileMenuOpen && (
+            <div className="mobile-menu-anchor">
+              <button
+                className="mobile-menu-toggle"
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Abrir menu"
+                type="button"
+              >
+                ☰
+              </button>
+            </div>
+          )}
+
           <div className="profile-header">
             <h2>Olá {user?.nome || "Usuário"}</h2>
           </div>
 
           <div className="profile-box">
-            {activeTab === "enviar-contracheque" && user?.role === "admin" && (
-              <div className="upload-section">
-                <h3>Adicionar Contracheque</h3>
-
-                <div className="profile-form">
-                  <label>
-                    Usuário
-                    <select
-                      name="user_id"
-                      value={uploadData.user_id}
-                      onChange={handleUploadChange}
-                    >
-                      <option value="">Selecione um usuário</option>
-                      {users.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.nome}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    Ano de competência
-                    <select
-                      name="ano"
-                      value={uploadData.ano}
-                      onChange={handleUploadChange}
-                    >
-                      <option value="">Selecione o ano</option>
-                      {anos.map((ano) => (
-                        <option key={ano} value={ano}>
-                          {ano}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    Mês de referência
-                    <select
-                      name="mes"
-                      value={uploadData.mes}
-                      onChange={handleUploadChange}
-                    >
-                      <option value="">Selecione o mês</option>
-                      {meses.map((mes) => (
-                        <option key={mes.value} value={mes.value}>
-                          {mes.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    Arquivo PDF
-                    <input
-                      type="file"
-                      name="contracheque"
-                      accept="application/pdf"
-                      onChange={handleUploadChange}
-                    />
-                  </label>
-                </div>
-
-                <button
-                  className="action-button password-save-button"
-                  onClick={handleUploadContracheque}
-                >
-                  Adicionar Contracheque
-                </button>
-              </div>
-            )}
-
-            {activeTab === "editar-usuarios" && user?.role === "admin" && (
-              <div className="admin-users-section">
-                <h3>Desativar/Ativar Usuários</h3>
-
-                <input
-                  type="text"
-                  placeholder="Pesquisar usuário"
-                  className="search-colaborador-input"
-                  value={searchUsuario}
-                  onChange={(e) => setSearchUsuario(e.target.value)}
-                />
-
-                {allUsers.length === 0 ? (
-                  <p>Nenhum usuário encontrado.</p>
-                ) : allUsersFiltrados.length === 0 ? (
-                  <p>Nenhum usuário encontrado com esse nome.</p>
-                ) : (
-                  <div className="admin-users-list">
-                    {allUsersFiltrados.map((item) => (
-                      <div key={item.id} className="admin-user-card">
-                        <div className="admin-user-info">
-                          <p><strong>Nome:</strong> {item.nome}</p>
-                          <p><strong>Email:</strong> {item.email}</p>
-                          <p><strong>CPF:</strong> {item.cpf}</p>
-                          <p>
-                            <strong>Status:</strong>{" "}
-                            {Number(item.is_active) === 1 ? "Ativo" : "Inativo"}
-                          </p>
-                        </div>
-
-                        {Number(item.is_active) === 1 ? (
-                          <button
-                            className="danger-button"
-                            onClick={() => handleAdminDeactivateUser(item.id)}
-                          >
-                            Desativar usuário
-                          </button>
-                        ) : (
-                          <button
-                            className="success-button"
-                            onClick={() => handleAdminActivateUser(item.id)}
-                          >
-                            Ativar usuário
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === "remover-contracheque" && user?.role === "admin" && (
-              <div className="admin-contracheque-section">
-                <h3>Remover Contracheque</h3>
-
-                <input
-                  type="text"
-                  placeholder="Pesquisar colaborador"
-                  className="search-colaborador-input"
-                  value={searchColaborador}
-                  onChange={(e) => setSearchColaborador(e.target.value)}
-                />
-
-                {allContracheques.length === 0 ? (
-                  <p>Nenhum contracheque encontrado.</p>
-                ) : contrachequesAdminFiltrados.length === 0 ? (
-                  <p>Nenhum colaborador encontrado.</p>
-                ) : (
-                  contrachequesAdminFiltrados.map((usuario) => (
-                    <div
-                      key={usuario.user_id}
-                      className="admin-contracheque-user-block"
-                    >
-                      <h4>{usuario.user_nome}</h4>
-                      <p><strong>Email:</strong> {usuario.user_email}</p>
-                      <p><strong>CPF:</strong> {usuario.user_cpf}</p>
-
-                      {Object.keys(usuario.anos)
-                        .sort((a, b) => Number(b) - Number(a))
-                        .map((ano) => (
-                          <div
-                            key={`${usuario.user_id}-${ano}`}
-                            className="admin-contracheque-year-block"
-                          >
-                            <h5>{ano}</h5>
-
-                            {Object.keys(usuario.anos[ano])
-                              .sort((a, b) => Number(b) - Number(a))
-                              .map((mes) => (
-                                <div
-                                  key={`${usuario.user_id}-${ano}-${mes}`}
-                                  className="admin-contracheque-month-block"
-                                >
-                                  <h6>{mesesNomes[Number(mes)]}</h6>
-
-                                  <div className="admin-contracheque-list">
-                                    {usuario.anos[ano][mes].map((item) => (
-                                      <div
-                                        key={item.id}
-                                        className="admin-contracheque-card"
-                                      >
-                                        <span>{item.file_name}</span>
-
-                                        <div className="admin-contracheque-actions">
-                                          <button
-                                            className="download-button"
-                                            onClick={() =>
-                                              handleDownloadContracheque(item.id)
-                                            }
-                                          >
-                                            Baixar
-                                          </button>
-
-                                          <button
-                                            className="danger-button"
-                                            onClick={() =>
-                                              handleRemoveContracheque(item.id)
-                                            }
-                                          >
-                                            Remover
-                                          </button>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        ))}
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-
-            {activeTab === "senha" && (
-              <div className="password-section">
-                <h3>Alterar Senha</h3>
-
-                <div className="profile-form">
-                  <label>
-                    Senha atual
-                    <input
-                      type="password"
-                      name="currentPassword"
-                      value={passwordData.currentPassword}
-                      onChange={handlePasswordChange}
-                      placeholder="Digite sua senha atual"
-                    />
-                  </label>
-
-                  <label>
-                    Nova senha
-                    <input
-                      type="password"
-                      name="newPassword"
-                      value={passwordData.newPassword}
-                      onChange={handlePasswordChange}
-                      placeholder="Digite a nova senha"
-                    />
-                  </label>
-
-                  <label>
-                    Confirmar nova senha
-                    <input
-                      type="password"
-                      name="confirmNewPassword"
-                      value={passwordData.confirmNewPassword}
-                      onChange={handlePasswordChange}
-                      placeholder="Confirme a nova senha"
-                    />
-                  </label>
-                </div>
-
-                <button
-                  className="action-button password-save-button"
-                  onClick={handleChangePassword}
-                >
-                  Atualizar senha
-                </button>
-              </div>
-            )}
-
             {activeTab === "perfil" && (
               <>
                 <div className="profile-actions">
@@ -1024,6 +735,263 @@ export default function Profile() {
                           ))}
                       </div>
                     ))
+                )}
+              </div>
+            )}
+
+            {activeTab === "senha" && (
+              <div className="password-section">
+                <h3>Alterar Senha</h3>
+
+                <div className="profile-form">
+                  <label>
+                    Senha atual
+                    <input
+                      type="password"
+                      name="currentPassword"
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="Digite sua senha atual"
+                    />
+                  </label>
+
+                  <label>
+                    Nova senha
+                    <input
+                      type="password"
+                      name="newPassword"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="Digite a nova senha"
+                    />
+                  </label>
+
+                  <label>
+                    Confirmar nova senha
+                    <input
+                      type="password"
+                      name="confirmNewPassword"
+                      value={passwordData.confirmNewPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="Confirme a nova senha"
+                    />
+                  </label>
+                </div>
+
+                <button
+                  className="action-button password-save-button"
+                  onClick={handleChangePassword}
+                >
+                  Atualizar senha
+                </button>
+              </div>
+            )}
+
+            {activeTab === "enviar-contracheque" && user?.role === "admin" && (
+              <div className="upload-section">
+                <h3>Adicionar Contracheque</h3>
+
+                <div className="profile-form">
+                  <label>
+                    Usuário
+                    <select
+                      name="user_id"
+                      value={uploadData.user_id}
+                      onChange={handleUploadChange}
+                    >
+                      <option value="">Selecione um usuário</option>
+                      {users.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    Ano de competência
+                    <select
+                      name="ano"
+                      value={uploadData.ano}
+                      onChange={handleUploadChange}
+                    >
+                      <option value="">Selecione o ano</option>
+                      {anos.map((ano) => (
+                        <option key={ano} value={ano}>
+                          {ano}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    Mês de referência
+                    <select
+                      name="mes"
+                      value={uploadData.mes}
+                      onChange={handleUploadChange}
+                    >
+                      <option value="">Selecione o mês</option>
+                      {meses.map((mes) => (
+                        <option key={mes.value} value={mes.value}>
+                          {mes.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    Arquivo PDF
+                    <input
+                      type="file"
+                      name="contracheque"
+                      accept="application/pdf"
+                      onChange={handleUploadChange}
+                    />
+                  </label>
+                </div>
+
+                <button
+                  className="action-button password-save-button"
+                  onClick={handleUploadContracheque}
+                >
+                  Adicionar Contracheque
+                </button>
+              </div>
+            )}
+
+            {activeTab === "remover-contracheque" && user?.role === "admin" && (
+              <div className="admin-contracheque-section">
+                <h3>Remover Contracheque</h3>
+
+                <input
+                  type="text"
+                  placeholder="Pesquisar colaborador"
+                  className="search-colaborador-input"
+                  value={searchColaborador}
+                  onChange={(e) => setSearchColaborador(e.target.value)}
+                />
+
+                {allContracheques.length === 0 ? (
+                  <p>Nenhum contracheque encontrado.</p>
+                ) : contrachequesAdminFiltrados.length === 0 ? (
+                  <p>Nenhum colaborador encontrado.</p>
+                ) : (
+                  contrachequesAdminFiltrados.map((usuario) => (
+                    <div
+                      key={usuario.user_id}
+                      className="admin-contracheque-user-block"
+                    >
+                      <h4>{usuario.user_nome}</h4>
+                      <p><strong>Email:</strong> {usuario.user_email}</p>
+                      <p><strong>CPF:</strong> {usuario.user_cpf}</p>
+
+                      {Object.keys(usuario.anos)
+                        .sort((a, b) => Number(b) - Number(a))
+                        .map((ano) => (
+                          <div
+                            key={`${usuario.user_id}-${ano}`}
+                            className="admin-contracheque-year-block"
+                          >
+                            <h5>{ano}</h5>
+
+                            {Object.keys(usuario.anos[ano])
+                              .sort((a, b) => Number(b) - Number(a))
+                              .map((mes) => (
+                                <div
+                                  key={`${usuario.user_id}-${ano}-${mes}`}
+                                  className="admin-contracheque-month-block"
+                                >
+                                  <h6>{mesesNomes[Number(mes)]}</h6>
+
+                                  <div className="admin-contracheque-list">
+                                    {usuario.anos[ano][mes].map((item) => (
+                                      <div
+                                        key={item.id}
+                                        className="admin-contracheque-card"
+                                      >
+                                        <span>{item.file_name}</span>
+
+                                        <div className="admin-contracheque-actions">
+                                          <button
+                                            className="download-button"
+                                            onClick={() =>
+                                              handleDownloadContracheque(item.id)
+                                            }
+                                          >
+                                            Baixar
+                                          </button>
+
+                                          <button
+                                            className="danger-button"
+                                            onClick={() =>
+                                              handleRemoveContracheque(item.id)
+                                            }
+                                          >
+                                            Remover
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        ))}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {activeTab === "editar-usuarios" && user?.role === "admin" && (
+              <div className="admin-users-section">
+                <h3>Desativar/Ativar Usuários</h3>
+
+                <input
+                  type="text"
+                  placeholder="Pesquisar usuário"
+                  className="search-colaborador-input"
+                  value={searchUsuario}
+                  onChange={(e) => setSearchUsuario(e.target.value)}
+                />
+
+                {allUsers.length === 0 ? (
+                  <p>Nenhum usuário encontrado.</p>
+                ) : allUsersFiltrados.length === 0 ? (
+                  <p>Nenhum usuário encontrado com esse nome.</p>
+                ) : (
+                  <div className="admin-users-list">
+                    {allUsersFiltrados.map((item) => (
+                      <div key={item.id} className="admin-user-card">
+                        <div className="admin-user-info">
+                          <p><strong>Nome:</strong> {item.nome}</p>
+                          <p><strong>Email:</strong> {item.email}</p>
+                          <p><strong>CPF:</strong> {item.cpf}</p>
+                          <p>
+                            <strong>Status:</strong>{" "}
+                            {Number(item.is_active) === 1 ? "Ativo" : "Inativo"}
+                          </p>
+                        </div>
+
+                        {Number(item.is_active) === 1 ? (
+                          <button
+                            className="danger-button"
+                            onClick={() => handleAdminDeactivateUser(item.id)}
+                          >
+                            Desativar usuário
+                          </button>
+                        ) : (
+                          <button
+                            className="success-button"
+                            onClick={() => handleAdminActivateUser(item.id)}
+                          >
+                            Ativar usuário
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}

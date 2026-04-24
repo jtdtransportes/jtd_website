@@ -137,20 +137,18 @@
   color: #0f4a6d;
 }
 
-.password-section h3 {
+.password-section h3,
+.upload-section h3,
+.contracheque-section h3,
+.admin-users-section h3,
+.admin-contracheque-section h3 {
   margin-bottom: 20px;
   font-size: 24px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .password-save-button {
   margin-top: 20px;
-}
-
-.upload-section h3 {
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: 500;
 }
 
 .profile-form input[type="file"] {
@@ -159,35 +157,35 @@
   background: #f3f3f3;
 }
 
-.contracheque-section h3 {
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: 600;
-}
-
 .contracheque-year-block {
   margin-bottom: 28px;
 }
 
-.contracheque-year-block h4 {
+.contracheque-year-block h4,
+.admin-contracheque-user-block h4 {
   margin-bottom: 14px;
   font-size: 22px;
   color: #0f4a6d;
+  word-break: break-word;
 }
 
-.contracheque-month-block {
+.contracheque-month-block,
+.admin-contracheque-user-block {
   margin-bottom: 18px;
   padding: 14px 18px;
   background: #e9e9e9;
   border-radius: 14px;
 }
 
-.contracheque-month-block h5 {
+.contracheque-month-block h5,
+.admin-contracheque-year-block h5 {
   margin-bottom: 10px;
   font-size: 18px;
 }
 
-.contracheque-list {
+.contracheque-list,
+.admin-users-list,
+.admin-contracheque-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -213,18 +211,6 @@
   opacity: 0.9;
 }
 
-.admin-users-section h3 {
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.admin-users-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 .admin-user-card {
   display: flex;
   justify-content: space-between;
@@ -235,7 +221,8 @@
   padding: 18px 20px;
 }
 
-.admin-user-info p {
+.admin-user-info p,
+.admin-contracheque-user-block p {
   margin: 4px 0;
   word-break: break-word;
 }
@@ -254,38 +241,8 @@
   opacity: 0.9;
 }
 
-.admin-contracheque-section h3 {
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.admin-contracheque-user-block {
-  background: #e9e9e9;
-  border-radius: 16px;
-  padding: 18px 20px;
-  margin-bottom: 20px;
-}
-
-.admin-contracheque-user-block h4 {
-  margin-bottom: 8px;
-  font-size: 22px;
-  color: #0f4a6d;
-  word-break: break-word;
-}
-
-.admin-contracheque-user-block p {
-  margin: 4px 0;
-  word-break: break-word;
-}
-
 .admin-contracheque-year-block {
   margin-top: 16px;
-}
-
-.admin-contracheque-year-block h5 {
-  margin-bottom: 10px;
-  font-size: 18px;
 }
 
 .admin-contracheque-month-block {
@@ -298,12 +255,6 @@
 .admin-contracheque-month-block h6 {
   margin-bottom: 10px;
   font-size: 16px;
-}
-
-.admin-contracheque-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .admin-contracheque-card {
@@ -376,12 +327,17 @@
     min-height: auto;
   }
 
+  .profile-content {
+    padding: 24px 12px 20px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .mobile-menu-anchor {
     display: block;
-    position: fixed;
-    top: 140px;
-    left: 12px;
-    z-index: 3000;
+    position: static;
+    margin-bottom: 28px;
+    z-index: 1;
   }
 
   .mobile-menu-toggle {
@@ -439,12 +395,6 @@
     font-size: 18px;
     margin-bottom: 18px;
     line-height: 1.4;
-  }
-
-  .profile-content {
-    padding: 88px 12px 20px;
-    width: 100%;
-    box-sizing: border-box;
   }
 
   .profile-header {
