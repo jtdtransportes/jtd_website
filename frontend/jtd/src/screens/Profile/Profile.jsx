@@ -543,7 +543,7 @@ export default function Profile() {
           </div>
 
           <button className="sidebar-title" onClick={() => changeTab("perfil")}>
-            Perfil
+            Meu perfil
           </button>
 
           <button
