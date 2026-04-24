@@ -16,6 +16,7 @@ const ServiceArea = () => {
 
             <div className='service-map'>
                 <iframe
+                    title="Localização da empresa"
                     src="https://www.google.com/maps?q=-12.315149448877332,-38.87943696132987&hl=pt-BR&z=15&output=embed"
                     width="100%"
                     height="400"
