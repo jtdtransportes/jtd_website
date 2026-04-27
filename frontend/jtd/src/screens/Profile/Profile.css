@@ -141,7 +141,8 @@
 .upload-section h3,
 .contracheque-section h3,
 .admin-users-section h3,
-.admin-contracheque-section h3 {
+.admin-contracheque-section h3,
+.sectors-section h3 {
   margin-bottom: 20px;
   font-size: 24px;
   font-weight: 600;
@@ -221,10 +222,46 @@
   padding: 18px 20px;
 }
 
+.admin-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
 .admin-user-info p,
 .admin-contracheque-user-block p {
   margin: 4px 0;
   word-break: break-word;
+}
+
+.admin-user-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.user-sector-edit-box {
+  margin-top: 12px;
+  max-width: 360px;
+}
+
+.user-sector-edit-box label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.user-sector-edit-box select {
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 15px;
+  background: #f3f3f3;
+  box-sizing: border-box;
+  outline: none;
 }
 
 .success-button {
@@ -303,6 +340,154 @@
 
 .download-button:hover {
   opacity: 0.9;
+}
+
+.sectors-section {
+  width: 100%;
+}
+
+.sector-create-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 20px;
+}
+
+.sector-create-box label,
+.sector-edit-box label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.sector-create-box input,
+.sector-edit-box input {
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 15px;
+  background: #f3f3f3;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.sectors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sector-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: #e9e9e9;
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.sector-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sector-info p {
+  margin: 0;
+  word-break: break-word;
+}
+
+.sector-edit-box {
+  flex: 1;
+  min-width: 0;
+}
+
+.sector-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sector-filter-box {
+  margin-bottom: 20px;
+  max-width: 420px;
+}
+
+.sector-filter-box label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.sector-filter-box select {
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 15px;
+  background: #f3f3f3;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.filter-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.filter-row .search-colaborador-input {
+  margin-bottom: 0;
+}
+
+.inline-filter {
+  margin-bottom: 0;
+  min-width: 240px;
+}
+
+.sector-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.sector-group-block {
+  background: #dedede;
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.sector-group-block > h4 {
+  margin: 0 0 14px;
+  font-size: 22px;
+  color: #0f4a6d;
+  word-break: break-word;
+}
+
+.sector-group-block .admin-users-list {
+  gap: 12px;
+}
+
+.sector-group-block .admin-user-card,
+.sector-group-block .admin-contracheque-user-block {
+  background: #f0f0f0;
+}
+
+.admin-contracheque-user-block h5 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #0f4a6d;
+  word-break: break-word;
 }
 
 .mobile-menu-anchor,
@@ -456,6 +641,15 @@
     align-items: stretch;
   }
 
+  .admin-user-actions {
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .user-sector-edit-box {
+    max-width: 100%;
+  }
+
   .admin-contracheque-card {
     flex-direction: column;
     align-items: stretch;
@@ -474,5 +668,39 @@
 
   .search-colaborador-input {
     max-width: 100%;
+  }
+
+  .sector-create-box {
+    grid-template-columns: 1fr;
+  }
+
+  .sector-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px;
+  }
+
+  .sector-actions {
+    flex-direction: column;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .sector-filter-box,
+  .inline-filter {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .sector-group-block {
+    padding: 14px;
+  }
+
+  .sector-group-block > h4 {
+    font-size: 20px;
   }
 }

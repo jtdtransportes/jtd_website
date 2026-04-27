@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import { registerUser } from "../../services/authService";
 import "./Register.css";
+
+const SECTORS_API_URL = "https://jtd-website.onrender.com/api/sectors";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ export default function Register() {
     data_nascimento: "",
     sexo: "",
     telefone: "",
+    sector_id: "",
   });
 
   const [errors, setErrors] = useState({
@@ -24,8 +27,26 @@ export default function Register() {
     telefone: "",
   });
 
+  const [sectors, setSectors] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadSectors() {
+      try {
+        const response = await fetch(SECTORS_API_URL);
+        const result = await response.json();
+
+        if (result.ok) {
+          setSectors(result.sectors || []);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar setores:", error);
+      }
+    }
+
+    loadSectors();
+  }, []);
 
   // ================= EMAIL =================
   function validarEmail(email) {
@@ -173,8 +194,7 @@ export default function Register() {
     } else if (numbers.length > 0) {
       setErrors((prev) => ({
         ...prev,
-        telefone:
-          "Telefone inválido. Use 11 números, exemplo: 71996815406",
+        telefone: "Telefone inválido. Use 11 números, exemplo: 71996815406",
       }));
     }
   }
@@ -209,7 +229,8 @@ export default function Register() {
       !formData.cpf ||
       !formData.data_nascimento ||
       !formData.sexo ||
-      !formData.telefone
+      !formData.telefone ||
+      !formData.sector_id
     ) {
       setMessage("Preencha todos os campos.");
       setLoading(false);
@@ -222,7 +243,12 @@ export default function Register() {
       return;
     }
 
-    const result = await registerUser(formData);
+    const payload = {
+      ...formData,
+      sector_id: Number(formData.sector_id),
+    };
+
+    const result = await registerUser(payload);
 
     if (!result.ok) {
       setMessage(result.message || "Erro ao realizar cadastro.");
@@ -263,6 +289,8 @@ export default function Register() {
               onBlur={handleEmailBlur}
             />
 
+            {errors.email && <span className="cpf-error">{errors.email}</span>}
+
             <input
               type="password"
               name="password"
@@ -282,7 +310,9 @@ export default function Register() {
               onBlur={handleCpfBlur}
               onFocus={handleCpfFocus}
             />
+
             {errors.cpf && <span className="cpf-error">{errors.cpf}</span>}
+
             <input
               type="text"
               name="telefone"
@@ -295,7 +325,6 @@ export default function Register() {
             />
 
             {errors.telefone && <p style={{ color: "red" }}>{errors.telefone}</p>}
-
 
             <input
               type="date"
@@ -318,6 +347,21 @@ export default function Register() {
               <option value="prefiro_nao_informar">Prefiro não informar</option>
             </select>
 
+            <select
+              name="sector_id"
+              className="register-input"
+              value={formData.sector_id}
+              onChange={handleChange}
+            >
+              <option value="">Selecione o setor</option>
+
+              {sectors.map((sector) => (
+                <option key={sector.id} value={sector.id}>
+                  {sector.descricao}
+                </option>
+              ))}
+            </select>
+
             <p className="register-login-text">
               Já tem conta? <Link to="/login">Faça login aqui</Link>
             </p>
@@ -329,7 +373,7 @@ export default function Register() {
             </button>
           </form>
         </section>
-      </main >
+      </main>
 
       <Footer />
     </>

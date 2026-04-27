@@ -21,9 +21,9 @@ class UserController {
 
   async login(req, res) {
     try {
-      const { email, password } = req.body;
+      const { login, password } = req.body;
 
-      const result = await userService.login(email, password);
+      const result = await userService.login(login, password);
 
       return res.status(200).json({
         ok: true,
@@ -54,122 +54,122 @@ class UserController {
       });
     }
   }
-async updateProfile(req, res) {
-  try {
-    const user = await userService.updateProfile(req.user.id, req.body);
+  async updateProfile(req, res) {
+    try {
+      const user = await userService.updateProfile(req.user.id, req.body);
 
-    return res.status(200).json({
-      ok: true,
-      message: "Perfil atualizado com sucesso.",
-      user,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      ok: false,
-      message: error.message,
-    });
+      return res.status(200).json({
+        ok: true,
+        message: "Perfil atualizado com sucesso.",
+        user,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        message: error.message,
+      });
+    }
   }
-}
 
-async deactivateAccount(req, res) {
-  try {
-    await userService.deactivateAccount(req.user.id);
+  async deactivateAccount(req, res) {
+    try {
+      await userService.deactivateAccount(req.user.id);
 
-    return res.status(200).json({
-      ok: true,
-      message: "Conta desativada com sucesso.",
-    });
-  } catch (error) {
-    return res.status(400).json({
-      ok: false,
-      message: error.message,
-    });
+      return res.status(200).json({
+        ok: true,
+        message: "Conta desativada com sucesso.",
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        message: error.message,
+      });
+    }
   }
-}
-async changePassword(req, res) {
-  try {
-    const { currentPassword, newPassword, confirmNewPassword } = req.body;
+  async changePassword(req, res) {
+    try {
+      const { currentPassword, newPassword, confirmNewPassword } = req.body;
 
-    await userService.changePassword(
-      req.user.id,
-      currentPassword,
-      newPassword,
-      confirmNewPassword
-    );
+      await userService.changePassword(
+        req.user.id,
+        currentPassword,
+        newPassword,
+        confirmNewPassword
+      );
 
-    return res.status(200).json({
-      ok: true,
-      message: "Senha atualizada com sucesso.",
-    });
-  } catch (error) {
-    return res.status(400).json({
-      ok: false,
-      message: error.message,
-    });
+      return res.status(200).json({
+        ok: true,
+        message: "Senha atualizada com sucesso.",
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        message: error.message,
+      });
+    }
   }
-}
-async listUsers(req, res) {
-  try {
-    const users = await userService.listUsers();
+  async listUsers(req, res) {
+    try {
+      const users = await userService.listUsers();
 
-    return res.status(200).json({
-      ok: true,
-      users,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      ok: false,
-      message: error.message,
-    });
+      return res.status(200).json({
+        ok: true,
+        users,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        message: error.message,
+      });
+    }
   }
-}
 
-async listUsersForAdmin(req, res) {
-  try {
-    const users = await userService.listUsersForAdmin();
+  async listUsersForAdmin(req, res) {
+    try {
+      const users = await userService.listUsersForAdmin();
 
-    return res.status(200).json({
-      ok: true,
-      users,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      ok: false,
-      message: error.message,
-    });
+      return res.status(200).json({
+        ok: true,
+        users,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        message: error.message,
+      });
+    }
   }
-}
-async adminDeactivateUser(req, res) {
-  try {
-    await userService.adminDeactivateUser(req.params.id);
+  async adminDeactivateUser(req, res) {
+    try {
+      await userService.adminDeactivateUser(req.params.id);
 
-    return res.status(200).json({
-      ok: true,
-      message: "Usuário desativado com sucesso.",
-    });
-  } catch (error) {
-    return res.status(400).json({
-      ok: false,
-      message: error.message,
-    });
+      return res.status(200).json({
+        ok: true,
+        message: "Usuário desativado com sucesso.",
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        message: error.message,
+      });
+    }
   }
-}
 
-async adminActivateUser(req, res) {
-  try {
-    await userService.adminActivateUser(req.params.id);
+  async adminActivateUser(req, res) {
+    try {
+      await userService.adminActivateUser(req.params.id);
 
-    return res.status(200).json({
-      ok: true,
-      message: "Usuário ativado com sucesso.",
-    });
-  } catch (error) {
-    return res.status(400).json({
-      ok: false,
-      message: error.message,
-    });
+      return res.status(200).json({
+        ok: true,
+        message: "Usuário ativado com sucesso.",
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        message: error.message,
+      });
+    }
   }
-}
 
 
 }

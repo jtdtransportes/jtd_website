@@ -154,6 +154,24 @@ async adminActivateUser(userId) {
     [userId]
   );
 }
+async findByEmailOrCpf(login) {
+  const loginLimpo = String(login || "").trim().toLowerCase();
+  const cpfLimpo = String(login || "").replace(/\D/g, "");
+
+  const [rows] = await pool.execute(
+    `
+      SELECT *
+      FROM users
+      WHERE LOWER(email) = ?
+         OR REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?
+      LIMIT 1
+    `,
+    [loginLimpo, cpfLimpo]
+  );
+
+  return rows[0] || null;
+}
+
 
 
 

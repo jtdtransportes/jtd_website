@@ -7,9 +7,9 @@ import dotenv from "dotenv";
 import { z } from "zod";
 import userRoutes from "./routes/user.routes.js";
 import contrachequeRoutes from "./routes/contracheque.routes.js";
+import sectorsRoutes from "./routes/sectors.routes.js";
 import path from "path";
 import { fileURLToPath } from "url";
-
 
 dotenv.config();
 
@@ -34,20 +34,22 @@ app.use(
 
       return cb(new Error("Not allowed by CORS"));
     },
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     optionsSuccessStatus: 204,
   })
 );
+
 app.options(/^\/api\/.*$/, cors());
 
 app.use(
   "/api/",
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 30,
+    max: 500,
     standardHeaders: true,
     legacyHeaders: false,
+    message: "Muitas requisições. Aguarde um pouco e tente novamente.",
   })
 );
 
@@ -62,9 +64,11 @@ function zodErrorToMessage(error) {
   if (field === "message" && first.code === "too_small") {
     return "Mensagem muito curta. Mínimo de 5 caracteres.";
   }
+
   if (first.code === "invalid_type") {
     return "Campo obrigatório.";
   }
+
   if (field === "email" && first.code === "invalid_string") {
     return "E-mail inválido.";
   }
@@ -131,6 +135,7 @@ app.get("/health", (_, res) => res.json({ ok: true }));
 
 app.post("/api/feedback", async (req, res) => {
   const parsed = feedbackSchema.safeParse(req.body);
+
   if (!parsed.success) {
     return res.status(400).json({
       ok: false,
@@ -163,6 +168,7 @@ app.post("/api/feedback", async (req, res) => {
     return res.json({ ok: true });
   } catch (err) {
     console.error(err);
+
     return res.status(500).json({
       ok: false,
       message: "Não foi possível enviar o e-mail, tente novamente.",
@@ -170,13 +176,9 @@ app.post("/api/feedback", async (req, res) => {
   }
 });
 
-app.get("/api/pega", async (req, res) => {
-  console.log("olá")
-  res.send("Funcionou 🚀")
-})
-
 app.post("/api/contact", async (req, res) => {
   const parsed = contactSchema.safeParse(req.body);
+
   if (!parsed.success) {
     return res.status(400).json({
       ok: false,
@@ -212,21 +214,24 @@ app.post("/api/contact", async (req, res) => {
     return res.json({ ok: true });
   } catch (err) {
     console.error(err);
+
     return res.status(500).json({
       ok: false,
       message: "Não foi possível enviar o e-mail, tente novamente.",
     });
   }
 });
+
+app.use("/api/sectors", sectorsRoutes);
 app.use("/api/contracheques", contrachequeRoutes);
 app.use("/api/users", userRoutes);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const port = Number(process.env.PORT || 4000);
-
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`API rodando na porta ${port}`);

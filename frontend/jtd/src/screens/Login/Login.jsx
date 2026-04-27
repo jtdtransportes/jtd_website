@@ -9,7 +9,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    email: "",
+    login: "",
     password: "",
   });
 
@@ -27,6 +27,12 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+
+    if (!formData.login || !formData.password) {
+      setMessage("Informe seu e-mail ou CPF e sua senha.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const result = await loginUser(formData);
@@ -59,11 +65,11 @@ export default function Login() {
 
           <form className="login-form" onSubmit={handleSubmit}>
             <input
-              type="email"
-              name="email"
-              placeholder="E-mail"
+              type="text"
+              name="login"
+              placeholder="E-mail ou CPF"
               className="login-input"
-              value={formData.email}
+              value={formData.login}
               onChange={handleChange}
             />
 

@@ -9,7 +9,6 @@ import {
   getUsers,
   uploadContracheque,
   getMyContracheques,
-  getAllUsers,
   deactivateUserByAdmin,
   activateUserByAdmin,
   getAllContrachequesForAdmin,
@@ -18,6 +17,7 @@ import {
 import "./Profile.css";
 
 const API_URL = "https://jtd-website.onrender.com/api/contracheques";
+const SECTORS_API_URL = "https://jtd-website.onrender.com/api/sectors";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -25,24 +25,43 @@ export default function Profile() {
   const [message, setMessage] = useState("");
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("perfil");
+
   const [searchColaborador, setSearchColaborador] = useState("");
   const [searchUsuario, setSearchUsuario] = useState("");
+  const [searchSector, setSearchSector] = useState("");
+
+  const [selectedUserSectorFilter, setSelectedUserSectorFilter] = useState("todos");
+  const [selectedUploadSectorFilter, setSelectedUploadSectorFilter] = useState("todos");
+  const [selectedRemoveSectorFilter, setSelectedRemoveSectorFilter] = useState("todos");
+
   const [users, setUsers] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const [sectors, setSectors] = useState([]);
+  const [sectorDescricao, setSectorDescricao] = useState("");
+  const [editingSectorId, setEditingSectorId] = useState(null);
+  const [editingSectorDescricao, setEditingSectorDescricao] = useState("");
+
+  const [editingUserSectorId, setEditingUserSectorId] = useState(null);
+  const [selectedUserSectorId, setSelectedUserSectorId] = useState("");
+
   const [uploadData, setUploadData] = useState({
     user_id: "",
     ano: "",
     mes: "",
     contracheque: null,
   });
+
   const [contracheques, setContracheques] = useState([]);
   const [allContracheques, setAllContracheques] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmNewPassword: "",
   });
+
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
@@ -50,6 +69,7 @@ export default function Profile() {
     telefone: "",
     sexo: "",
     data_nascimento: "",
+    setor: "",
   });
 
   const meses = [
@@ -96,13 +116,52 @@ export default function Profile() {
   }
 
   async function reloadAdminUsersData(token) {
-    const result = await getAllUsers(token);
-    if (result.ok) setAllUsers(result.users || []);
+    try {
+      const response = await fetch(`${SECTORS_API_URL}/users`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        setAllUsers(result.users || []);
+      } else {
+        setMessage(result.message || "Erro ao carregar usuários.");
+      }
+    } catch (error) {
+      console.error("Erro ao carregar usuários:", error);
+      setMessage("Erro ao carregar usuários.");
+    }
   }
 
   async function reloadAdminContrachequesData(token) {
     const result = await getAllContrachequesForAdmin(token);
     if (result.ok) setAllContracheques(result.contracheques || []);
+  }
+
+  async function reloadSectorsData(token) {
+    try {
+      const response = await fetch(SECTORS_API_URL, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        setSectors(result.sectors || []);
+      } else {
+        setMessage(result.message || "Erro ao carregar setores.");
+      }
+    } catch (error) {
+      console.error("Erro ao carregar setores:", error);
+      setMessage("Erro ao carregar setores.");
+    }
   }
 
   useEffect(() => {
@@ -134,12 +193,14 @@ export default function Profile() {
         data_nascimento: result.user.data_nascimento
           ? String(result.user.data_nascimento).slice(0, 10)
           : "",
+        setor: result.user.sector_name || result.user.setor || "Sem setor",
       });
 
       await reloadUsersData(token);
       await reloadMyContrachequesData(token);
 
       if (result.user.role === "admin") {
+        await reloadSectorsData(token);
         await reloadAdminUsersData(token);
         await reloadAdminContrachequesData(token);
       }
@@ -180,16 +241,33 @@ export default function Profile() {
     if (!token) return;
 
     if (tab === "contracheque") await reloadMyContrachequesData(token);
-    if (tab === "enviar-contracheque") await reloadUsersData(token);
-    if (tab === "remover-contracheque" && user?.role === "admin")
-      await reloadAdminContrachequesData(token);
-    if (tab === "editar-usuarios" && user?.role === "admin")
+
+    if (tab === "enviar-contracheque" && user?.role === "admin") {
+      await reloadSectorsData(token);
       await reloadAdminUsersData(token);
+      await reloadUsersData(token);
+    }
+
+    if (tab === "remover-contracheque" && user?.role === "admin") {
+      await reloadSectorsData(token);
+      await reloadAdminUsersData(token);
+      await reloadAdminContrachequesData(token);
+    }
+
+    if (tab === "editar-usuarios" && user?.role === "admin") {
+      await reloadSectorsData(token);
+      await reloadAdminUsersData(token);
+    }
+
+    if (tab === "gerenciar-setores" && user?.role === "admin") {
+      await reloadSectorsData(token);
+    }
   }
 
   function handleChange(e) {
     const { name, value } = e.target;
     if (name === "cpf") return;
+    if (name === "setor") return;
 
     setFormData((prev) => ({
       ...prev,
@@ -215,6 +293,20 @@ export default function Profile() {
 
     setUser(result.user);
     localStorage.setItem("user", JSON.stringify(result.user));
+
+    setFormData((prev) => ({
+      ...prev,
+      nome: result.user.nome || "",
+      email: result.user.email || "",
+      cpf: result.user.cpf || "",
+      telefone: result.user.telefone || "",
+      sexo: result.user.sexo || "",
+      data_nascimento: result.user.data_nascimento
+        ? String(result.user.data_nascimento).slice(0, 10)
+        : "",
+      setor: result.user.sector_name || result.user.setor || prev.setor || "Sem setor",
+    }));
+
     setMessage("Perfil atualizado com sucesso.");
     setEditing(false);
   }
@@ -330,14 +422,17 @@ export default function Profile() {
       }
 
       if (user?.role === "admin") {
+        const usuarioSelecionado =
+          allUsers.find((u) => Number(u.id) === userIdSelecionado) ||
+          users.find((u) => Number(u.id) === userIdSelecionado);
+
         const itemAdmin = {
           ...novoContracheque,
-          user_nome:
-            users.find((u) => Number(u.id) === userIdSelecionado)?.nome || "",
-          user_email:
-            users.find((u) => Number(u.id) === userIdSelecionado)?.email || "",
-          user_cpf:
-            users.find((u) => Number(u.id) === userIdSelecionado)?.cpf || "",
+          user_nome: usuarioSelecionado?.nome || "",
+          user_email: usuarioSelecionado?.email || "",
+          user_cpf: usuarioSelecionado?.cpf || "",
+          sector_id: usuarioSelecionado?.sector_id || null,
+          sector_name: usuarioSelecionado?.sector_name || "Sem setor",
         };
 
         setAllContracheques((prev) => [itemAdmin, ...prev]);
@@ -353,8 +448,8 @@ export default function Profile() {
 
   const contrachequesSeguros = Array.isArray(contracheques)
     ? contracheques.filter(
-        (item) => item && item.id != null && item.ano != null && item.mes != null
-      )
+      (item) => item && item.id != null && item.ano != null && item.mes != null
+    )
     : [];
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
@@ -430,38 +525,318 @@ export default function Profile() {
     );
   }
 
-  const contrachequesAdminAgrupados = allContracheques.reduce((acc, item) => {
-    const userKey = `${item.user_id}`;
-    const userNome = item.user_nome || "Usuário";
-    const ano = String(item.ano);
-    const mes = String(item.mes);
+  async function handleCreateSector() {
+    const token = localStorage.getItem("token");
 
-    if (!acc[userKey]) {
-      acc[userKey] = {
-        user_id: item.user_id,
-        user_nome: userNome,
-        user_email: item.user_email,
-        user_cpf: item.user_cpf,
-        anos: {},
-      };
+    if (!sectorDescricao.trim()) {
+      setMessage("Informe a descrição do setor.");
+      return;
     }
 
-    if (!acc[userKey].anos[ano]) acc[userKey].anos[ano] = {};
-    if (!acc[userKey].anos[ano][mes]) acc[userKey].anos[ano][mes] = [];
+    try {
+      const response = await fetch(SECTORS_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          descricao: sectorDescricao.trim(),
+        }),
+      });
 
-    acc[userKey].anos[ano][mes].push(item);
+      const result = await response.json();
 
-    return acc;
-  }, {});
+      if (!result.ok) {
+        setMessage(result.message || "Erro ao criar setor.");
+        return;
+      }
 
-  const contrachequesAdminFiltrados = Object.values(
-    contrachequesAdminAgrupados
-  ).filter((usuario) =>
-    usuario.user_nome?.toLowerCase().includes(searchColaborador.toLowerCase().trim())
-  );
+      setMessage("Setor criado com sucesso.");
+      setSectorDescricao("");
+      await reloadSectorsData(token);
+    } catch (error) {
+      console.error("Erro ao criar setor:", error);
+      setMessage("Erro ao criar setor.");
+    }
+  }
 
-  const allUsersFiltrados = allUsers.filter((item) =>
-    item.nome?.toLowerCase().includes(searchUsuario.toLowerCase().trim())
+  function handleStartEditSector(sector) {
+    setEditingSectorId(sector.id);
+    setEditingSectorDescricao(sector.descricao || "");
+    setMessage("");
+  }
+
+  function handleCancelEditSector() {
+    setEditingSectorId(null);
+    setEditingSectorDescricao("");
+    setMessage("");
+  }
+
+  async function handleUpdateSector(sectorId) {
+    const token = localStorage.getItem("token");
+
+    if (!editingSectorDescricao.trim()) {
+      setMessage("Informe a descrição do setor.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${SECTORS_API_URL}/${sectorId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          descricao: editingSectorDescricao.trim(),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.ok) {
+        setMessage(result.message || "Erro ao atualizar setor.");
+        return;
+      }
+
+      setMessage("Setor atualizado com sucesso.");
+      setEditingSectorId(null);
+      setEditingSectorDescricao("");
+      await reloadSectorsData(token);
+      await reloadAdminUsersData(token);
+    } catch (error) {
+      console.error("Erro ao atualizar setor:", error);
+      setMessage("Erro ao atualizar setor.");
+    }
+  }
+
+  async function handleDeleteSector(sectorId) {
+    const confirmAction = window.confirm(
+      "Tem certeza que deseja excluir este setor?"
+    );
+
+    if (!confirmAction) return;
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(`${SECTORS_API_URL}/${sectorId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (!result.ok) {
+        setMessage(result.message || "Erro ao excluir setor.");
+        return;
+      }
+
+      setMessage("Setor excluído com sucesso.");
+      await reloadSectorsData(token);
+      await reloadAdminUsersData(token);
+    } catch (error) {
+      console.error("Erro ao excluir setor:", error);
+      setMessage("Erro ao excluir setor.");
+    }
+  }
+
+  function handleStartEditUserSector(item) {
+    setEditingUserSectorId(item.id);
+    setSelectedUserSectorId(item.sector_id ? String(item.sector_id) : "");
+    setMessage("");
+  }
+
+  function handleCancelEditUserSector() {
+    setEditingUserSectorId(null);
+    setSelectedUserSectorId("");
+    setMessage("");
+  }
+
+  async function handleUpdateUserSector(userId) {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(`${SECTORS_API_URL}/users/${userId}/sector`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          sector_id: selectedUserSectorId ? Number(selectedUserSectorId) : null,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.ok) {
+        setMessage(result.message || "Erro ao alterar setor do usuário.");
+        return;
+      }
+
+      setMessage("Setor do usuário atualizado com sucesso.");
+      setEditingUserSectorId(null);
+      setSelectedUserSectorId("");
+      await reloadAdminUsersData(token);
+    } catch (error) {
+      console.error("Erro ao alterar setor do usuário:", error);
+      setMessage("Erro ao alterar setor do usuário.");
+    }
+  }
+
+  function getUserSectorId(userId) {
+    const foundUser = allUsers.find((item) => Number(item.id) === Number(userId));
+    return foundUser?.sector_id || null;
+  }
+
+  function getUserSectorName(userId) {
+    const foundUser = allUsers.find((item) => Number(item.id) === Number(userId));
+    return foundUser?.sector_name || "Sem setor";
+  }
+
+  function userMatchesSectorFilter(item, selectedSector) {
+    if (selectedSector === "todos") return true;
+    if (selectedSector === "sem-setor") return !item.sector_id;
+    return Number(item.sector_id) === Number(selectedSector);
+  }
+
+  function contrachequeMatchesSectorFilter(item, selectedSector) {
+    const sectorId = item.sector_id || getUserSectorId(item.user_id);
+
+    if (selectedSector === "todos") return true;
+    if (selectedSector === "sem-setor") return !sectorId;
+    return Number(sectorId) === Number(selectedSector);
+  }
+
+  function groupUsersBySector(usersList) {
+    const groups = {};
+
+    usersList.forEach((item) => {
+      const key = item.sector_id ? String(item.sector_id) : "sem-setor";
+      const name = item.sector_name || "Sem setor";
+
+      if (!groups[key]) {
+        groups[key] = {
+          sector_id: key,
+          sector_name: name,
+          users: [],
+        };
+      }
+
+      groups[key].users.push(item);
+    });
+
+    return Object.values(groups).sort((a, b) => {
+      if (a.sector_id === "sem-setor") return 1;
+      if (b.sector_id === "sem-setor") return -1;
+      return a.sector_name.localeCompare(b.sector_name);
+    });
+  }
+
+  function groupContrachequesBySector(contrachequesList) {
+    const groups = {};
+
+    contrachequesList.forEach((item) => {
+      const sectorId = item.sector_id || getUserSectorId(item.user_id);
+      const key = sectorId ? String(sectorId) : "sem-setor";
+      const name = item.sector_name || getUserSectorName(item.user_id);
+
+      if (!groups[key]) {
+        groups[key] = {
+          sector_id: key,
+          sector_name: name || "Sem setor",
+          colaboradores: {},
+        };
+      }
+
+      const userKey = `${item.user_id}`;
+      const userNome = item.user_nome || "Usuário";
+      const ano = String(item.ano);
+      const mes = String(item.mes);
+
+      if (!groups[key].colaboradores[userKey]) {
+        groups[key].colaboradores[userKey] = {
+          user_id: item.user_id,
+          user_nome: userNome,
+          user_email: item.user_email,
+          user_cpf: item.user_cpf,
+          sector_id: sectorId,
+          sector_name: name || "Sem setor",
+          anos: {},
+        };
+      }
+
+      if (!groups[key].colaboradores[userKey].anos[ano]) {
+        groups[key].colaboradores[userKey].anos[ano] = {};
+      }
+
+      if (!groups[key].colaboradores[userKey].anos[ano][mes]) {
+        groups[key].colaboradores[userKey].anos[ano][mes] = [];
+      }
+
+      groups[key].colaboradores[userKey].anos[ano][mes].push(item);
+    });
+
+    return Object.values(groups)
+      .map((group) => ({
+        ...group,
+        colaboradores: Object.values(group.colaboradores).sort((a, b) =>
+          a.user_nome.localeCompare(b.user_nome)
+        ),
+      }))
+      .sort((a, b) => {
+        if (a.sector_id === "sem-setor") return 1;
+        if (b.sector_id === "sem-setor") return -1;
+        return a.sector_name.localeCompare(b.sector_name);
+      });
+  }
+
+  const allUsersFiltrados = allUsers
+    .filter((item) =>
+      item.nome?.toLowerCase().includes(searchUsuario.toLowerCase().trim())
+    )
+    .filter((item) => userMatchesSectorFilter(item, selectedUserSectorFilter));
+
+  const usuariosAgrupadosPorSetor = groupUsersBySector(allUsersFiltrados);
+
+  const usersParaUpload = allUsers
+    .filter((item) => Number(item.is_active) === 1)
+    .filter((item) => userMatchesSectorFilter(item, selectedUploadSectorFilter));
+
+  const usersParaUploadAgrupadosPorSetor = groupUsersBySector(usersParaUpload);
+
+  const allContrachequesComSetor = allContracheques.map((item) => {
+    const foundUser = allUsers.find((u) => Number(u.id) === Number(item.user_id));
+
+    return {
+      ...item,
+      sector_id: item.sector_id || foundUser?.sector_id || null,
+      sector_name: item.sector_name || foundUser?.sector_name || "Sem setor",
+      user_nome: item.user_nome || foundUser?.nome || "Usuário",
+      user_email: item.user_email || foundUser?.email || "",
+      user_cpf: item.user_cpf || foundUser?.cpf || "",
+    };
+  });
+
+  const contrachequesAdminFiltrados = allContrachequesComSetor
+    .filter((item) =>
+      item.user_nome
+        ?.toLowerCase()
+        .includes(searchColaborador.toLowerCase().trim())
+    )
+    .filter((item) =>
+      contrachequeMatchesSectorFilter(item, selectedRemoveSectorFilter)
+    );
+
+  const contrachequesAgrupadosPorSetor =
+    groupContrachequesBySector(contrachequesAdminFiltrados);
+
+  const sectorsFiltrados = sectors.filter((item) =>
+    item.descricao?.toLowerCase().includes(searchSector.toLowerCase().trim())
   );
 
   async function handleDownloadContracheque(id) {
@@ -486,7 +861,7 @@ export default function Profile() {
         try {
           const errorData = await response.json();
           if (errorData?.message) errorMessage = errorData.message;
-        } catch {}
+        } catch { }
 
         throw new Error(errorMessage);
       }
@@ -577,7 +952,14 @@ export default function Profile() {
                 className="sidebar-title"
                 onClick={() => changeTab("editar-usuarios")}
               >
-                Desativar/Ativar Usuários
+                Gerenciar Usuarios
+              </button>
+
+              <button
+                className="sidebar-title"
+                onClick={() => changeTab("gerenciar-setores")}
+              >
+                Gerenciar Setores
               </button>
             </>
           )}
@@ -650,6 +1032,8 @@ export default function Profile() {
                     <input type="text" name="cpf" value={formData.cpf} disabled />
                   </label>
 
+
+
                   <label>
                     Telefone
                     <input
@@ -687,6 +1071,15 @@ export default function Profile() {
                       value={formData.data_nascimento}
                       onChange={handleChange}
                       disabled={!editing}
+                    />
+                  </label>
+                  <label>
+                    Setor
+                    <input
+                      type="text"
+                      name="setor"
+                      value={formData.setor}
+                      disabled
                     />
                   </label>
                 </div>
@@ -791,6 +1184,30 @@ export default function Profile() {
               <div className="upload-section">
                 <h3>Adicionar Contracheque</h3>
 
+                <div className="sector-filter-box">
+                  <label>
+                    Filtrar usuários por setor
+                    <select
+                      value={selectedUploadSectorFilter}
+                      onChange={(e) => {
+                        setSelectedUploadSectorFilter(e.target.value);
+                        setUploadData((prev) => ({
+                          ...prev,
+                          user_id: "",
+                        }));
+                      }}
+                    >
+                      <option value="todos">Todos os setores</option>
+                      <option value="sem-setor">Sem setor</option>
+                      {sectors.map((sector) => (
+                        <option key={sector.id} value={sector.id}>
+                          {sector.descricao}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
                 <div className="profile-form">
                   <label>
                     Usuário
@@ -800,10 +1217,18 @@ export default function Profile() {
                       onChange={handleUploadChange}
                     >
                       <option value="">Selecione um usuário</option>
-                      {users.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.nome}
-                        </option>
+
+                      {usersParaUploadAgrupadosPorSetor.map((group) => (
+                        <optgroup
+                          key={group.sector_id}
+                          label={group.sector_name || "Sem setor"}
+                        >
+                          {group.users.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.nome}
+                            </option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </label>
@@ -864,130 +1289,375 @@ export default function Profile() {
               <div className="admin-contracheque-section">
                 <h3>Remover Contracheque</h3>
 
-                <input
-                  type="text"
-                  placeholder="Pesquisar colaborador"
-                  className="search-colaborador-input"
-                  value={searchColaborador}
-                  onChange={(e) => setSearchColaborador(e.target.value)}
-                />
+                <div className="filter-row">
+                  <input
+                    type="text"
+                    placeholder="Pesquisar colaborador"
+                    className="search-colaborador-input"
+                    value={searchColaborador}
+                    onChange={(e) => setSearchColaborador(e.target.value)}
+                  />
+
+                  <div className="sector-filter-box inline-filter">
+                    <label>
+                      <select
+                        value={selectedRemoveSectorFilter}
+                        onChange={(e) =>
+                          setSelectedRemoveSectorFilter(e.target.value)
+                        }
+                      >
+                        <option value="todos">Todos os setores</option>
+                        <option value="sem-setor">Sem setor</option>
+                        {sectors.map((sector) => (
+                          <option key={sector.id} value={sector.id}>
+                            {sector.descricao}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </div>
 
                 {allContracheques.length === 0 ? (
                   <p>Nenhum contracheque encontrado.</p>
-                ) : contrachequesAdminFiltrados.length === 0 ? (
+                ) : contrachequesAgrupadosPorSetor.length === 0 ? (
                   <p>Nenhum colaborador encontrado.</p>
                 ) : (
-                  contrachequesAdminFiltrados.map((usuario) => (
-                    <div
-                      key={usuario.user_id}
-                      className="admin-contracheque-user-block"
-                    >
-                      <h4>{usuario.user_nome}</h4>
-                      <p><strong>Email:</strong> {usuario.user_email}</p>
-                      <p><strong>CPF:</strong> {usuario.user_cpf}</p>
+                  <div className="sector-group-list">
+                    {contrachequesAgrupadosPorSetor.map((sectorGroup) => (
+                      <div
+                        key={sectorGroup.sector_id}
+                        className="sector-group-block"
+                      >
+                        <h4>{sectorGroup.sector_name || "Sem setor"}</h4>
 
-                      {Object.keys(usuario.anos)
-                        .sort((a, b) => Number(b) - Number(a))
-                        .map((ano) => (
+                        {sectorGroup.colaboradores.map((usuario) => (
                           <div
-                            key={`${usuario.user_id}-${ano}`}
-                            className="admin-contracheque-year-block"
+                            key={usuario.user_id}
+                            className="admin-contracheque-user-block"
                           >
-                            <h5>{ano}</h5>
+                            <h5>{usuario.user_nome}</h5>
+                            <p>
+                              <strong>Email:</strong> {usuario.user_email}
+                            </p>
+                            <p>
+                              <strong>CPF:</strong> {usuario.user_cpf}
+                            </p>
 
-                            {Object.keys(usuario.anos[ano])
+                            {Object.keys(usuario.anos)
                               .sort((a, b) => Number(b) - Number(a))
-                              .map((mes) => (
+                              .map((ano) => (
                                 <div
-                                  key={`${usuario.user_id}-${ano}-${mes}`}
-                                  className="admin-contracheque-month-block"
+                                  key={`${usuario.user_id}-${ano}`}
+                                  className="admin-contracheque-year-block"
                                 >
-                                  <h6>{mesesNomes[Number(mes)]}</h6>
+                                  <h5>{ano}</h5>
 
-                                  <div className="admin-contracheque-list">
-                                    {usuario.anos[ano][mes].map((item) => (
+                                  {Object.keys(usuario.anos[ano])
+                                    .sort((a, b) => Number(b) - Number(a))
+                                    .map((mes) => (
                                       <div
-                                        key={item.id}
-                                        className="admin-contracheque-card"
+                                        key={`${usuario.user_id}-${ano}-${mes}`}
+                                        className="admin-contracheque-month-block"
                                       >
-                                        <span>{item.file_name}</span>
+                                        <h6>{mesesNomes[Number(mes)]}</h6>
 
-                                        <div className="admin-contracheque-actions">
-                                          <button
-                                            className="download-button"
-                                            onClick={() =>
-                                              handleDownloadContracheque(item.id)
-                                            }
-                                          >
-                                            Baixar
-                                          </button>
+                                        <div className="admin-contracheque-list">
+                                          {usuario.anos[ano][mes].map((item) => (
+                                            <div
+                                              key={item.id}
+                                              className="admin-contracheque-card"
+                                            >
+                                              <span>{item.file_name}</span>
 
-                                          <button
-                                            className="danger-button"
-                                            onClick={() =>
-                                              handleRemoveContracheque(item.id)
-                                            }
-                                          >
-                                            Remover
-                                          </button>
+                                              <div className="admin-contracheque-actions">
+                                                <button
+                                                  className="download-button"
+                                                  onClick={() =>
+                                                    handleDownloadContracheque(
+                                                      item.id
+                                                    )
+                                                  }
+                                                >
+                                                  Baixar
+                                                </button>
+
+                                                <button
+                                                  className="danger-button"
+                                                  onClick={() =>
+                                                    handleRemoveContracheque(
+                                                      item.id
+                                                    )
+                                                  }
+                                                >
+                                                  Remover
+                                                </button>
+                                              </div>
+                                            </div>
+                                          ))}
                                         </div>
                                       </div>
                                     ))}
-                                  </div>
                                 </div>
                               ))}
                           </div>
                         ))}
-                    </div>
-                  ))
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
 
             {activeTab === "editar-usuarios" && user?.role === "admin" && (
               <div className="admin-users-section">
-                <h3>Desativar/Ativar Usuários</h3>
+                <h3>Gerenciar Usuarios</h3>
 
-                <input
-                  type="text"
-                  placeholder="Pesquisar usuário"
-                  className="search-colaborador-input"
-                  value={searchUsuario}
-                  onChange={(e) => setSearchUsuario(e.target.value)}
-                />
+                <div className="filter-row">
+                  <input
+                    type="text"
+                    placeholder="Pesquisar usuário"
+                    className="search-colaborador-input"
+                    value={searchUsuario}
+                    onChange={(e) => setSearchUsuario(e.target.value)}
+                  />
+
+                  <div className="sector-filter-box inline-filter">
+                    <label>
+                      <select
+                        value={selectedUserSectorFilter}
+                        onChange={(e) =>
+                          setSelectedUserSectorFilter(e.target.value)
+                        }
+                      >
+                        <option value="todos">Todos os setores</option>
+                        <option value="sem-setor">Sem setor</option>
+                        {sectors.map((sector) => (
+                          <option key={sector.id} value={sector.id}>
+                            {sector.descricao}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </div>
 
                 {allUsers.length === 0 ? (
                   <p>Nenhum usuário encontrado.</p>
                 ) : allUsersFiltrados.length === 0 ? (
-                  <p>Nenhum usuário encontrado com esse nome.</p>
+                  <p>Nenhum usuário encontrado com esse filtro.</p>
                 ) : (
-                  <div className="admin-users-list">
-                    {allUsersFiltrados.map((item) => (
-                      <div key={item.id} className="admin-user-card">
-                        <div className="admin-user-info">
-                          <p><strong>Nome:</strong> {item.nome}</p>
-                          <p><strong>Email:</strong> {item.email}</p>
-                          <p><strong>CPF:</strong> {item.cpf}</p>
-                          <p>
-                            <strong>Status:</strong>{" "}
-                            {Number(item.is_active) === 1 ? "Ativo" : "Inativo"}
-                          </p>
-                        </div>
+                  <div className="sector-group-list">
+                    {usuariosAgrupadosPorSetor.map((sectorGroup) => (
+                      <div
+                        key={sectorGroup.sector_id}
+                        className="sector-group-block"
+                      >
+                        <h4>{sectorGroup.sector_name || "Sem setor"}</h4>
 
-                        {Number(item.is_active) === 1 ? (
-                          <button
-                            className="danger-button"
-                            onClick={() => handleAdminDeactivateUser(item.id)}
-                          >
-                            Desativar usuário
-                          </button>
+                        <div className="admin-users-list">
+                          {sectorGroup.users.map((item) => (
+                            <div key={item.id} className="admin-user-card">
+                              <div className="admin-user-info">
+                                <p>
+                                  <strong>Nome:</strong> {item.nome}
+                                </p>
+                                <p>
+                                  <strong>Email:</strong> {item.email}
+                                </p>
+                                <p>
+                                  <strong>CPF:</strong> {item.cpf}
+                                </p>
+                                <p>
+                                  <strong>Status:</strong>{" "}
+                                  {Number(item.is_active) === 1
+                                    ? "Ativo"
+                                    : "Inativo"}
+                                </p>
+                                <p>
+                                  <strong>Setor:</strong>{" "}
+                                  {item.sector_name || "Sem setor"}
+                                </p>
+
+                                {editingUserSectorId === item.id && (
+                                  <div className="user-sector-edit-box">
+                                    <label>
+                                      Alterar setor
+                                      <select
+                                        value={selectedUserSectorId}
+                                        onChange={(e) =>
+                                          setSelectedUserSectorId(e.target.value)
+                                        }
+                                      >
+                                        <option value="">Sem setor</option>
+                                        {sectors.map((sector) => (
+                                          <option
+                                            key={sector.id}
+                                            value={sector.id}
+                                          >
+                                            {sector.descricao}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="admin-user-actions">
+                                {editingUserSectorId === item.id ? (
+                                  <>
+                                    <button
+                                      className="success-button"
+                                      onClick={() =>
+                                        handleUpdateUserSector(item.id)
+                                      }
+                                    >
+                                      Salvar setor
+                                    </button>
+
+                                    <button
+                                      className="danger-button"
+                                      onClick={handleCancelEditUserSector}
+                                    >
+                                      Cancelar
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    className="download-button"
+                                    onClick={() =>
+                                      handleStartEditUserSector(item)
+                                    }
+                                  >
+                                    Alterar setor
+                                  </button>
+                                )}
+
+                                {Number(item.is_active) === 1 ? (
+                                  <button
+                                    className="danger-button"
+                                    onClick={() =>
+                                      handleAdminDeactivateUser(item.id)
+                                    }
+                                  >
+                                    Desativar usuário
+                                  </button>
+                                ) : (
+                                  <button
+                                    className="success-button"
+                                    onClick={() =>
+                                      handleAdminActivateUser(item.id)
+                                    }
+                                  >
+                                    Ativar usuário
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "gerenciar-setores" && user?.role === "admin" && (
+              <div className="sectors-section">
+                <h3>Gerenciar Setores</h3>
+
+                <div className="sector-create-box">
+                  <label>
+                    Novo setor
+                    <input
+                      type="text"
+                      placeholder="Digite o nome do setor"
+                      value={sectorDescricao}
+                      onChange={(e) => setSectorDescricao(e.target.value)}
+                    />
+                  </label>
+
+                  <button className="action-button" onClick={handleCreateSector}>
+                    Criar setor
+                  </button>
+                </div>
+
+                <input
+                  type="text"
+                  placeholder="Pesquisar setor"
+                  className="search-colaborador-input"
+                  value={searchSector}
+                  onChange={(e) => setSearchSector(e.target.value)}
+                />
+
+                {sectors.length === 0 ? (
+                  <p>Nenhum setor cadastrado.</p>
+                ) : sectorsFiltrados.length === 0 ? (
+                  <p>Nenhum setor encontrado com esse nome.</p>
+                ) : (
+                  <div className="sectors-list">
+                    {sectorsFiltrados.map((sector) => (
+                      <div key={sector.id} className="sector-card">
+                        {editingSectorId === sector.id ? (
+                          <>
+                            <div className="sector-edit-box">
+                              <label>
+                                Descrição
+                                <input
+                                  type="text"
+                                  value={editingSectorDescricao}
+                                  onChange={(e) =>
+                                    setEditingSectorDescricao(e.target.value)
+                                  }
+                                />
+                              </label>
+                            </div>
+
+                            <div className="sector-actions">
+                              <button
+                                className="success-button"
+                                onClick={() => handleUpdateSector(sector.id)}
+                              >
+                                Salvar
+                              </button>
+
+                              <button
+                                className="danger-button"
+                                onClick={handleCancelEditSector}
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </>
                         ) : (
-                          <button
-                            className="success-button"
-                            onClick={() => handleAdminActivateUser(item.id)}
-                          >
-                            Ativar usuário
-                          </button>
+                          <>
+                            <div className="sector-info">
+                              <p>
+                                <strong>ID:</strong> {sector.id}
+                              </p>
+                              <p>
+                                <strong>Descrição:</strong> {sector.descricao}
+                              </p>
+                            </div>
+
+                            <div className="sector-actions">
+                              <button
+                                className="download-button"
+                                onClick={() => handleStartEditSector(sector)}
+                              >
+                                Editar
+                              </button>
+
+                              <button
+                                className="danger-button"
+                                onClick={() => handleDeleteSector(sector.id)}
+                              >
+                                Excluir
+                              </button>
+                            </div>
+                          </>
                         )}
                       </div>
                     ))}
