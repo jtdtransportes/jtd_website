@@ -105,6 +105,31 @@ export default function Profile() {
     12: "Dezembro",
   };
 
+  function getSectorDisplayName(sector) {
+    if (!sector) return "Sem setor";
+    return sector.name || sector.descricao || sector.sector_name || "Sem setor";
+  }
+
+  function getSectorNameFromUser(userData, sectorsList = []) {
+    if (!userData) return "Sem setor";
+
+    if (userData.sector_name) return userData.sector_name;
+    if (userData.setor) return userData.setor;
+
+    if (userData.sector?.name) return userData.sector.name;
+    if (userData.sector?.descricao) return userData.sector.descricao;
+
+    if (userData.sector_id) {
+      const foundSector = sectorsList.find(
+        (sector) => Number(sector.id) === Number(userData.sector_id)
+      );
+
+      if (foundSector) return getSectorDisplayName(foundSector);
+    }
+
+    return "Sem setor";
+  }
+
   async function reloadUsersData(token) {
     const usersResult = await getUsers(token);
     if (usersResult.ok) setUsers(usersResult.users || []);
@@ -155,12 +180,15 @@ export default function Profile() {
 
       if (result.ok) {
         setSectors(result.sectors || []);
+        return result.sectors || [];
       } else {
         setMessage(result.message || "Erro ao carregar setores.");
+        return [];
       }
     } catch (error) {
       console.error("Erro ao carregar setores:", error);
       setMessage("Erro ao carregar setores.");
+      return [];
     }
   }
 
@@ -182,6 +210,28 @@ export default function Profile() {
         return;
       }
 
+      let loadedSectors = [];
+
+      try {
+        const sectorsResponse = await fetch(SECTORS_API_URL, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const sectorsResult = await sectorsResponse.json();
+
+        if (sectorsResult.ok) {
+          loadedSectors = sectorsResult.sectors || [];
+          setSectors(loadedSectors);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar setores no perfil:", error);
+      }
+
+      const setorNome = getSectorNameFromUser(result.user, loadedSectors);
+
       setUser(result.user);
 
       setFormData({
@@ -193,7 +243,7 @@ export default function Profile() {
         data_nascimento: result.user.data_nascimento
           ? String(result.user.data_nascimento).slice(0, 10)
           : "",
-        setor: result.user.sector_name || result.user.setor || "Sem setor",
+        setor: setorNome,
       });
 
       await reloadUsersData(token);
@@ -291,11 +341,18 @@ export default function Profile() {
       return;
     }
 
+    let loadedSectors = sectors;
+
+    if (!loadedSectors.length) {
+      loadedSectors = await reloadSectorsData(token);
+    }
+
+    const setorNome = getSectorNameFromUser(result.user, loadedSectors);
+
     setUser(result.user);
     localStorage.setItem("user", JSON.stringify(result.user));
 
-    setFormData((prev) => ({
-      ...prev,
+    setFormData({
       nome: result.user.nome || "",
       email: result.user.email || "",
       cpf: result.user.cpf || "",
@@ -304,8 +361,8 @@ export default function Profile() {
       data_nascimento: result.user.data_nascimento
         ? String(result.user.data_nascimento).slice(0, 10)
         : "",
-      setor: result.user.sector_name || result.user.setor || prev.setor || "Sem setor",
-    }));
+      setor: setorNome,
+    });
 
     setMessage("Perfil atualizado com sucesso.");
     setEditing(false);
@@ -432,7 +489,7 @@ export default function Profile() {
           user_email: usuarioSelecionado?.email || "",
           user_cpf: usuarioSelecionado?.cpf || "",
           sector_id: usuarioSelecionado?.sector_id || null,
-          sector_name: usuarioSelecionado?.sector_name || "Sem setor",
+          sector_name: getSectorNameFromUser(usuarioSelecionado, sectors),
         };
 
         setAllContracheques((prev) => [itemAdmin, ...prev]);
@@ -448,8 +505,8 @@ export default function Profile() {
 
   const contrachequesSeguros = Array.isArray(contracheques)
     ? contracheques.filter(
-      (item) => item && item.id != null && item.ano != null && item.mes != null
-    )
+        (item) => item && item.id != null && item.ano != null && item.mes != null
+      )
     : [];
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
@@ -529,7 +586,7 @@ export default function Profile() {
     const token = localStorage.getItem("token");
 
     if (!sectorDescricao.trim()) {
-      setMessage("Informe a descrição do setor.");
+      setMessage("Informe o nome do setor.");
       return;
     }
 
@@ -541,6 +598,7 @@ export default function Profile() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          name: sectorDescricao.trim(),
           descricao: sectorDescricao.trim(),
         }),
       });
@@ -563,7 +621,7 @@ export default function Profile() {
 
   function handleStartEditSector(sector) {
     setEditingSectorId(sector.id);
-    setEditingSectorDescricao(sector.descricao || "");
+    setEditingSectorDescricao(getSectorDisplayName(sector));
     setMessage("");
   }
 
@@ -577,7 +635,7 @@ export default function Profile() {
     const token = localStorage.getItem("token");
 
     if (!editingSectorDescricao.trim()) {
-      setMessage("Informe a descrição do setor.");
+      setMessage("Informe o nome do setor.");
       return;
     }
 
@@ -589,6 +647,7 @@ export default function Profile() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          name: editingSectorDescricao.trim(),
           descricao: editingSectorDescricao.trim(),
         }),
       });
@@ -681,7 +740,21 @@ export default function Profile() {
       setMessage("Setor do usuário atualizado com sucesso.");
       setEditingUserSectorId(null);
       setSelectedUserSectorId("");
+
       await reloadAdminUsersData(token);
+
+      if (Number(user?.id) === Number(userId)) {
+        const updatedProfile = await getProfile(token);
+        if (updatedProfile.ok) {
+          const sectorName = getSectorNameFromUser(updatedProfile.user, sectors);
+          setUser(updatedProfile.user);
+          setFormData((prev) => ({
+            ...prev,
+            setor: sectorName,
+          }));
+          localStorage.setItem("user", JSON.stringify(updatedProfile.user));
+        }
+      }
     } catch (error) {
       console.error("Erro ao alterar setor do usuário:", error);
       setMessage("Erro ao alterar setor do usuário.");
@@ -695,7 +768,7 @@ export default function Profile() {
 
   function getUserSectorName(userId) {
     const foundUser = allUsers.find((item) => Number(item.id) === Number(userId));
-    return foundUser?.sector_name || "Sem setor";
+    return getSectorNameFromUser(foundUser, sectors);
   }
 
   function userMatchesSectorFilter(item, selectedSector) {
@@ -717,7 +790,7 @@ export default function Profile() {
 
     usersList.forEach((item) => {
       const key = item.sector_id ? String(item.sector_id) : "sem-setor";
-      const name = item.sector_name || "Sem setor";
+      const name = getSectorNameFromUser(item, sectors);
 
       if (!groups[key]) {
         groups[key] = {
@@ -815,7 +888,8 @@ export default function Profile() {
     return {
       ...item,
       sector_id: item.sector_id || foundUser?.sector_id || null,
-      sector_name: item.sector_name || foundUser?.sector_name || "Sem setor",
+      sector_name:
+        item.sector_name || getSectorNameFromUser(foundUser, sectors) || "Sem setor",
       user_nome: item.user_nome || foundUser?.nome || "Usuário",
       user_email: item.user_email || foundUser?.email || "",
       user_cpf: item.user_cpf || foundUser?.cpf || "",
@@ -836,7 +910,7 @@ export default function Profile() {
     groupContrachequesBySector(contrachequesAdminFiltrados);
 
   const sectorsFiltrados = sectors.filter((item) =>
-    item.descricao?.toLowerCase().includes(searchSector.toLowerCase().trim())
+    getSectorDisplayName(item).toLowerCase().includes(searchSector.toLowerCase().trim())
   );
 
   async function handleDownloadContracheque(id) {
@@ -861,7 +935,7 @@ export default function Profile() {
         try {
           const errorData = await response.json();
           if (errorData?.message) errorMessage = errorData.message;
-        } catch { }
+        } catch {}
 
         throw new Error(errorMessage);
       }
@@ -1032,8 +1106,6 @@ export default function Profile() {
                     <input type="text" name="cpf" value={formData.cpf} disabled />
                   </label>
 
-
-
                   <label>
                     Telefone
                     <input
@@ -1073,6 +1145,7 @@ export default function Profile() {
                       disabled={!editing}
                     />
                   </label>
+
                   <label>
                     Setor
                     <input
@@ -1201,7 +1274,7 @@ export default function Profile() {
                       <option value="sem-setor">Sem setor</option>
                       {sectors.map((sector) => (
                         <option key={sector.id} value={sector.id}>
-                          {sector.descricao}
+                          {getSectorDisplayName(sector)}
                         </option>
                       ))}
                     </select>
@@ -1310,7 +1383,7 @@ export default function Profile() {
                         <option value="sem-setor">Sem setor</option>
                         {sectors.map((sector) => (
                           <option key={sector.id} value={sector.id}>
-                            {sector.descricao}
+                            {getSectorDisplayName(sector)}
                           </option>
                         ))}
                       </select>
@@ -1434,7 +1507,7 @@ export default function Profile() {
                         <option value="sem-setor">Sem setor</option>
                         {sectors.map((sector) => (
                           <option key={sector.id} value={sector.id}>
-                            {sector.descricao}
+                            {getSectorDisplayName(sector)}
                           </option>
                         ))}
                       </select>
@@ -1476,7 +1549,7 @@ export default function Profile() {
                                 </p>
                                 <p>
                                   <strong>Setor:</strong>{" "}
-                                  {item.sector_name || "Sem setor"}
+                                  {getSectorNameFromUser(item, sectors)}
                                 </p>
 
                                 {editingUserSectorId === item.id && (
@@ -1495,7 +1568,7 @@ export default function Profile() {
                                             key={sector.id}
                                             value={sector.id}
                                           >
-                                            {sector.descricao}
+                                            {getSectorDisplayName(sector)}
                                           </option>
                                         ))}
                                       </select>
@@ -1604,7 +1677,7 @@ export default function Profile() {
                           <>
                             <div className="sector-edit-box">
                               <label>
-                                Descrição
+                                Nome do setor
                                 <input
                                   type="text"
                                   value={editingSectorDescricao}
@@ -1638,7 +1711,8 @@ export default function Profile() {
                                 <strong>ID:</strong> {sector.id}
                               </p>
                               <p>
-                                <strong>Descrição:</strong> {sector.descricao}
+                                <strong>Setor:</strong>{" "}
+                                {getSectorDisplayName(sector)}
                               </p>
                             </div>
 
