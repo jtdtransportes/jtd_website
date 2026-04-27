@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -105,30 +105,33 @@ export default function Profile() {
     12: "Dezembro",
   };
 
-  function getSectorDisplayName(sector) {
+  const getSectorDisplayName = useCallback((sector) => {
     if (!sector) return "Sem setor";
     return sector.name || sector.descricao || sector.sector_name || "Sem setor";
-  }
+  }, []);
 
-  function getSectorNameFromUser(userData, sectorsList = []) {
-    if (!userData) return "Sem setor";
+  const getSectorNameFromUser = useCallback(
+    (userData, sectorsList = []) => {
+      if (!userData) return "Sem setor";
 
-    if (userData.sector_name) return userData.sector_name;
-    if (userData.setor) return userData.setor;
+      if (userData.sector_name) return userData.sector_name;
+      if (userData.setor) return userData.setor;
 
-    if (userData.sector?.name) return userData.sector.name;
-    if (userData.sector?.descricao) return userData.sector.descricao;
+      if (userData.sector?.name) return userData.sector.name;
+      if (userData.sector?.descricao) return userData.sector.descricao;
 
-    if (userData.sector_id) {
-      const foundSector = sectorsList.find(
-        (sector) => Number(sector.id) === Number(userData.sector_id)
-      );
+      if (userData.sector_id) {
+        const foundSector = sectorsList.find(
+          (sector) => Number(sector.id) === Number(userData.sector_id)
+        );
 
-      if (foundSector) return getSectorDisplayName(foundSector);
-    }
+        if (foundSector) return getSectorDisplayName(foundSector);
+      }
 
-    return "Sem setor";
-  }
+      return "Sem setor";
+    },
+    [getSectorDisplayName]
+  );
 
   async function reloadUsersData(token) {
     const usersResult = await getUsers(token);
@@ -257,7 +260,7 @@ export default function Profile() {
     }
 
     loadProfile();
-  }, [navigate]);
+  }, [navigate, getSectorNameFromUser]);
 
   useEffect(() => {
     function handleResize() {
@@ -505,8 +508,8 @@ export default function Profile() {
 
   const contrachequesSeguros = Array.isArray(contracheques)
     ? contracheques.filter(
-        (item) => item && item.id != null && item.ano != null && item.mes != null
-      )
+      (item) => item && item.id != null && item.ano != null && item.mes != null
+    )
     : [];
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
@@ -935,7 +938,7 @@ export default function Profile() {
         try {
           const errorData = await response.json();
           if (errorData?.message) errorMessage = errorData.message;
-        } catch {}
+        } catch { }
 
         throw new Error(errorMessage);
       }
