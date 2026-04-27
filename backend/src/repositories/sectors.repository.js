@@ -4,7 +4,7 @@ export async function findAllSectors() {
   const [rows] = await pool.query(`
     SELECT 
       id,
-      name AS descricao,
+      name AS name,
       created_at,
       updated_at
     FROM sectors
@@ -27,7 +27,7 @@ export async function insertSector(data) {
     `
       SELECT 
         id,
-        name AS descricao,
+        name AS name,
         created_at,
         updated_at
       FROM sectors
@@ -57,7 +57,7 @@ export async function updateSector(id, data) {
     `
       SELECT 
         id,
-        name AS descricao,
+        name AS name,
         created_at,
         updated_at
       FROM sectors
