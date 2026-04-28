@@ -132,3 +132,49 @@
   text-align: left;
   line-height: 1.2;
 }
+.register-date-wrapper {
+  width: 100%;
+  max-width: 470px;
+  position: relative;
+  margin-bottom: 23px;
+}
+
+.register-date-wrapper .register-input {
+  margin-bottom: 0;
+}
+
+.register-date-placeholder {
+  position: absolute;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 17px;
+  color: #333;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.register-date-input {
+  position: relative;
+  z-index: 2;
+  background-color: transparent;
+  color: transparent;
+}
+
+.register-date-input:focus,
+.register-date-input:valid {
+  color: #333;
+}
+
+.register-date-input::-webkit-datetime-edit {
+  color: transparent;
+}
+
+.register-date-input:focus::-webkit-datetime-edit,
+.register-date-input:valid::-webkit-datetime-edit {
+  color: #333;
+}
+
+.register-date-input::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}

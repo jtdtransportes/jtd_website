@@ -331,13 +331,19 @@ export default function Register() {
               <span className="cpf-error">{errors.telefone}</span>
             )}
 
-            <input
-              type="date"
-              name="data_nascimento"
-              className="register-input"
-              value={formData.data_nascimento}
-              onChange={handleChange}
-            />
+            <div className="register-date-wrapper">
+              {!formData.data_nascimento && (
+                <span className="register-date-placeholder">Data de nascimento</span>
+              )}
+
+              <input
+                type="date"
+                name="data_nascimento"
+                className="register-input register-date-input"
+                value={formData.data_nascimento}
+                onChange={handleChange}
+              />
+            </div>
 
             <select
               name="sexo"
