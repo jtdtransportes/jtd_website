@@ -48,7 +48,6 @@ export default function Register() {
     loadSectors();
   }, []);
 
-  // ================= EMAIL =================
   function validarEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
@@ -80,7 +79,6 @@ export default function Register() {
     }
   }
 
-  // ================= CPF =================
   function validarCPF(cpf) {
     cpf = cpf.replace(/\D/g, "");
 
@@ -88,20 +86,24 @@ export default function Register() {
     if (/^(\d)\1{10}$/.test(cpf)) return false;
 
     let soma = 0;
+
     for (let i = 0; i < 9; i++) {
       soma += parseInt(cpf.charAt(i)) * (10 - i);
     }
 
     let resto = (soma * 10) % 11;
+
     if (resto === 10) resto = 0;
     if (resto !== parseInt(cpf.charAt(9))) return false;
 
     soma = 0;
+
     for (let i = 0; i < 10; i++) {
       soma += parseInt(cpf.charAt(i)) * (11 - i);
     }
 
     resto = (soma * 10) % 11;
+
     if (resto === 10) resto = 0;
     if (resto !== parseInt(cpf.charAt(10))) return false;
 
@@ -149,13 +151,13 @@ export default function Register() {
 
   function handleCpfFocus() {
     const cpfLimpo = formData.cpf.replace(/\D/g, "");
+
     setFormData((prev) => ({
       ...prev,
       cpf: cpfLimpo,
     }));
   }
 
-  // ================= TELEFONE =================
   function handleTelefoneChange(e) {
     let value = e.target.value.replace(/\D/g, "");
     value = value.slice(0, 11);
@@ -201,13 +203,13 @@ export default function Register() {
 
   function handleTelefoneFocus() {
     const somenteNumeros = formData.telefone.replace(/\D/g, "");
+
     setFormData((prev) => ({
       ...prev,
       telefone: somenteNumeros,
     }));
   }
 
-  // ================= GERAL =================
   function handleChange(e) {
     const { name, value } = e.target;
 
@@ -219,6 +221,7 @@ export default function Register() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
     setLoading(true);
     setMessage("");
 
@@ -324,7 +327,9 @@ export default function Register() {
               onFocus={handleTelefoneFocus}
             />
 
-            {errors.telefone && <p style={{ color: "red" }}>{errors.telefone}</p>}
+            {errors.telefone && (
+              <span className="cpf-error">{errors.telefone}</span>
+            )}
 
             <input
               type="date"
@@ -357,7 +362,7 @@ export default function Register() {
 
               {sectors.map((sector) => (
                 <option key={sector.id} value={sector.id}>
-                  {sector.name}
+                  {sector.name || sector.nome || sector.descricao}
                 </option>
               ))}
             </select>

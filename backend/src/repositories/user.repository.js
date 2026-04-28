@@ -57,6 +57,7 @@ class UserRepository {
       data_nascimento,
       sexo,
       telefone,
+      sector_id,
       role,
       is_active,
     } = data;
@@ -64,8 +65,8 @@ class UserRepository {
     const [result] = await pool.execute(
       `
       INSERT INTO users
-        (nome, email, password_hash, cpf, data_nascimento, sexo, telefone, role, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (nome, email, password_hash, cpf, data_nascimento, sexo, telefone, sector_id, role, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         nome,
@@ -75,6 +76,7 @@ class UserRepository {
         data_nascimento,
         sexo,
         telefone || null,
+        sector_id,
         role || "user",
         is_active ?? 1,
       ]
@@ -84,10 +86,7 @@ class UserRepository {
   }
 
   async updateLastLogin(id) {
-    await pool.execute(
-      "UPDATE users SET last_login = NOW() WHERE id = ?",
-      [id]
-    );
+    await pool.execute("UPDATE users SET last_login = NOW() WHERE id = ?", [id]);
   }
 
   async updateProfile(id, data) {

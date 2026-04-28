@@ -2,7 +2,6 @@ import userRepository from "../repositories/user.repository.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import { generateToken } from "../utils/jwt.js";
 
-
 class UserService {
   normalizeCpf(cpf) {
     return String(cpf || "").replace(/\D/g, "");
@@ -16,9 +15,18 @@ class UserService {
     const data_nascimento = data.data_nascimento;
     const sexo = String(data.sexo || "").trim().toLowerCase();
     const telefone = String(data.telefone || "").trim();
+    const sector_id = data.sector_id ? Number(data.sector_id) : null;
     const role = data.role === "admin" ? "admin" : "user";
 
-    if (!nome || !email || !password || !cpf || !data_nascimento || !sexo) {
+    if (
+      !nome ||
+      !email ||
+      !password ||
+      !cpf ||
+      !data_nascimento ||
+      !sexo ||
+      !sector_id
+    ) {
       throw new Error("Preencha todos os campos obrigatórios.");
     }
 
@@ -31,11 +39,13 @@ class UserService {
     }
 
     const userByEmail = await userRepository.findByEmail(email);
+
     if (userByEmail) {
       throw new Error("Este e-mail já está cadastrado.");
     }
 
     const userByCpf = await userRepository.findByCpf(cpf);
+
     if (userByCpf) {
       throw new Error("Este CPF já está cadastrado.");
     }
@@ -50,6 +60,7 @@ class UserService {
       data_nascimento,
       sexo,
       telefone,
+      sector_id,
       role,
       is_active: 1,
     });
@@ -112,6 +123,7 @@ class UserService {
 
     return user;
   }
+
   async updateProfile(userId, data) {
     const nome = String(data.nome || "").trim();
     const email = String(data.email || "").trim().toLowerCase();
@@ -129,7 +141,11 @@ class UserService {
       throw new Error("Usuário não encontrado.");
     }
 
-    const emailInUse = await userRepository.findByEmailExcludingId(email, userId);
+    const emailInUse = await userRepository.findByEmailExcludingId(
+      email,
+      userId
+    );
+
     if (emailInUse) {
       throw new Error("Este e-mail já está em uso.");
     }
@@ -154,6 +170,7 @@ class UserService {
 
     await userRepository.deactivateAccount(userId);
   }
+
   async changePassword(userId, currentPassword, newPassword, confirmNewPassword) {
     const current = String(currentPassword || "");
     const next = String(newPassword || "");
@@ -197,12 +214,15 @@ class UserService {
 
     await userRepository.updatePassword(userId, newPasswordHash);
   }
+
   async listUsers() {
     return userRepository.findAll();
   }
+
   async listUsersForAdmin() {
     return userRepository.findAllForAdmin();
   }
+
   async adminDeactivateUser(userId) {
     const user = await userRepository.findById(userId);
 
@@ -212,8 +232,6 @@ class UserService {
 
     await userRepository.adminDeactivateUser(userId);
   }
-
-
 
   async adminActivateUser(userId) {
     const user = await userRepository.findById(userId);
