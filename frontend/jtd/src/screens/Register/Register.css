@@ -42,7 +42,13 @@
 }
 
 .register-input::placeholder {
-  color: #4a4a4a;
+  color: #333;
+  opacity: 1;
+}
+
+select.register-input {
+  appearance: auto;
+  cursor: pointer;
 }
 
 .register-login-text {
@@ -94,6 +100,20 @@
   cursor: not-allowed;
 }
 
+.cpf-error {
+  display: block;
+  width: 100%;
+  max-width: 470px;
+  color: #ff3b30;
+  font-size: 12px;
+  margin-top: -15px;
+  margin-bottom: 14px;
+  padding-left: 2px;
+  text-align: left;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
 @media (max-width: 768px) {
   .register-page {
     padding: 40px 16px 60px;
@@ -119,62 +139,4 @@
     height: 64px;
     font-size: 22px;
   }
-}
-.cpf-error {
-  display: block;
-  color: #ff3b30;
-  font-size: 12px;
-
-  margin-top: -15px;     /* ↓ diminui espaço de cima */
-  margin-bottom: 14px; /* ↑ aumenta espaço de baixo */
-
-  padding-left: 2px;
-  text-align: left;
-  line-height: 1.2;
-}
-.register-date-wrapper {
-  width: 100%;
-  max-width: 470px;
-  position: relative;
-  margin-bottom: 23px;
-}
-
-.register-date-wrapper .register-input {
-  margin-bottom: 0;
-}
-
-.register-date-placeholder {
-  position: absolute;
-  left: 24px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 17px;
-  color: #333;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.register-date-input {
-  position: relative;
-  z-index: 2;
-  background-color: transparent;
-  color: transparent;
-}
-
-.register-date-input:focus,
-.register-date-input:valid {
-  color: #333;
-}
-
-.register-date-input::-webkit-datetime-edit {
-  color: transparent;
-}
-
-.register-date-input:focus::-webkit-datetime-edit,
-.register-date-input:valid::-webkit-datetime-edit {
-  color: #333;
-}
-
-.register-date-input::-webkit-calendar-picker-indicator {
-  opacity: 1;
 }

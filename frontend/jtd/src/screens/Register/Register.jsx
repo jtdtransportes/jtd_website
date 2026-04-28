@@ -30,6 +30,7 @@ export default function Register() {
   const [sectors, setSectors] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dateInputType, setDateInputType] = useState("text");
 
   useEffect(() => {
     async function loadSectors() {
@@ -210,6 +211,16 @@ export default function Register() {
     }));
   }
 
+  function handleDateFocus() {
+    setDateInputType("date");
+  }
+
+  function handleDateBlur() {
+    if (!formData.data_nascimento) {
+      setDateInputType("text");
+    }
+  }
+
   function handleChange(e) {
     const { name, value } = e.target;
 
@@ -331,19 +342,16 @@ export default function Register() {
               <span className="cpf-error">{errors.telefone}</span>
             )}
 
-            <div className="register-date-wrapper">
-              {!formData.data_nascimento && (
-                <span className="register-date-placeholder">Data de nascimento</span>
-              )}
-
-              <input
-                type="date"
-                name="data_nascimento"
-                className="register-input register-date-input"
-                value={formData.data_nascimento}
-                onChange={handleChange}
-              />
-            </div>
+            <input
+              type={dateInputType}
+              name="data_nascimento"
+              placeholder="Data de nascimento"
+              className="register-input"
+              value={formData.data_nascimento}
+              onChange={handleChange}
+              onFocus={handleDateFocus}
+              onBlur={handleDateBlur}
+            />
 
             <select
               name="sexo"
