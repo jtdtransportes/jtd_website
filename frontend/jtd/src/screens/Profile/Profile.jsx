@@ -23,6 +23,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("perfil");
 
@@ -30,9 +31,12 @@ export default function Profile() {
   const [searchUsuario, setSearchUsuario] = useState("");
   const [searchSector, setSearchSector] = useState("");
 
-  const [selectedUserSectorFilter, setSelectedUserSectorFilter] = useState("todos");
-  const [selectedUploadSectorFilter, setSelectedUploadSectorFilter] = useState("todos");
-  const [selectedRemoveSectorFilter, setSelectedRemoveSectorFilter] = useState("todos");
+  const [selectedUserSectorFilter, setSelectedUserSectorFilter] =
+    useState("todos");
+  const [selectedUploadSectorFilter, setSelectedUploadSectorFilter] =
+    useState("todos");
+  const [selectedRemoveSectorFilter, setSelectedRemoveSectorFilter] =
+    useState("todos");
 
   const [users, setUsers] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -105,6 +109,21 @@ export default function Profile() {
     12: "Dezembro",
   };
 
+  function showError(text) {
+    setMessageType("error");
+    setMessage(text);
+  }
+
+  function showSuccess(text) {
+    setMessageType("success");
+    setMessage(text);
+  }
+
+  function clearMessage() {
+    setMessage("");
+    setMessageType("");
+  }
+
   const getSectorDisplayName = useCallback((sector) => {
     if (!sector) return "Sem setor";
     return sector.name || sector.descricao || sector.sector_name || "Sem setor";
@@ -157,11 +176,11 @@ export default function Profile() {
       if (result.ok) {
         setAllUsers(result.users || []);
       } else {
-        setMessage(result.message || "Erro ao carregar usuários.");
+        showError(result.message || "Erro ao carregar usuários.");
       }
     } catch (error) {
       console.error("Erro ao carregar usuários:", error);
-      setMessage("Erro ao carregar usuários.");
+      showError("Erro ao carregar usuários.");
     }
   }
 
@@ -185,12 +204,12 @@ export default function Profile() {
         setSectors(result.sectors || []);
         return result.sectors || [];
       } else {
-        setMessage(result.message || "Erro ao carregar setores.");
+        showError(result.message || "Erro ao carregar setores.");
         return [];
       }
     } catch (error) {
       console.error("Erro ao carregar setores:", error);
-      setMessage("Erro ao carregar setores.");
+      showError("Erro ao carregar setores.");
       return [];
     }
   }
@@ -286,7 +305,7 @@ export default function Profile() {
   }
 
   async function changeTab(tab) {
-    setMessage("");
+    clearMessage();
     setActiveTab(tab);
     setMobileMenuOpen(false);
 
@@ -340,7 +359,7 @@ export default function Profile() {
     });
 
     if (!result.ok) {
-      setMessage(result.message || "Erro ao atualizar perfil.");
+      showError(result.message || "Erro ao atualizar perfil.");
       return;
     }
 
@@ -367,7 +386,7 @@ export default function Profile() {
       setor: setorNome,
     });
 
-    setMessage("Perfil atualizado com sucesso.");
+    showSuccess("Perfil atualizado com sucesso.");
     setEditing(false);
   }
 
@@ -386,17 +405,17 @@ export default function Profile() {
       !passwordData.newPassword ||
       !passwordData.confirmNewPassword
     ) {
-      setMessage("Preencha todos os campos da senha.");
+      showError("Preencha todos os campos da senha.");
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      setMessage("A nova senha deve ter pelo menos 6 caracteres.");
+      showError("A nova senha deve ter pelo menos 6 caracteres.");
       return;
     }
 
     if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-      setMessage("A confirmação da nova senha não confere.");
+      showError("A confirmação da nova senha não confere.");
       return;
     }
 
@@ -409,11 +428,11 @@ export default function Profile() {
     });
 
     if (!result.ok) {
-      setMessage(result.message || "Erro ao atualizar a senha.");
+      showError(result.message || "Erro ao atualizar a senha.");
       return;
     }
 
-    setMessage("Senha atualizada com sucesso.");
+    showSuccess("Senha atualizada com sucesso.");
     setPasswordData({
       currentPassword: "",
       newPassword: "",
@@ -447,7 +466,7 @@ export default function Profile() {
       !uploadData.mes ||
       !uploadData.contracheque
     ) {
-      setMessage("Selecione o usuário, o ano, o mês e o arquivo PDF.");
+      showError("Selecione o usuário, o ano, o mês e o arquivo PDF.");
       return;
     }
 
@@ -462,13 +481,13 @@ export default function Profile() {
     const result = await uploadContracheque(token, form);
 
     if (!result.ok) {
-      setMessage(result.message || "Erro ao enviar contracheque.");
+      showError(result.message || "Erro ao enviar contracheque.");
       return;
     }
 
     const novoContracheque = result.contracheque;
 
-    setMessage("Contracheque enviado com sucesso.");
+    showSuccess("Contracheque enviado com sucesso.");
     setUploadData({
       user_id: "",
       ano: "",
@@ -508,8 +527,8 @@ export default function Profile() {
 
   const contrachequesSeguros = Array.isArray(contracheques)
     ? contracheques.filter(
-      (item) => item && item.id != null && item.ano != null && item.mes != null
-    )
+        (item) => item && item.id != null && item.ano != null && item.mes != null
+      )
     : [];
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
@@ -534,11 +553,11 @@ export default function Profile() {
     const result = await deactivateUserByAdmin(token, userId);
 
     if (!result.ok) {
-      setMessage(result.message || "Erro ao desativar usuário.");
+      showError(result.message || "Erro ao desativar usuário.");
       return;
     }
 
-    setMessage("Usuário desativado com sucesso.");
+    showSuccess("Usuário desativado com sucesso.");
     await reloadAdminUsersData(token);
   }
 
@@ -551,11 +570,11 @@ export default function Profile() {
     const result = await activateUserByAdmin(token, userId);
 
     if (!result.ok) {
-      setMessage(result.message || "Erro ao ativar usuário.");
+      showError(result.message || "Erro ao ativar usuário.");
       return;
     }
 
-    setMessage("Usuário ativado com sucesso.");
+    showSuccess("Usuário ativado com sucesso.");
     await reloadAdminUsersData(token);
   }
 
@@ -570,11 +589,11 @@ export default function Profile() {
     const result = await removeContrachequeByAdmin(token, contrachequeId);
 
     if (!result.ok) {
-      setMessage(result.message || "Erro ao remover contracheque.");
+      showError(result.message || "Erro ao remover contracheque.");
       return;
     }
 
-    setMessage("Contracheque removido com sucesso.");
+    showSuccess("Contracheque removido com sucesso.");
 
     setAllContracheques((prev) =>
       prev.filter((item) => Number(item.id) !== Number(contrachequeId))
@@ -589,7 +608,7 @@ export default function Profile() {
     const token = localStorage.getItem("token");
 
     if (!sectorDescricao.trim()) {
-      setMessage("Informe o nome do setor.");
+      showError("Informe o nome do setor.");
       return;
     }
 
@@ -609,36 +628,36 @@ export default function Profile() {
       const result = await response.json();
 
       if (!result.ok) {
-        setMessage(result.message || "Erro ao criar setor.");
+        showError(result.message || "Erro ao criar setor.");
         return;
       }
 
-      setMessage("Setor criado com sucesso.");
+      showSuccess("Setor criado com sucesso.");
       setSectorDescricao("");
       await reloadSectorsData(token);
     } catch (error) {
       console.error("Erro ao criar setor:", error);
-      setMessage("Erro ao criar setor.");
+      showError("Erro ao criar setor.");
     }
   }
 
   function handleStartEditSector(sector) {
     setEditingSectorId(sector.id);
     setEditingSectorDescricao(getSectorDisplayName(sector));
-    setMessage("");
+    clearMessage();
   }
 
   function handleCancelEditSector() {
     setEditingSectorId(null);
     setEditingSectorDescricao("");
-    setMessage("");
+    clearMessage();
   }
 
   async function handleUpdateSector(sectorId) {
     const token = localStorage.getItem("token");
 
     if (!editingSectorDescricao.trim()) {
-      setMessage("Informe o nome do setor.");
+      showError("Informe o nome do setor.");
       return;
     }
 
@@ -658,18 +677,18 @@ export default function Profile() {
       const result = await response.json();
 
       if (!result.ok) {
-        setMessage(result.message || "Erro ao atualizar setor.");
+        showError(result.message || "Erro ao atualizar setor.");
         return;
       }
 
-      setMessage("Setor atualizado com sucesso.");
+      showSuccess("Setor atualizado com sucesso.");
       setEditingSectorId(null);
       setEditingSectorDescricao("");
       await reloadSectorsData(token);
       await reloadAdminUsersData(token);
     } catch (error) {
       console.error("Erro ao atualizar setor:", error);
-      setMessage("Erro ao atualizar setor.");
+      showError("Erro ao atualizar setor.");
     }
   }
 
@@ -693,29 +712,29 @@ export default function Profile() {
       const result = await response.json();
 
       if (!result.ok) {
-        setMessage(result.message || "Erro ao excluir setor.");
+        showError(result.message || "Erro ao excluir setor.");
         return;
       }
 
-      setMessage("Setor excluído com sucesso.");
+      showSuccess("Setor excluído com sucesso.");
       await reloadSectorsData(token);
       await reloadAdminUsersData(token);
     } catch (error) {
       console.error("Erro ao excluir setor:", error);
-      setMessage("Erro ao excluir setor.");
+      showError("Erro ao excluir setor.");
     }
   }
 
   function handleStartEditUserSector(item) {
     setEditingUserSectorId(item.id);
     setSelectedUserSectorId(item.sector_id ? String(item.sector_id) : "");
-    setMessage("");
+    clearMessage();
   }
 
   function handleCancelEditUserSector() {
     setEditingUserSectorId(null);
     setSelectedUserSectorId("");
-    setMessage("");
+    clearMessage();
   }
 
   async function handleUpdateUserSector(userId) {
@@ -736,11 +755,11 @@ export default function Profile() {
       const result = await response.json();
 
       if (!result.ok) {
-        setMessage(result.message || "Erro ao alterar setor do usuário.");
+        showError(result.message || "Erro ao alterar setor do usuário.");
         return;
       }
 
-      setMessage("Setor do usuário atualizado com sucesso.");
+      showSuccess("Setor do usuário atualizado com sucesso.");
       setEditingUserSectorId(null);
       setSelectedUserSectorId("");
 
@@ -748,8 +767,10 @@ export default function Profile() {
 
       if (Number(user?.id) === Number(userId)) {
         const updatedProfile = await getProfile(token);
+
         if (updatedProfile.ok) {
           const sectorName = getSectorNameFromUser(updatedProfile.user, sectors);
+
           setUser(updatedProfile.user);
           setFormData((prev) => ({
             ...prev,
@@ -760,7 +781,7 @@ export default function Profile() {
       }
     } catch (error) {
       console.error("Erro ao alterar setor do usuário:", error);
-      setMessage("Erro ao alterar setor do usuário.");
+      showError("Erro ao alterar setor do usuário.");
     }
   }
 
@@ -913,7 +934,9 @@ export default function Profile() {
     groupContrachequesBySector(contrachequesAdminFiltrados);
 
   const sectorsFiltrados = sectors.filter((item) =>
-    getSectorDisplayName(item).toLowerCase().includes(searchSector.toLowerCase().trim())
+    getSectorDisplayName(item)
+      .toLowerCase()
+      .includes(searchSector.toLowerCase().trim())
   );
 
   async function handleDownloadContracheque(id) {
@@ -938,7 +961,7 @@ export default function Profile() {
         try {
           const errorData = await response.json();
           if (errorData?.message) errorMessage = errorData.message;
-        } catch { }
+        } catch {}
 
         throw new Error(errorMessage);
       }
@@ -1069,7 +1092,7 @@ export default function Profile() {
                       className="action-button"
                       onClick={() => {
                         setEditing(true);
-                        setMessage("");
+                        clearMessage();
                       }}
                     >
                       Editar dados
@@ -1743,7 +1766,17 @@ export default function Profile() {
               </div>
             )}
 
-            {message && <p className="profile-message">{message}</p>}
+            {message && (
+              <p
+                className={`profile-message ${
+                  messageType === "error"
+                    ? "profile-message-error"
+                    : "profile-message-success"
+                }`}
+              >
+                {message}
+              </p>
+            )}
 
             <button className="logout-button" onClick={handleLogout}>
               Sair

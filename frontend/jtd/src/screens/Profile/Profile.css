@@ -134,7 +134,21 @@
 .profile-message {
   margin-top: 20px;
   font-size: 15px;
-  color: #0f4a6d;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.profile-message-error {
+  color: #b00020;
+  background-color: #fdecea;
+  border: 1px solid #f5c2c7;
+}
+
+.profile-message-success {
+  color: #1e7e34;
+  background-color: #edf7ed;
+  border: 1px solid #badbcc;
 }
 
 .password-section h3,
