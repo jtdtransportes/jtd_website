@@ -357,7 +357,7 @@ export default function Register() {
 
               {sectors.map((sector) => (
                 <option key={sector.id} value={sector.id}>
-                  {sector.descricao}
+                  {sector.name}
                 </option>
               ))}
             </select>
