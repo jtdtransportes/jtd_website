@@ -64,6 +64,13 @@ class UserController {
         user,
       });
     } catch (error) {
+      if (error.code === "ER_NO_REFERENCED_ROW_2") {
+        return res.status(400).json({
+          ok: false,
+          message: "Setor selecionado nao existe.",
+        });
+      }
+
       return res.status(400).json({
         ok: false,
         message: error.message,

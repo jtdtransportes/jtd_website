@@ -130,6 +130,10 @@ class UserService {
     const telefone = String(data.telefone || "").trim();
     const sexo = String(data.sexo || "").trim().toLowerCase();
     const data_nascimento = data.data_nascimento;
+    const hasSectorId = Object.prototype.hasOwnProperty.call(
+      data,
+      "sector_id"
+    );
 
     if (!nome || !email || !sexo || !data_nascimento) {
       throw new Error("Preencha todos os campos obrigatórios.");
@@ -150,12 +154,31 @@ class UserService {
       throw new Error("Este e-mail já está em uso.");
     }
 
+    let sector_id = existingUser.sector_id || null;
+
+    if (hasSectorId) {
+      sector_id =
+        data.sector_id === "" ||
+        data.sector_id === null ||
+        data.sector_id === undefined
+          ? null
+          : Number(data.sector_id);
+
+      if (
+        sector_id !== null &&
+        (!Number.isInteger(sector_id) || sector_id <= 0)
+      ) {
+        throw new Error("Setor selecionado invalido.");
+      }
+    }
+
     const updatedUser = await userRepository.updateProfile(userId, {
       nome,
       email,
       telefone,
       sexo,
       data_nascimento,
+      sector_id,
     });
 
     return updatedUser;

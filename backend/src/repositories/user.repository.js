@@ -90,15 +90,15 @@ class UserRepository {
   }
 
   async updateProfile(id, data) {
-    const { nome, email, telefone, sexo, data_nascimento } = data;
+    const { nome, email, telefone, sexo, data_nascimento, sector_id } = data;
 
     await pool.execute(
       `
       UPDATE users
-      SET nome = ?, email = ?, telefone = ?, sexo = ?, data_nascimento = ?
+      SET nome = ?, email = ?, telefone = ?, sexo = ?, data_nascimento = ?, sector_id = ?
       WHERE id = ?
       `,
-      [nome, email, telefone || null, sexo, data_nascimento, id]
+      [nome, email, telefone || null, sexo, data_nascimento, sector_id, id]
     );
 
     return this.findById(id);

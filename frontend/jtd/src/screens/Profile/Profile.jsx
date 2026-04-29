@@ -73,6 +73,7 @@ export default function Profile() {
     telefone: "",
     sexo: "",
     data_nascimento: "",
+    sector_id: "",
     setor: "",
   });
 
@@ -148,6 +149,38 @@ export default function Profile() {
       }
 
       return "Sem setor";
+    },
+    [getSectorDisplayName]
+  );
+
+  const getSectorIdFromUser = useCallback(
+    (userData, sectorsList = []) => {
+      if (!userData) return "";
+
+      if (
+        userData.sector_id !== null &&
+        userData.sector_id !== undefined &&
+        userData.sector_id !== ""
+      ) {
+        return String(userData.sector_id);
+      }
+
+      const sectorName =
+        userData.sector_name ||
+        userData.setor ||
+        userData.sector?.name ||
+        userData.sector?.descricao ||
+        "";
+
+      if (!sectorName) return "";
+
+      const foundSector = sectorsList.find(
+        (sector) =>
+          getSectorDisplayName(sector).toLowerCase() ===
+          String(sectorName).toLowerCase()
+      );
+
+      return foundSector ? String(foundSector.id) : "";
     },
     [getSectorDisplayName]
   );
@@ -240,6 +273,7 @@ export default function Profile() {
 
       const loadedSectors = await reloadSectorsData(token);
       const setorNome = getSectorNameFromUser(result.user, loadedSectors);
+      const setorId = getSectorIdFromUser(result.user, loadedSectors);
 
       setUser(result.user);
 
@@ -252,6 +286,7 @@ export default function Profile() {
         data_nascimento: result.user.data_nascimento
           ? String(result.user.data_nascimento).slice(0, 10)
           : "",
+        sector_id: setorId,
         setor: setorNome,
       });
 
@@ -267,6 +302,7 @@ export default function Profile() {
     loadProfile();
   }, [
     navigate,
+    getSectorIdFromUser,
     getSectorNameFromUser,
     reloadUsersData,
     reloadMyContrachequesData,
@@ -333,7 +369,6 @@ export default function Profile() {
   function handleChange(e) {
     const { name, value } = e.target;
     if (name === "cpf") return;
-    if (name === "setor") return;
 
     setFormData((prev) => ({
       ...prev,
@@ -350,6 +385,7 @@ export default function Profile() {
       telefone: formData.telefone,
       sexo: formData.sexo,
       data_nascimento: formData.data_nascimento,
+      sector_id: formData.sector_id ? Number(formData.sector_id) : null,
     });
 
     if (!result.ok) {
@@ -364,6 +400,7 @@ export default function Profile() {
     }
 
     const setorNome = getSectorNameFromUser(result.user, loadedSectors);
+    const setorId = getSectorIdFromUser(result.user, loadedSectors);
 
     setUser(result.user);
     localStorage.setItem("user", JSON.stringify(result.user));
@@ -377,6 +414,7 @@ export default function Profile() {
       data_nascimento: result.user.data_nascimento
         ? String(result.user.data_nascimento).slice(0, 10)
         : "",
+      sector_id: setorId,
       setor: setorNome,
     });
 
@@ -1168,12 +1206,28 @@ export default function Profile() {
 
                   <label>
                     Setor
-                    <input
-                      type="text"
-                      name="setor"
-                      value={formData.setor}
+                    <select
+                      name="sector_id"
+                      value={formData.sector_id}
+                      onChange={handleChange}
                       disabled={!editing}
-                    />
+                    >
+                      <option value="">Selecione o setor</option>
+                      {formData.sector_id &&
+                        !sectors.some(
+                          (sector) =>
+                            String(sector.id) === String(formData.sector_id)
+                        ) && (
+                          <option value={formData.sector_id}>
+                            {formData.setor || "Setor atual"}
+                          </option>
+                        )}
+                      {sectors.map((sector) => (
+                        <option key={sector.id} value={sector.id}>
+                          {getSectorDisplayName(sector)}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                 </div>
               </>
