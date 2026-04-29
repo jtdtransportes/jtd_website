@@ -1,0 +1,2 @@
+o link_contracheques_drive foi utilizado para linkar os contracheques ao usuário no banco de dados
+drive_files.json foi o arquivo gerado pelo C:\Users\gustavo.silva\Desktop\Projeto\jtd_website\backend\src\Script = listarArquivosDrive.js
