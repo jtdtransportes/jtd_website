@@ -1172,7 +1172,7 @@ export default function Profile() {
                       type="text"
                       name="setor"
                       value={formData.setor}
-                      disabled
+                      disabled={!editing}
                     />
                   </label>
                 </div>
