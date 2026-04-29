@@ -109,20 +109,20 @@ export default function Profile() {
     12: "Dezembro",
   };
 
-  function showError(text) {
+  const showError = useCallback((text) => {
     setMessageType("error");
     setMessage(text);
-  }
+  }, []);
 
-  function showSuccess(text) {
+  const showSuccess = useCallback((text) => {
     setMessageType("success");
     setMessage(text);
-  }
+  }, []);
 
-  function clearMessage() {
+  const clearMessage = useCallback(() => {
     setMessage("");
     setMessageType("");
-  }
+  }, []);
 
   const getSectorDisplayName = useCallback((sector) => {
     if (!sector) return "Sem setor";
@@ -152,67 +152,73 @@ export default function Profile() {
     [getSectorDisplayName]
   );
 
-  async function reloadUsersData(token) {
+  const reloadUsersData = useCallback(async (token) => {
     const usersResult = await getUsers(token);
     if (usersResult.ok) setUsers(usersResult.users || []);
-  }
+  }, []);
 
-  async function reloadMyContrachequesData(token) {
+  const reloadMyContrachequesData = useCallback(async (token) => {
     const result = await getMyContracheques(token);
     if (result.ok) setContracheques(result.contracheques || []);
-  }
+  }, []);
 
-  async function reloadAdminUsersData(token) {
-    try {
-      const response = await fetch(`${SECTORS_API_URL}/users`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  const reloadAdminUsersData = useCallback(
+    async (token) => {
+      try {
+        const response = await fetch(`${SECTORS_API_URL}/users`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (result.ok) {
-        setAllUsers(result.users || []);
-      } else {
-        showError(result.message || "Erro ao carregar usuários.");
+        if (result.ok) {
+          setAllUsers(result.users || []);
+        } else {
+          showError(result.message || "Erro ao carregar usuários.");
+        }
+      } catch (error) {
+        console.error("Erro ao carregar usuários:", error);
+        showError("Erro ao carregar usuários.");
       }
-    } catch (error) {
-      console.error("Erro ao carregar usuários:", error);
-      showError("Erro ao carregar usuários.");
-    }
-  }
+    },
+    [showError]
+  );
 
-  async function reloadAdminContrachequesData(token) {
+  const reloadAdminContrachequesData = useCallback(async (token) => {
     const result = await getAllContrachequesForAdmin(token);
     if (result.ok) setAllContracheques(result.contracheques || []);
-  }
+  }, []);
 
-  async function reloadSectorsData(token) {
-    try {
-      const response = await fetch(SECTORS_API_URL, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  const reloadSectorsData = useCallback(
+    async (token) => {
+      try {
+        const response = await fetch(SECTORS_API_URL, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (result.ok) {
-        setSectors(result.sectors || []);
-        return result.sectors || [];
-      } else {
+        if (result.ok) {
+          setSectors(result.sectors || []);
+          return result.sectors || [];
+        }
+
         showError(result.message || "Erro ao carregar setores.");
         return [];
+      } catch (error) {
+        console.error("Erro ao carregar setores:", error);
+        showError("Erro ao carregar setores.");
+        return [];
       }
-    } catch (error) {
-      console.error("Erro ao carregar setores:", error);
-      showError("Erro ao carregar setores.");
-      return [];
-    }
-  }
+    },
+    [showError]
+  );
 
   useEffect(() => {
     async function loadProfile() {
@@ -232,26 +238,7 @@ export default function Profile() {
         return;
       }
 
-      let loadedSectors = [];
-
-      try {
-        const sectorsResponse = await fetch(SECTORS_API_URL, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const sectorsResult = await sectorsResponse.json();
-
-        if (sectorsResult.ok) {
-          loadedSectors = sectorsResult.sectors || [];
-          setSectors(loadedSectors);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar setores no perfil:", error);
-      }
-
+      const loadedSectors = await reloadSectorsData(token);
       const setorNome = getSectorNameFromUser(result.user, loadedSectors);
 
       setUser(result.user);
@@ -272,14 +259,21 @@ export default function Profile() {
       await reloadMyContrachequesData(token);
 
       if (result.user.role === "admin") {
-        await reloadSectorsData(token);
         await reloadAdminUsersData(token);
         await reloadAdminContrachequesData(token);
       }
     }
 
     loadProfile();
-  }, [navigate, getSectorNameFromUser]);
+  }, [
+    navigate,
+    getSectorNameFromUser,
+    reloadUsersData,
+    reloadMyContrachequesData,
+    reloadAdminUsersData,
+    reloadAdminContrachequesData,
+    reloadSectorsData,
+  ]);
 
   useEffect(() => {
     function handleResize() {
