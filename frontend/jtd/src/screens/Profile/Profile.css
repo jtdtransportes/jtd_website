@@ -7,7 +7,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
 
 /* ── Tokens ─────────────────────────────────────────────── */
-:root {
+.profile-page {
   --bg-base:        #0d1117;
   --bg-surface:     #161b22;
   --bg-elevated:    #1c2330;
@@ -49,13 +49,21 @@
 }
 
 /* ── Reset & Base ───────────────────────────────────────── */
-*, *::before, *::after {
+.profile-page,
+.profile-page *,
+.profile-page *::before,
+.profile-page *::after {
   box-sizing: border-box;
+}
+
+.profile-page *,
+.profile-page *::before,
+.profile-page *::after {
   margin: 0;
   padding: 0;
 }
 
-body {
+.profile-page {
   font-family: var(--font-body);
   background-color: var(--bg-base);
   color: var(--text-primary);
@@ -67,7 +75,6 @@ body {
 .profile-page {
   display: flex;
   min-height: 100vh;
-  background: var(--bg-base);
 }
 
 /* ── Sidebar ────────────────────────────────────────────── */
@@ -898,21 +905,21 @@ body {
 }
 
 /* ── Scrollbar personalizada ────────────────────────────── */
-::-webkit-scrollbar {
+.profile-page ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
-::-webkit-scrollbar-track {
+.profile-page ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
+.profile-page ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 99px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+.profile-page ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
 

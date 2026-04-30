@@ -26,6 +26,7 @@ export default function Profile() {
   const [messageType, setMessageType] = useState("");
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("perfil");
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const [searchColaborador, setSearchColaborador] = useState("");
   const [searchUsuario, setSearchUsuario] = useState("");
@@ -434,6 +435,10 @@ export default function Profile() {
   }
 
   async function handleChangePassword() {
+    if (changingPassword) {
+      return;
+    }
+
     if (
       !passwordData.currentPassword ||
       !passwordData.newPassword ||
@@ -455,23 +460,29 @@ export default function Profile() {
 
     const token = localStorage.getItem("token");
 
-    const result = await changePassword(token, {
-      currentPassword: passwordData.currentPassword,
-      newPassword: passwordData.newPassword,
-      confirmNewPassword: passwordData.confirmNewPassword,
-    });
+    setChangingPassword(true);
 
-    if (!result.ok) {
-      showError(result.message || "Erro ao atualizar a senha.");
-      return;
+    try {
+      const result = await changePassword(token, {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmNewPassword: passwordData.confirmNewPassword,
+      });
+
+      if (!result.ok) {
+        showError(result.message || "Erro ao atualizar a senha.");
+        return;
+      }
+
+      showSuccess("Senha atualizada com sucesso.");
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmNewPassword: "",
+      });
+    } finally {
+      setChangingPassword(false);
     }
-
-    showSuccess("Senha atualizada com sucesso.");
-    setPasswordData({
-      currentPassword: "",
-      newPassword: "",
-      confirmNewPassword: "",
-    });
   }
 
   function handleUploadChange(e) {
@@ -1343,8 +1354,9 @@ export default function Profile() {
                 <button
                   className="action-button password-save-button"
                   onClick={handleChangePassword}
+                  disabled={changingPassword}
                 >
-                  Atualizar senha
+                  {changingPassword ? "Atualizando..." : "Atualizar senha"}
                 </button>
               </div>
             )}
