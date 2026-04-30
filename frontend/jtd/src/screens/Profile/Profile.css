@@ -389,6 +389,24 @@ body {
   transform: translateY(-1px);
 }
 
+.action-button:disabled,
+.action-button:disabled:hover,
+.download-button:disabled,
+.download-button:disabled:hover {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.action-button:disabled:hover {
+  background: var(--accent);
+}
+
+.download-button:disabled:hover {
+  background: transparent;
+}
+
 .success-button {
   padding: 8px 16px;
   background: var(--success);
@@ -591,8 +609,11 @@ body {
 }
 
 .search-colaborador-input {
-  flex: 1 1 260px;
   max-width: 360px;
+}
+
+.filter-row .search-colaborador-input {
+  flex: 1 1 260px;
 }
 
 .sector-filter-box {
@@ -624,6 +645,11 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.admin-contracheque-section .filter-row,
+.admin-users-section .filter-row {
+  margin-bottom: 14px;
 }
 
 /* ── Grupos admin: contracheques ────────────────────────── */

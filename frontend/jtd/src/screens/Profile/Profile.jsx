@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -59,6 +59,8 @@ export default function Profile() {
   const [contracheques, setContracheques] = useState([]);
   const [allContracheques, setAllContracheques] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const downloadingContrachequeIdsRef = useRef(new Set());
+  const [downloadingContrachequeIds, setDownloadingContrachequeIds] = useState([]);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -971,7 +973,20 @@ export default function Profile() {
       .includes(searchSector.toLowerCase().trim())
   );
 
+  function isContrachequeDownloading(id) {
+    return downloadingContrachequeIds.includes(String(id));
+  }
+
   async function handleDownloadContracheque(id) {
+    const downloadId = String(id);
+
+    if (downloadingContrachequeIdsRef.current.has(downloadId)) {
+      return;
+    }
+
+    downloadingContrachequeIdsRef.current.add(downloadId);
+    setDownloadingContrachequeIds([...downloadingContrachequeIdsRef.current]);
+
     try {
       const token = localStorage.getItem("token");
 
@@ -1020,6 +1035,9 @@ export default function Profile() {
     } catch (error) {
       console.error("Erro ao baixar contracheque:", error);
       alert(error.message || "Erro ao baixar contracheque.");
+    } finally {
+      downloadingContrachequeIdsRef.current.delete(downloadId);
+      setDownloadingContrachequeIds([...downloadingContrachequeIdsRef.current]);
     }
   }
 
@@ -1261,13 +1279,17 @@ export default function Profile() {
                                     key={item.id}
                                     type="button"
                                     className="action-button password-save-button contracheque-download-button"
+                                    disabled={isContrachequeDownloading(item.id)}
                                     onClick={() =>
                                       handleDownloadContracheque(item.id)
                                     }
                                   >
-                                    Baixar{" "}
-                                    {mesesNomes[Number(item.mes)] || item.mes}/
-                                    {item.ano}
+                                    {isContrachequeDownloading(item.id)
+                                      ? "Baixando..."
+                                      : `Baixar ${
+                                          mesesNomes[Number(item.mes)] ||
+                                          item.mes
+                                        }/${item.ano}`}
                                   </button>
                                 ))}
                               </div>
@@ -1520,13 +1542,20 @@ export default function Profile() {
                                               <div className="admin-contracheque-actions">
                                                 <button
                                                   className="download-button"
+                                                  disabled={isContrachequeDownloading(
+                                                    item.id
+                                                  )}
                                                   onClick={() =>
                                                     handleDownloadContracheque(
                                                       item.id
                                                     )
                                                   }
                                                 >
-                                                  Baixar
+                                                  {isContrachequeDownloading(
+                                                    item.id
+                                                  )
+                                                    ? "Baixando..."
+                                                    : "Baixar"}
                                                 </button>
 
                                                 <button
