@@ -64,6 +64,17 @@
   text-decoration: underline;
 }
 
+.login-instruction {
+  width: 100%;
+  max-width: 470px;
+  text-align: left;
+  font-size: 18px;
+  line-height: 1.45;
+  color: #555;
+  margin-top: -18px;
+  margin-bottom: 28px;
+}
+
 .login-message {
   width: 100%;
   max-width: 470px;
