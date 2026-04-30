@@ -27,6 +27,8 @@ export default function Profile() {
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("perfil");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingContracheque, setUploadingContracheque] = useState(false);
 
   const [searchColaborador, setSearchColaborador] = useState("");
   const [searchUsuario, setSearchUsuario] = useState("");
@@ -380,49 +382,59 @@ export default function Profile() {
   }
 
   async function handleSave() {
-    const token = localStorage.getItem("token");
-
-    const result = await updateProfile(token, {
-      nome: formData.nome,
-      email: formData.email,
-      telefone: formData.telefone,
-      sexo: formData.sexo,
-      data_nascimento: formData.data_nascimento,
-      sector_id: formData.sector_id ? Number(formData.sector_id) : null,
-    });
-
-    if (!result.ok) {
-      showError(result.message || "Erro ao atualizar perfil.");
+    if (savingProfile) {
       return;
     }
 
-    let loadedSectors = sectors;
+    const token = localStorage.getItem("token");
 
-    if (!loadedSectors.length) {
-      loadedSectors = await reloadSectorsData(token);
+    setSavingProfile(true);
+
+    try {
+      const result = await updateProfile(token, {
+        nome: formData.nome,
+        email: formData.email,
+        telefone: formData.telefone,
+        sexo: formData.sexo,
+        data_nascimento: formData.data_nascimento,
+        sector_id: formData.sector_id ? Number(formData.sector_id) : null,
+      });
+
+      if (!result.ok) {
+        showError(result.message || "Erro ao atualizar perfil.");
+        return;
+      }
+
+      let loadedSectors = sectors;
+
+      if (!loadedSectors.length) {
+        loadedSectors = await reloadSectorsData(token);
+      }
+
+      const setorNome = getSectorNameFromUser(result.user, loadedSectors);
+      const setorId = getSectorIdFromUser(result.user, loadedSectors);
+
+      setUser(result.user);
+      localStorage.setItem("user", JSON.stringify(result.user));
+
+      setFormData({
+        nome: result.user.nome || "",
+        email: result.user.email || "",
+        cpf: result.user.cpf || "",
+        telefone: result.user.telefone || "",
+        sexo: result.user.sexo || "",
+        data_nascimento: result.user.data_nascimento
+          ? String(result.user.data_nascimento).slice(0, 10)
+          : "",
+        sector_id: setorId,
+        setor: setorNome,
+      });
+
+      showSuccess("Perfil atualizado com sucesso.");
+      setEditing(false);
+    } finally {
+      setSavingProfile(false);
     }
-
-    const setorNome = getSectorNameFromUser(result.user, loadedSectors);
-    const setorId = getSectorIdFromUser(result.user, loadedSectors);
-
-    setUser(result.user);
-    localStorage.setItem("user", JSON.stringify(result.user));
-
-    setFormData({
-      nome: result.user.nome || "",
-      email: result.user.email || "",
-      cpf: result.user.cpf || "",
-      telefone: result.user.telefone || "",
-      sexo: result.user.sexo || "",
-      data_nascimento: result.user.data_nascimento
-        ? String(result.user.data_nascimento).slice(0, 10)
-        : "",
-      sector_id: setorId,
-      setor: setorNome,
-    });
-
-    showSuccess("Perfil atualizado com sucesso.");
-    setEditing(false);
   }
 
   function handlePasswordChange(e) {
@@ -503,6 +515,10 @@ export default function Profile() {
   }
 
   async function handleUploadContracheque() {
+    if (uploadingContracheque) {
+      return;
+    }
+
     const token = localStorage.getItem("token");
 
     if (
@@ -523,50 +539,56 @@ export default function Profile() {
     form.append("mes", uploadData.mes);
     form.append("contracheque", uploadData.contracheque);
 
-    const result = await uploadContracheque(token, form);
+    setUploadingContracheque(true);
 
-    if (!result.ok) {
-      showError(result.message || "Erro ao enviar contracheque.");
-      return;
-    }
+    try {
+      const result = await uploadContracheque(token, form);
 
-    const novoContracheque = result.contracheque;
-
-    showSuccess("Contracheque enviado com sucesso.");
-    setUploadData({
-      user_id: "",
-      ano: "",
-      mes: "",
-      contracheque: null,
-    });
-
-    if (novoContracheque) {
-      if (Number(user?.id) === userIdSelecionado) {
-        setContracheques((prev) => [novoContracheque, ...prev]);
+      if (!result.ok) {
+        showError(result.message || "Erro ao enviar contracheque.");
+        return;
       }
 
-      if (user?.role === "admin") {
-        const usuarioSelecionado =
-          allUsers.find((u) => Number(u.id) === userIdSelecionado) ||
-          users.find((u) => Number(u.id) === userIdSelecionado);
+      const novoContracheque = result.contracheque;
 
-        const itemAdmin = {
-          ...novoContracheque,
-          user_nome: usuarioSelecionado?.nome || "",
-          user_email: usuarioSelecionado?.email || "",
-          user_cpf: usuarioSelecionado?.cpf || "",
-          sector_id: usuarioSelecionado?.sector_id || null,
-          sector_name: getSectorNameFromUser(usuarioSelecionado, sectors),
-        };
+      showSuccess("Contracheque enviado com sucesso.");
+      setUploadData({
+        user_id: "",
+        ano: "",
+        mes: "",
+        contracheque: null,
+      });
 
-        setAllContracheques((prev) => [itemAdmin, ...prev]);
+      if (novoContracheque) {
+        if (Number(user?.id) === userIdSelecionado) {
+          setContracheques((prev) => [novoContracheque, ...prev]);
+        }
+
+        if (user?.role === "admin") {
+          const usuarioSelecionado =
+            allUsers.find((u) => Number(u.id) === userIdSelecionado) ||
+            users.find((u) => Number(u.id) === userIdSelecionado);
+
+          const itemAdmin = {
+            ...novoContracheque,
+            user_nome: usuarioSelecionado?.nome || "",
+            user_email: usuarioSelecionado?.email || "",
+            user_cpf: usuarioSelecionado?.cpf || "",
+            sector_id: usuarioSelecionado?.sector_id || null,
+            sector_name: getSectorNameFromUser(usuarioSelecionado, sectors),
+          };
+
+          setAllContracheques((prev) => [itemAdmin, ...prev]);
+        }
+      } else {
+        await reloadMyContrachequesData(token);
+
+        if (user?.role === "admin") {
+          await reloadAdminContrachequesData(token);
+        }
       }
-    } else {
-      await reloadMyContrachequesData(token);
-
-      if (user?.role === "admin") {
-        await reloadAdminContrachequesData(token);
-      }
+    } finally {
+      setUploadingContracheque(false);
     }
   }
 
@@ -1159,8 +1181,12 @@ export default function Profile() {
                       Editar dados
                     </button>
                   ) : (
-                    <button className="action-button" onClick={handleSave}>
-                      Salvar alterações
+                    <button
+                      className="action-button"
+                      onClick={handleSave}
+                      disabled={savingProfile}
+                    >
+                      {savingProfile ? "Salvando" : "Salvar alterações"}
                     </button>
                   )}
                 </div>
@@ -1460,8 +1486,11 @@ export default function Profile() {
                 <button
                   className="action-button password-save-button"
                   onClick={handleUploadContracheque}
+                  disabled={uploadingContracheque}
                 >
-                  Adicionar Contracheque
+                  {uploadingContracheque
+                    ? "Salvando"
+                    : "Adicionar Contracheque"}
                 </button>
               </div>
             )}
