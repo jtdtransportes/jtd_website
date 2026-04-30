@@ -260,6 +260,7 @@ body {
 .profile-form label,
 .password-section label,
 .upload-form label,
+.sector-filter-box label,
 .sector-create-box label,
 .sector-edit-box label,
 .user-sector-edit-box label {
@@ -278,6 +279,7 @@ body {
 .password-section input,
 .upload-form input,
 .upload-form select,
+.sector-filter-box select,
 .sector-create-box input,
 .sector-edit-box input,
 .user-sector-edit-box select,
@@ -300,6 +302,7 @@ body {
 .password-section input:focus,
 .upload-form input:focus,
 .upload-form select:focus,
+.sector-filter-box select:focus,
 .sector-create-box input:focus,
 .sector-edit-box input:focus,
 .user-sector-edit-box select:focus,
@@ -318,6 +321,7 @@ body {
 
 .profile-form select option,
 .upload-form select option,
+.sector-filter-box select option,
 .user-sector-edit-box select option {
   background: var(--bg-elevated);
   color: var(--text-primary);
@@ -579,12 +583,47 @@ body {
 }
 
 /* ── Filtros de busca ───────────────────────────────────── */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+}
+
 .search-colaborador-input {
+  flex: 1 1 260px;
   max-width: 360px;
 }
 
-.sector-filter-select {
-  max-width: 240px;
+.sector-filter-box {
+  width: 100%;
+  max-width: 470px;
+}
+
+.sector-filter-box select {
+  cursor: pointer;
+}
+
+.inline-filter {
+  flex: 1 1 240px;
+  max-width: 300px;
+}
+
+.sector-filter-select,
+.inline-filter select {
+  max-width: 100%;
+}
+
+.contracheque-download-button {
+  align-self: flex-start;
+  width: fit-content;
+}
+
+.admin-contracheque-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 /* ── Grupos admin: contracheques ────────────────────────── */

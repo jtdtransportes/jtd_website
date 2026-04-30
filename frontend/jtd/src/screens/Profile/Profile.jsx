@@ -1260,7 +1260,7 @@ export default function Profile() {
                                   <button
                                     key={item.id}
                                     type="button"
-                                    className="contracheque-link"
+                                    className="action-button password-save-button contracheque-download-button"
                                     onClick={() =>
                                       handleDownloadContracheque(item.id)
                                     }
