@@ -382,7 +382,7 @@ export default function Register() {
             </select>
 
             <p className="register-login-text">
-              Já tem conta? <Link to="/login">Faça login aqui</Link>
+              Já tem conta? <Link to="/login"><b>Faça login aqui</b></Link>
             </p>
 
             {message && <p className="register-message">{message}</p>}

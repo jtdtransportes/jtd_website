@@ -4,6 +4,7 @@ import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import { changePassword, loginUser } from "../../services/authService";
 import "./Login.css";
+import ImageSite from "../../assets/img-side.png"
 
 const DEFAULT_PASSWORD = "123456";
 
@@ -145,45 +146,47 @@ export default function Login() {
       <Header />
 
       <main className="login-page">
-        <section className="login-container">
-          <h1 className="login-title">
-            {mustChangePassword ? "Atualizar senha" : "Login"}
-          </h1>
+  <div className="login-layout">
+    <section className="login-left">
+      <div className="login-container">
+        <h1 className="login-title">
+          {mustChangePassword ? "Atualizar senha" : "Login"}
+        </h1>
 
-          {mustChangePassword ? (
-            <form className="login-form" onSubmit={handleForcedPasswordChange}>
-              <p className="login-instruction">
-                Sua senha temporaria foi validada. Defina uma nova senha para
-                acessar o perfil.
-              </p>
+        {mustChangePassword ? (
+          <form className="login-form" onSubmit={handleForcedPasswordChange}>
+            <p className="login-instruction">
+              Sua senha temporária foi validada. Defina uma nova senha para
+              acessar o perfil.
+            </p>
 
-              <input
-                type="password"
-                name="newPassword"
-                placeholder="Nova senha"
-                className="login-input"
-                value={passwordData.newPassword}
-                onChange={handlePasswordChange}
-                autoComplete="new-password"
-              />
+            <input
+              type="password"
+              name="newPassword"
+              placeholder="Nova senha"
+              className="login-input"
+              value={passwordData.newPassword}
+              onChange={handlePasswordChange}
+              autoComplete="new-password"
+            />
 
-              <input
-                type="password"
-                name="confirmNewPassword"
-                placeholder="Confirmar nova senha"
-                className="login-input"
-                value={passwordData.confirmNewPassword}
-                onChange={handlePasswordChange}
-                autoComplete="new-password"
-              />
+            <input
+              type="password"
+              name="confirmNewPassword"
+              placeholder="Confirmar nova senha"
+              className="login-input"
+              value={passwordData.confirmNewPassword}
+              onChange={handlePasswordChange}
+              autoComplete="new-password"
+            />
 
-              {message && <p className="login-message">{message}</p>}
+            {message && <p className="login-message">{message}</p>}
 
-              <button type="submit" className="login-button" disabled={loading}>
-                {loading ? "Atualizando..." : "Atualizar senha"}
-              </button>
-            </form>
-          ) : (
+            <button type="submit" className="login-button" disabled={loading}>
+              {loading ? "Atualizando..." : "Atualizar senha"}
+            </button>
+          </form>
+        ) : (
           <form className="login-form" onSubmit={handleSubmit}>
             <input
               type="text"
@@ -212,12 +215,19 @@ export default function Login() {
             {message && <p className="login-message">{message}</p>}
 
             <button type="submit" className="login-button" disabled={loading}>
-              {loading ? "Entrando..." : "Login"}
+              {loading ? "Entrando..." : "Acessar"}
             </button>
           </form>
-          )}
-        </section>
-      </main>
+        )}
+      </div>
+    </section>
+
+    <aside className="login-right" aria-hidden="true">
+      <img src={ImageSite} alt="" className="login-image" />
+      <div className="login-gradient"></div>
+    </aside>
+  </div>
+</main>
 
       <Footer />
     </>

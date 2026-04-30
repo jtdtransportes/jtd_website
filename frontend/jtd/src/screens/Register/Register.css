@@ -14,10 +14,12 @@
 }
 
 .register-title {
-  font-size: 51px;
-  font-weight: 400;
-  color: #0f4a6d;
-  margin-bottom: 45px;
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #01304a;
+  margin-bottom: 36px;
+  text-align: center;
 }
 
 .register-form {
@@ -28,17 +30,19 @@
 
 .register-input {
   width: 100%;
-  max-width: 470px;
-  height: 73px;
-  background-color: #d9d9d9;
-  border: none;
+  height: 58px;
+  background: #d8d8d8;
+  border: 1px solid #d8d8d8;
   border-radius: 8px;
-  padding: 0 24px;
-  font-size: 17px;
-  color: #333;
-  margin-bottom: 23px;
+  padding: 0 18px;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.7);
+  margin-bottom: 20px;
   outline: none;
   box-sizing: border-box;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .register-input::placeholder {
@@ -80,15 +84,20 @@ select.register-input {
 }
 
 .register-button {
-  width: 245px;
-  height: 73px;
-  background-color: #0f4a6d;
-  color: white;
+  width: 170px;
+  height: 56px;
+  background: #01304a;
+  color: #ffffff;
   border: none;
-  border-radius: 40px;
-  font-size: 21px;
+  border-radius: 999px;
+  font-size: 17px;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease,
+    box-shadow 0.25s ease;
+  align-self: center;
 }
 
 .register-button:hover {
@@ -120,23 +129,24 @@ select.register-input {
   }
 
   .register-title {
-    font-size: 42px;
-    margin-bottom: 35px;
+    font-size: 36px;
+    margin-bottom: 28px;
   }
 
   .register-input {
-    height: 64px;
-    font-size: 18px;
+    height: 54px;
+    font-size: 15px;
+    margin-bottom: 16px;
   }
 
   .register-login-text {
-    font-size: 17px;
+    font-size: 14px;
     margin-bottom: 24px;
   }
 
   .register-button {
-    width: 210px;
-    height: 64px;
-    font-size: 22px;
+    width: 170px;
+    height: 50px;
+    font-size: 18px;
   }
 }
