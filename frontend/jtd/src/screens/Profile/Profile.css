@@ -23,6 +23,9 @@
   --accent:         #01304a;
   --accent-hover:   #00263b;
   --accent-glow:    rgba(1, 48, 74, 0.15);
+  --ticket-blue:    #0b72c9;
+  --ticket-blue-hover: #085fa8;
+  --ticket-blue-glow: rgba(11, 114, 201, 0.22);
 
   --success:        #01304a;
   --success-hover:  #00263b;
@@ -144,6 +147,34 @@
 
 .sidebar-title:hover::before {
   transform: translateY(-50%) scaleY(1);
+}
+
+.sidebar-ticket-button {
+  width: 100%;
+  padding: 11px 14px;
+  margin-bottom: 8px;
+  background: var(--ticket-blue);
+  border: 1px solid rgba(11, 114, 201, 0.25);
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 8px 18px var(--ticket-blue-glow);
+  transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.sidebar-ticket-button:hover {
+  background: var(--ticket-blue-hover);
+  border-color: rgba(8, 95, 168, 0.45);
+  box-shadow: 0 10px 22px var(--ticket-blue-glow);
+  transform: translateY(-1px);
+}
+
+.sidebar-ticket-button:active {
+  transform: translateY(0);
 }
 
 /* ── Overlay mobile ─────────────────────────────────────── */

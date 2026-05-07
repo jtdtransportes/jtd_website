@@ -339,6 +339,11 @@ export default function Profile() {
     navigate("/login");
   }
 
+  function handleOpenTicket() {
+    setMobileMenuOpen(false);
+    navigate("/#contato");
+  }
+
   async function changeTab(tab) {
     clearMessage();
     setActiveTab(tab);
@@ -1099,6 +1104,14 @@ export default function Profile() {
               ×
             </button>
           </div>
+
+          <button
+            className="sidebar-ticket-button"
+            onClick={handleOpenTicket}
+            type="button"
+          >
+            Abrir chamado
+          </button>
 
           <button className="sidebar-title" onClick={() => changeTab("perfil")}>
             Meu perfil
