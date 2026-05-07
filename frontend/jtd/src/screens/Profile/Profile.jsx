@@ -341,7 +341,7 @@ export default function Profile() {
 
   function handleOpenTicket() {
     setMobileMenuOpen(false);
-    navigate("/#contato");
+    window.location.assign("https://deskio.site");
   }
 
   async function changeTab(tab) {
