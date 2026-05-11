@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
+import { fixMojibake, normalizePopText } from "../../utils/textEncoding";
 import {
   getProfile,
   updateProfile,
@@ -155,18 +156,20 @@ export default function Profile() {
 
   const getSectorDisplayName = useCallback((sector) => {
     if (!sector) return "Sem setor";
-    return sector.name || sector.descricao || sector.sector_name || "Sem setor";
+    return fixMojibake(
+      sector.name || sector.descricao || sector.sector_name || "Sem setor"
+    );
   }, []);
 
   const getSectorNameFromUser = useCallback(
     (userData, sectorsList = []) => {
       if (!userData) return "Sem setor";
 
-      if (userData.sector_name) return userData.sector_name;
-      if (userData.setor) return userData.setor;
+      if (userData.sector_name) return fixMojibake(userData.sector_name);
+      if (userData.setor) return fixMojibake(userData.setor);
 
-      if (userData.sector?.name) return userData.sector.name;
-      if (userData.sector?.descricao) return userData.sector.descricao;
+      if (userData.sector?.name) return fixMojibake(userData.sector.name);
+      if (userData.sector?.descricao) return fixMojibake(userData.sector.descricao);
 
       if (userData.sector_id) {
         const foundSector = sectorsList.find(
@@ -225,7 +228,7 @@ export default function Profile() {
 
   const reloadMyPopsData = useCallback(async (token) => {
     const result = await getMyPops(token);
-    if (result.ok) setPops(result.pops || []);
+    if (result.ok) setPops((result.pops || []).map(normalizePopText));
   }, []);
 
   const reloadAdminUsersData = useCallback(
@@ -260,7 +263,7 @@ export default function Profile() {
 
   const reloadAdminPopsData = useCallback(async (token) => {
     const result = await getAllPopsForAdmin(token);
-    if (result.ok) setAllPops(result.pops || []);
+    if (result.ok) setAllPops((result.pops || []).map(normalizePopText));
   }, []);
 
   const reloadSectorsData = useCallback(
@@ -703,10 +706,12 @@ export default function Profile() {
       });
 
       if (result.pop) {
-        setAllPops((prev) => [result.pop, ...prev]);
+        const normalizedPop = normalizePopText(result.pop);
 
-        if (Number(result.pop.sector_id) === Number(user?.sector_id)) {
-          setPops((prev) => [result.pop, ...prev]);
+        setAllPops((prev) => [normalizedPop, ...prev]);
+
+        if (Number(normalizedPop.sector_id) === Number(user?.sector_id)) {
+          setPops((prev) => [normalizedPop, ...prev]);
         }
       } else {
         await reloadAdminPopsData(token);
@@ -1169,7 +1174,7 @@ export default function Profile() {
 
     popsList.forEach((item) => {
       const key = item.sector_id ? String(item.sector_id) : "sem-setor";
-      const name = item.sector_name || "Sem setor";
+      const name = fixMojibake(item.sector_name || "Sem setor");
 
       if (!groups[key]) {
         groups[key] = {
@@ -1186,7 +1191,9 @@ export default function Profile() {
       .map((group) => ({
         ...group,
         pops: group.pops.sort((a, b) =>
-          String(a.title || "").localeCompare(String(b.title || ""))
+          String(fixMojibake(a.title) || "").localeCompare(
+            String(fixMojibake(b.title) || "")
+          )
         ),
       }))
       .sort((a, b) => {
@@ -1239,7 +1246,9 @@ export default function Profile() {
 
   const allPopsFiltrados = allPops
     .filter((item) =>
-      item.title?.toLowerCase().includes(searchPop.toLowerCase().trim())
+      fixMojibake(item.title)
+        ?.toLowerCase()
+        .includes(searchPop.toLowerCase().trim())
     )
     .filter((item) => popMatchesSectorFilter(item, selectedRemovePopSectorFilter));
 
@@ -1367,7 +1376,7 @@ export default function Profile() {
 
       if (disposition) {
         const match = disposition.match(/filename="?([^"]+)"?/i);
-        if (match && match[1]) fileName = match[1];
+        if (match && match[1]) fileName = fixMojibake(match[1]);
       }
 
       const link = document.createElement("a");
@@ -1777,7 +1786,7 @@ export default function Profile() {
                       {popsSeguros.map((item) => (
                         <div key={item.id} className="contracheque-item">
                           <span>
-                            <strong>{item.title}</strong>
+                            <strong>{fixMojibake(item.title)}</strong>
                           </span>
 
                           <button
@@ -2126,8 +2135,10 @@ export default function Profile() {
                           {sectorGroup.pops.map((item) => (
                             <div key={item.id} className="admin-contracheque-card">
                               <span>
-                                <strong>{item.title}</strong>
-                                {item.file_name ? ` - ${item.file_name}` : ""}
+                                <strong>{fixMojibake(item.title)}</strong>
+                                {item.file_name
+                                  ? ` - ${fixMojibake(item.file_name)}`
+                                  : ""}
                               </span>
 
                               <div className="admin-contracheque-actions">

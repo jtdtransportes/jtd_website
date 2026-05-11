@@ -2,8 +2,19 @@ import { Readable } from "stream";
 import popRepository from "../repositories/pop.repository.js";
 import userRepository from "../repositories/user.repository.js";
 import drive from "../config/googleDrive.js";
+import { fixMojibake, fixObjectTextFields } from "../utils/textEncoding.js";
+
+const POP_TEXT_FIELDS = ["title", "file_name", "original_name", "sector_name"];
 
 class PopService {
+  normalizePop(pop) {
+    return fixObjectTextFields(pop, POP_TEXT_FIELDS);
+  }
+
+  normalizePops(pops) {
+    return Array.isArray(pops) ? pops.map((pop) => this.normalizePop(pop)) : [];
+  }
+
   sanitizeName(name) {
     return String(name || "")
       .normalize("NFD")
@@ -28,7 +39,8 @@ class PopService {
       throw new Error("Selecione o setor do POP.");
     }
 
-    const title = String(file.originalname || "POP").replace(/\.pdf$/i, "").trim();
+    const originalName = fixMojibake(file.originalname || "POP");
+    const title = String(originalName).replace(/\.pdf$/i, "").trim();
 
     if (!title.trim()) {
       throw new Error("Nao foi possivel identificar o nome do PDF.");
@@ -61,15 +73,17 @@ class PopService {
     });
 
     try {
-      return await popRepository.create({
+      const pop = await popRepository.create({
         sector_id: sectorId,
         title,
         file_name: uploaded.data.name || finalFileName,
-        original_name: file.originalname,
+        original_name: originalName,
         drive_file_id: uploaded.data.id,
         mime_type: uploaded.data.mimeType || file.mimetype,
         created_by: createdBy,
       });
+
+      return this.normalizePop(pop);
     } catch (error) {
       if (uploaded.data.id) {
         await drive.files.delete({
@@ -100,13 +114,14 @@ class PopService {
 
     return {
       sector_id: user.sector_id,
-      sector_name: user.sector_name || null,
-      pops,
+      sector_name: fixMojibake(user.sector_name) || null,
+      pops: this.normalizePops(pops),
     };
   }
 
   async listAllForAdmin() {
-    return popRepository.findAllDetailed();
+    const pops = await popRepository.findAllDetailed();
+    return this.normalizePops(pops);
   }
 
   async removeByAdmin(popId) {
@@ -155,7 +170,7 @@ class PopService {
     );
 
     return {
-      pop,
+      pop: this.normalizePop(pop),
       stream: response.data,
     };
   }
