@@ -85,6 +85,9 @@ export default function Profile() {
   const [allUsers, setAllUsers] = useState([]);
   const [adminDashboard, setAdminDashboard] = useState(null);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
+  const [selectedDashboardDay, setSelectedDashboardDay] = useState("");
+  const [selectedDashboardAdoption, setSelectedDashboardAdoption] = useState("");
+  const [dashboardViewKey, setDashboardViewKey] = useState(0);
   const downloadingContrachequeIdsRef = useRef(new Set());
   const [downloadingContrachequeIds, setDownloadingContrachequeIds] = useState([]);
   const downloadingPopIdsRef = useRef(new Set());
@@ -266,6 +269,14 @@ export default function Profile() {
 
         if (result.ok) {
           setAdminDashboard(result.dashboard || null);
+          const days = result.dashboard?.week?.days || [];
+          const latestActiveDay = [...days]
+            .reverse()
+            .find((day) => Number(day.accesses || 0) > 0);
+
+          setSelectedDashboardDay((current) =>
+            current || latestActiveDay?.date || days[days.length - 1]?.date || ""
+          );
           return;
         }
 
@@ -411,6 +422,10 @@ export default function Profile() {
     clearMessage();
     setActiveTab(tab);
     setMobileMenuOpen(false);
+
+    if (tab === "dashboard") {
+      setDashboardViewKey((prev) => prev + 1);
+    }
 
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -780,6 +795,10 @@ export default function Profile() {
         .filter((item) => item && item.id != null)
         .sort(sortPopsByCurrentSector)
     : [];
+  const popsAgrupadosUsuario = groupPopsBySector(
+    popsSeguros,
+    formData.sector_id || user?.sector_id
+  );
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
     const ano = String(item.ano);
@@ -1170,8 +1189,9 @@ export default function Profile() {
       });
   }
 
-  function groupPopsBySector(popsList) {
+  function groupPopsBySector(popsList, prioritySectorId = "") {
     const groups = {};
+    const priorityKey = prioritySectorId ? String(prioritySectorId) : "";
 
     popsList.forEach((item) => {
       const key = item.sector_id ? String(item.sector_id) : "sem-setor";
@@ -1191,16 +1211,16 @@ export default function Profile() {
     return Object.values(groups)
       .map((group) => ({
         ...group,
-        pops: group.pops.sort((a, b) =>
-          String(fixMojibake(a.title) || "").localeCompare(
-            String(fixMojibake(b.title) || "")
-          )
-        ),
+        pops: group.pops.sort((a, b) => comparePopText(a.title, b.title)),
       }))
       .sort((a, b) => {
+        const aIsPriority = priorityKey && a.sector_id === priorityKey;
+        const bIsPriority = priorityKey && b.sector_id === priorityKey;
+
+        if (aIsPriority !== bIsPriority) return aIsPriority ? -1 : 1;
         if (a.sector_id === "sem-setor") return 1;
         if (b.sector_id === "sem-setor") return -1;
-        return a.sector_name.localeCompare(b.sector_name);
+        return comparePopText(a.sector_name, b.sector_name);
       });
   }
 
@@ -1298,18 +1318,63 @@ export default function Profile() {
     });
   }
 
+  function formatDashboardMonth(monthString) {
+    const [year, month] = String(monthString || "")
+      .split("-")
+      .map(Number);
+
+    if (!year || !month) return "--";
+
+    return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString("pt-BR", {
+      month: "short",
+      year: "2-digit",
+      timeZone: "UTC",
+    });
+  }
+
+  function formatDashboardDateTime(dateTimeString) {
+    if (!dateTimeString) return "--";
+
+    const [datePart, timePart = ""] = String(dateTimeString).split(" ");
+    const [year, month, day] = datePart.split("-");
+    const [hour = "00", minute = "00"] = timePart.split(":");
+
+    if (!year || !month || !day) return dateTimeString;
+
+    return `${day}/${month}/${year} ${hour}:${minute}`;
+  }
+
   function getDashboardBarHeight(value, maxValue) {
     if (!maxValue || !value) return 0;
     return Math.max(8, Math.round((Number(value) / Number(maxValue)) * 100));
   }
 
   const dashboardWeekDays = adminDashboard?.week?.days || [];
+  const dashboardMonths = adminDashboard?.monthly?.months || [];
   const maxDashboardAccesses = Math.max(
     0,
     ...dashboardWeekDays.map((day) => Number(day.accesses || 0))
   );
+  const maxDashboardMonthlyAccesses = Math.max(
+    0,
+    ...dashboardMonths.map((month) => Number(month.accesses || 0))
+  );
+  const selectedDashboardDayData =
+    dashboardWeekDays.find((day) => day.date === selectedDashboardDay) || null;
   const dashboardAdoptedPercentage =
     adminDashboard?.adoption?.adoptedPercentage || 0;
+  const selectedDashboardAdoptionUsers =
+    selectedDashboardAdoption === "pending"
+      ? adminDashboard?.adoption?.notAdoptedUserList || []
+      : selectedDashboardAdoption === "adopted"
+      ? adminDashboard?.adoption?.adoptedUserList || []
+      : [];
+  const selectedDashboardAdoptionTitle =
+    selectedDashboardAdoption === "pending"
+      ? "Usuarios que nao aderiram"
+      : selectedDashboardAdoption === "adopted"
+      ? "Usuarios que aderiram"
+      : "";
 
   async function handleDownloadContracheque(id) {
     const downloadId = String(id);
@@ -1800,24 +1865,33 @@ export default function Profile() {
                     documento publicado, ele aparecerá aqui.
                   </p>
                 ) : (
-                  <div className="contracheque-list">
-                    {popsSeguros.map((item) => (
-                      <div key={item.id} className="contracheque-item">
-                        <span className="pop-item-info">
-                          <strong>{fixMojibake(item.title)}</strong>
-                          <small>
-                            {fixMojibake(item.sector_name || "Sem setor")}
-                          </small>
-                        </span>
+                  <div className="pop-sector-groups">
+                    {popsAgrupadosUsuario.map((sectorGroup) => (
+                      <div key={sectorGroup.sector_id} className="sector-group">
+                        <h4 className="sector-group-title">
+                          {sectorGroup.sector_name || "Sem setor"}
+                        </h4>
 
-                        <button
-                          type="button"
-                          className="action-button password-save-button contracheque-download-button"
-                          disabled={isPopDownloading(item.id)}
-                          onClick={() => handleDownloadPop(item.id)}
-                        >
-                          {isPopDownloading(item.id) ? "Baixando..." : "Baixar POP"}
-                        </button>
+                        <div className="contracheque-list pop-group-list">
+                          {sectorGroup.pops.map((item) => (
+                            <div key={item.id} className="contracheque-item">
+                              <span className="pop-item-info">
+                                <strong>{fixMojibake(item.title)}</strong>
+                              </span>
+
+                              <button
+                                type="button"
+                                className="action-button password-save-button contracheque-download-button"
+                                disabled={isPopDownloading(item.id)}
+                                onClick={() => handleDownloadPop(item.id)}
+                              >
+                                {isPopDownloading(item.id)
+                                  ? "Baixando..."
+                                  : "Baixar POP"}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -2449,7 +2523,7 @@ export default function Profile() {
             )}
 
             {activeTab === "dashboard" && user?.role === "admin" && (
-              <div className="dashboard-section">
+              <div className="dashboard-section" key={dashboardViewKey}>
                 <h3>Dashboard</h3>
 
                 {loadingDashboard && !adminDashboard ? (
@@ -2508,7 +2582,14 @@ export default function Profile() {
 
                         <div className="dashboard-bar-chart">
                           {dashboardWeekDays.map((day) => (
-                            <div className="dashboard-bar-column" key={day.date}>
+                            <button
+                              className={`dashboard-bar-column ${
+                                selectedDashboardDay === day.date ? "active" : ""
+                              }`}
+                              key={day.date}
+                              type="button"
+                              onClick={() => setSelectedDashboardDay(day.date)}
+                            >
                               <span className="dashboard-bar-value">
                                 {formatDashboardNumber(day.accesses)}
                               </span>
@@ -2526,9 +2607,49 @@ export default function Profile() {
                               <span className="dashboard-bar-label">
                                 {formatDashboardDay(day.date)}
                               </span>
-                            </div>
+                            </button>
                           ))}
                         </div>
+
+                        {selectedDashboardDayData && (
+                          <div className="dashboard-access-list">
+                            <div className="dashboard-access-list-header">
+                              <strong>
+                                {formatDashboardDay(selectedDashboardDayData.date)}
+                              </strong>
+                              <span>
+                                {formatDashboardNumber(
+                                  selectedDashboardDayData.accessedUsers?.length
+                                )}{" "}
+                                usuarios
+                              </span>
+                            </div>
+
+                            {selectedDashboardDayData.accessedUsers?.length ? (
+                              <div className="dashboard-access-users">
+                                {selectedDashboardDayData.accessedUsers.map(
+                                  (accessUser) => (
+                                    <div
+                                      className="dashboard-access-user"
+                                      key={`${selectedDashboardDayData.date}-${accessUser.id}`}
+                                    >
+                                      <strong>{accessUser.nome}</strong>
+                                      <span>{accessUser.email}</span>
+                                      <small>
+                                        {accessUser.sectorName || "Sem setor"} -{" "}
+                                        {formatDashboardDateTime(
+                                          accessUser.lastLogin
+                                        )}
+                                      </small>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            ) : (
+                              <p>Nenhum usuario acessou nesse dia.</p>
+                            )}
+                          </div>
+                        )}
                       </section>
 
                       <section className="dashboard-panel dashboard-adoption-panel">
@@ -2540,8 +2661,14 @@ export default function Profile() {
                         </div>
 
                         <div className="dashboard-adoption-content">
-                          <div
-                            className="dashboard-donut"
+                          <button
+                            className={`dashboard-donut ${
+                              selectedDashboardAdoption === "adopted"
+                                ? "active"
+                                : ""
+                            }`}
+                            type="button"
+                            onClick={() => setSelectedDashboardAdoption("adopted")}
                             style={{
                               "--dashboard-adopted": `${dashboardAdoptedPercentage}%`,
                             }}
@@ -2552,10 +2679,18 @@ export default function Profile() {
                             <span>
                               {formatDashboardPercent(dashboardAdoptedPercentage)}
                             </span>
-                          </div>
+                          </button>
 
                           <div className="dashboard-legend">
-                            <div>
+                            <button
+                              className={`dashboard-legend-item ${
+                                selectedDashboardAdoption === "adopted"
+                                  ? "active"
+                                  : ""
+                              }`}
+                              type="button"
+                              onClick={() => setSelectedDashboardAdoption("adopted")}
+                            >
                               <span className="dashboard-legend-dot adopted" />
                               <strong>
                                 {formatDashboardNumber(
@@ -2563,9 +2698,17 @@ export default function Profile() {
                                 )}
                               </strong>
                               <small>Aderiram</small>
-                            </div>
+                            </button>
 
-                            <div>
+                            <button
+                              className={`dashboard-legend-item ${
+                                selectedDashboardAdoption === "pending"
+                                  ? "active"
+                                  : ""
+                              }`}
+                              type="button"
+                              onClick={() => setSelectedDashboardAdoption("pending")}
+                            >
                               <span className="dashboard-legend-dot pending" />
                               <strong>
                                 {formatDashboardNumber(
@@ -2573,11 +2716,107 @@ export default function Profile() {
                                 )}
                               </strong>
                               <small>Nao aderiram</small>
-                            </div>
+                            </button>
                           </div>
+
+                          {selectedDashboardAdoption && (
+                            <div className="dashboard-access-list dashboard-adoption-list">
+                              <div className="dashboard-access-list-header">
+                                <strong>{selectedDashboardAdoptionTitle}</strong>
+                                <span>
+                                  {formatDashboardNumber(
+                                    selectedDashboardAdoptionUsers.length
+                                  )}{" "}
+                                  usuarios
+                                </span>
+                              </div>
+
+                              {selectedDashboardAdoptionUsers.length ? (
+                                <div className="dashboard-access-users">
+                                  {selectedDashboardAdoptionUsers.map(
+                                    (adoptionUser) => (
+                                      <div
+                                        className="dashboard-access-user"
+                                        key={`${selectedDashboardAdoption}-${adoptionUser.id}`}
+                                      >
+                                        <strong>{adoptionUser.nome}</strong>
+                                        <span>{adoptionUser.email}</span>
+                                        <small>
+                                          {adoptionUser.sectorName || "Sem setor"} -{" "}
+                                          {adoptionUser.lastLogin
+                                            ? formatDashboardDateTime(
+                                                adoptionUser.lastLogin
+                                              )
+                                            : "Nunca acessou"}
+                                        </small>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              ) : (
+                                <p>Nenhum usuario encontrado nesse grupo.</p>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </section>
                     </div>
+
+                    <section className="dashboard-panel dashboard-monthly-panel">
+                      <div className="dashboard-panel-header">
+                        <h4>Acessos mensais</h4>
+                        <span>
+                          {formatDashboardNumber(
+                            adminDashboard.monthly?.totalAccesses
+                          )}{" "}
+                          acessos
+                        </span>
+                      </div>
+
+                      <div className="dashboard-monthly-summary">
+                        <div>
+                          <span>Media mensal de acessos</span>
+                          <strong>
+                            {formatDashboardDecimal(
+                              adminDashboard.monthly?.averageAccessesPerMonth
+                            )}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Media mensal de usuarios</span>
+                          <strong>
+                            {formatDashboardDecimal(
+                              adminDashboard.monthly?.averageUsersPerMonth
+                            )}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="dashboard-bar-chart dashboard-monthly-chart">
+                        {dashboardMonths.map((month) => (
+                          <div className="dashboard-bar-column" key={month.month}>
+                            <span className="dashboard-bar-value">
+                              {formatDashboardNumber(month.accesses)}
+                            </span>
+                            <div className="dashboard-bar-track">
+                              <div
+                                className="dashboard-bar-fill monthly"
+                                style={{
+                                  height: `${getDashboardBarHeight(
+                                    month.accesses,
+                                    maxDashboardMonthlyAccesses
+                                  )}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="dashboard-bar-label">
+                              {formatDashboardMonth(month.month)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
                   </>
                 )}
               </div>

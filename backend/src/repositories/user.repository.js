@@ -223,14 +223,75 @@ class UserRepository {
       `
     );
 
+    const [dailyUserRows] = await pool.execute(
+      `
+      SELECT
+        DATE_FORMAT(u.last_login, '%Y-%m-%d') AS login_date,
+        u.id,
+        u.nome,
+        u.email,
+        DATE_FORMAT(u.last_login, '%Y-%m-%d %H:%i:%s') AS last_login,
+        u.sector_id,
+        s.name AS sector_name
+      FROM users u
+      LEFT JOIN sectors s ON s.id = u.sector_id
+      WHERE u.last_login IS NOT NULL
+        AND u.last_login >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        AND u.last_login < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+      ORDER BY u.last_login DESC, u.nome ASC
+      `
+    );
+
+    const [monthlyRows] = await pool.execute(
+      `
+      SELECT
+        DATE_FORMAT(last_login, '%Y-%m') AS login_month,
+        COUNT(*) AS access_count,
+        COUNT(DISTINCT id) AS user_count
+      FROM users
+      WHERE last_login IS NOT NULL
+        AND last_login >= DATE_SUB(CAST(DATE_FORMAT(CURDATE(), '%Y-%m-01') AS DATE), INTERVAL 5 MONTH)
+        AND last_login < DATE_ADD(LAST_DAY(CURDATE()), INTERVAL 1 DAY)
+      GROUP BY DATE_FORMAT(last_login, '%Y-%m')
+      ORDER BY login_month ASC
+      `
+    );
+
+    const [adoptionUserRows] = await pool.execute(
+      `
+      SELECT
+        u.id,
+        u.nome,
+        u.email,
+        u.is_active,
+        DATE_FORMAT(u.last_login, '%Y-%m-%d %H:%i:%s') AS last_login,
+        u.sector_id,
+        s.name AS sector_name
+      FROM users u
+      LEFT JOIN sectors s ON s.id = u.sector_id
+      ORDER BY
+        CASE WHEN u.last_login IS NOT NULL THEN 0 ELSE 1 END,
+        u.last_login DESC,
+        u.nome ASC
+      `
+    );
+
     const [dateRows] = await pool.execute(
-      "SELECT DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS today"
+      `
+      SELECT
+        DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS today,
+        DATE_FORMAT(CURDATE(), '%Y-%m') AS current_month
+      `
     );
 
     return {
       summary: summaryRows[0] || {},
       daily: dailyRows,
+      dailyUsers: dailyUserRows,
+      monthly: monthlyRows,
+      adoptionUsers: adoptionUserRows,
       today: dateRows[0]?.today,
+      currentMonth: dateRows[0]?.current_month,
     };
   }
 

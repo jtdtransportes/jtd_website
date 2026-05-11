@@ -12,8 +12,30 @@ function addDaysToDateString(dateString, days) {
   return date.toISOString().slice(0, 10);
 }
 
+function addMonthsToMonthString(monthString, months) {
+  const [year, month] = String(monthString || "")
+    .split("-")
+    .map(Number);
+  const date = new Date(Date.UTC(year, month - 1, 1));
+
+  date.setUTCMonth(date.getUTCMonth() + months);
+  return date.toISOString().slice(0, 7);
+}
+
 function toNumber(value) {
   return Number(value || 0);
+}
+
+function mapDashboardUser(item) {
+  return {
+    id: item.id,
+    nome: item.nome,
+    email: item.email,
+    lastLogin: item.last_login || null,
+    isActive: Number(item.is_active) === 1,
+    sectorId: item.sector_id || null,
+    sectorName: item.sector_name || "Sem setor",
+  };
 }
 
 class UserService {
@@ -272,8 +294,31 @@ class UserService {
         },
       ])
     );
+    const dailyUsersByDate = new Map();
+
+    (dashboard.dailyUsers || []).forEach((item) => {
+      if (!dailyUsersByDate.has(item.login_date)) {
+        dailyUsersByDate.set(item.login_date, []);
+      }
+
+      dailyUsersByDate.get(item.login_date).push(mapDashboardUser(item));
+    });
+    const adoptionUsers = (dashboard.adoptionUsers || []).map(mapDashboardUser);
+    const adoptedUserList = adoptionUsers.filter((item) => item.lastLogin);
+    const notAdoptedUserList = adoptionUsers.filter((item) => !item.lastLogin);
+    const monthlyByMonth = new Map(
+      (dashboard.monthly || []).map((item) => [
+        item.login_month,
+        {
+          accesses: toNumber(item.access_count),
+          users: toNumber(item.user_count),
+        },
+      ])
+    );
 
     const today = dashboard.today || new Date().toISOString().slice(0, 10);
+    const currentMonth =
+      dashboard.currentMonth || new Date().toISOString().slice(0, 7);
     const week = Array.from({ length: 7 }, (_, index) => {
       const date = addDaysToDateString(today, index - 6);
       const dayData = dailyByDate.get(date) || { accesses: 0, users: 0 };
@@ -282,6 +327,17 @@ class UserService {
         date,
         accesses: dayData.accesses,
         users: dayData.users,
+        accessedUsers: dailyUsersByDate.get(date) || [],
+      };
+    });
+    const months = Array.from({ length: 6 }, (_, index) => {
+      const month = addMonthsToMonthString(currentMonth, index - 5);
+      const monthData = monthlyByMonth.get(month) || { accesses: 0, users: 0 };
+
+      return {
+        month,
+        accesses: monthData.accesses,
+        users: monthData.users,
       };
     });
 
@@ -290,6 +346,14 @@ class UserService {
       0
     );
     const totalWeekUsers = week.reduce((total, day) => total + day.users, 0);
+    const totalMonthAccesses = months.reduce(
+      (total, month) => total + month.accesses,
+      0
+    );
+    const totalMonthUsers = months.reduce(
+      (total, month) => total + month.users,
+      0
+    );
     const totalUsers = toNumber(summary.total_users);
     const adoptedUsers = toNumber(summary.adopted_users);
     const notAdoptedUsers = toNumber(summary.not_adopted_users);
@@ -310,11 +374,19 @@ class UserService {
         averageAccessesPerDay: Number((totalWeekAccesses / 7).toFixed(1)),
         averageUsersPerDay: Number((totalWeekUsers / 7).toFixed(1)),
       },
+      monthly: {
+        months,
+        totalAccesses: totalMonthAccesses,
+        averageAccessesPerMonth: Number((totalMonthAccesses / 6).toFixed(1)),
+        averageUsersPerMonth: Number((totalMonthUsers / 6).toFixed(1)),
+      },
       adoption: {
         adoptedUsers,
         notAdoptedUsers,
         adoptedPercentage,
         notAdoptedPercentage,
+        adoptedUserList,
+        notAdoptedUserList,
       },
     };
   }
