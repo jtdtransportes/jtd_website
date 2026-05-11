@@ -66,7 +66,13 @@ class PopRepository {
     return rows[0] || null;
   }
 
-  async findActivePrioritizingSector(sectorId) {
+  async findActivePrioritizingSector({
+    sectorId,
+    isMotoristaUser,
+    motoristaSectorId,
+  }) {
+    const motoristaUserFlag = isMotoristaUser ? 1 : 0;
+
     const [rows] = await pool.execute(
       `SELECT
         p.id,
@@ -86,12 +92,23 @@ class PopRepository {
        INNER JOIN sectors s ON s.id = p.sector_id
        LEFT JOIN users u ON u.id = p.created_by
        WHERE p.is_active = 1
+        AND (
+          (? = 1 AND (p.sector_id = ? OR LOWER(TRIM(s.name)) = 'motorista'))
+          OR
+          (? = 0 AND p.sector_id <> ? AND LOWER(TRIM(s.name)) <> 'motorista')
+        )
        ORDER BY
         CASE WHEN p.sector_id = ? THEN 0 ELSE 1 END,
         s.name ASC,
         p.title ASC,
         p.created_at DESC`,
-      [sectorId || null]
+      [
+        motoristaUserFlag,
+        motoristaSectorId,
+        motoristaUserFlag,
+        motoristaSectorId,
+        sectorId || null,
+      ]
     );
 
     return rows;

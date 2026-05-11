@@ -28,6 +28,7 @@ const API_BASE_URL = "https://jtd-website.onrender.com";
 const API_URL = `${API_BASE_URL}/api/contracheques`;
 const POPS_API_URL = `${API_BASE_URL}/api/pops`;
 const SECTORS_API_URL = `${API_BASE_URL}/api/sectors`;
+const MOTORISTA_SECTOR_ID = 7;
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -269,14 +270,7 @@ export default function Profile() {
 
         if (result.ok) {
           setAdminDashboard(result.dashboard || null);
-          const days = result.dashboard?.week?.days || [];
-          const latestActiveDay = [...days]
-            .reverse()
-            .find((day) => Number(day.accesses || 0) > 0);
-
-          setSelectedDashboardDay((current) =>
-            current || latestActiveDay?.date || days[days.length - 1]?.date || ""
-          );
+          setSelectedDashboardDay("");
           return;
         }
 
@@ -749,7 +743,7 @@ export default function Profile() {
         const normalizedPop = normalizePopText(result.pop);
 
         setAllPops((prev) => [normalizedPop, ...prev]);
-        setPops((prev) => [normalizedPop, ...prev]);
+        await reloadMyPopsData(token);
       } else {
         await reloadAdminPopsData(token);
         await reloadMyPopsData(token);
@@ -771,6 +765,34 @@ export default function Profile() {
       "pt-BR",
       { sensitivity: "base" }
     );
+  }
+
+  function normalizeSectorNameForAccess(name) {
+    return String(fixMojibake(name) || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
+  }
+
+  function isMotoristaSectorValue(sectorId, sectorName) {
+    return (
+      Number(sectorId) === MOTORISTA_SECTOR_ID ||
+      normalizeSectorNameForAccess(sectorName) === "motorista"
+    );
+  }
+
+  function canCurrentUserAccessPop(pop) {
+    const currentUserIsMotorista = isMotoristaSectorValue(
+      formData.sector_id || user?.sector_id,
+      formData.setor || user?.sector_name
+    );
+    const popIsMotorista = isMotoristaSectorValue(
+      pop?.sector_id,
+      pop?.sector_name
+    );
+
+    return currentUserIsMotorista ? popIsMotorista : !popIsMotorista;
   }
 
   function sortPopsByCurrentSector(a, b) {
@@ -1873,24 +1895,32 @@ export default function Profile() {
                         </h4>
 
                         <div className="contracheque-list pop-group-list">
-                          {sectorGroup.pops.map((item) => (
-                            <div key={item.id} className="contracheque-item">
-                              <span className="pop-item-info">
-                                <strong>{fixMojibake(item.title)}</strong>
-                              </span>
+                          {sectorGroup.pops.map((item) => {
+                            const canDownloadPop = canCurrentUserAccessPop(item);
 
-                              <button
-                                type="button"
-                                className="action-button password-save-button contracheque-download-button"
-                                disabled={isPopDownloading(item.id)}
-                                onClick={() => handleDownloadPop(item.id)}
-                              >
-                                {isPopDownloading(item.id)
-                                  ? "Baixando..."
-                                  : "Baixar POP"}
-                              </button>
-                            </div>
-                          ))}
+                            return (
+                              <div key={item.id} className="contracheque-item">
+                                <span className="pop-item-info">
+                                  <strong>{fixMojibake(item.title)}</strong>
+                                </span>
+
+                                <button
+                                  type="button"
+                                  className="action-button password-save-button contracheque-download-button"
+                                  disabled={
+                                    !canDownloadPop || isPopDownloading(item.id)
+                                  }
+                                  onClick={() => handleDownloadPop(item.id)}
+                                >
+                                  {!canDownloadPop
+                                    ? "Restrito"
+                                    : isPopDownloading(item.id)
+                                    ? "Baixando..."
+                                    : "Baixar POP"}
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -2227,35 +2257,46 @@ export default function Profile() {
                         <h4>{sectorGroup.sector_name || "Sem setor"}</h4>
 
                         <div className="admin-contracheque-list">
-                          {sectorGroup.pops.map((item) => (
-                            <div key={item.id} className="admin-contracheque-card">
-                              <span>
-                                <strong>{fixMojibake(item.title)}</strong>
-                                {item.file_name
-                                  ? ` - ${fixMojibake(item.file_name)}`
-                                  : ""}
-                              </span>
+                          {sectorGroup.pops.map((item) => {
+                            const canDownloadPop = canCurrentUserAccessPop(item);
 
-                              <div className="admin-contracheque-actions">
-                                <button
-                                  className="download-button"
-                                  disabled={isPopDownloading(item.id)}
-                                  onClick={() => handleDownloadPop(item.id)}
-                                >
-                                  {isPopDownloading(item.id)
-                                    ? "Baixando..."
-                                    : "Baixar"}
-                                </button>
+                            return (
+                              <div
+                                key={item.id}
+                                className="admin-contracheque-card"
+                              >
+                                <span>
+                                  <strong>{fixMojibake(item.title)}</strong>
+                                  {item.file_name
+                                    ? ` - ${fixMojibake(item.file_name)}`
+                                    : ""}
+                                </span>
 
-                                <button
-                                  className="danger-button"
-                                  onClick={() => handleRemovePop(item.id)}
-                                >
-                                  Remover
-                                </button>
+                                <div className="admin-contracheque-actions">
+                                  <button
+                                    className="download-button"
+                                    disabled={
+                                      !canDownloadPop || isPopDownloading(item.id)
+                                    }
+                                    onClick={() => handleDownloadPop(item.id)}
+                                  >
+                                    {!canDownloadPop
+                                      ? "Restrito"
+                                      : isPopDownloading(item.id)
+                                      ? "Baixando..."
+                                      : "Baixar"}
+                                  </button>
+
+                                  <button
+                                    className="danger-button"
+                                    onClick={() => handleRemovePop(item.id)}
+                                  >
+                                    Remover
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -2588,7 +2629,11 @@ export default function Profile() {
                               }`}
                               key={day.date}
                               type="button"
-                              onClick={() => setSelectedDashboardDay(day.date)}
+                              onClick={() =>
+                                setSelectedDashboardDay((currentDay) =>
+                                  currentDay === day.date ? "" : day.date
+                                )
+                              }
                             >
                               <span className="dashboard-bar-value">
                                 {formatDashboardNumber(day.accesses)}

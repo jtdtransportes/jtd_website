@@ -68,7 +68,10 @@ class PopController {
 
   async download(req, res) {
     try {
-      const { pop, stream } = await popService.getDownloadStream(req.params.id);
+      const { pop, stream } = await popService.getDownloadStream(
+        req.user.id,
+        req.params.id
+      );
 
       res.setHeader("Content-Type", pop.mime_type || "application/pdf");
       res.setHeader("Content-Disposition", `inline; filename="${pop.file_name}"`);

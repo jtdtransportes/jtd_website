@@ -686,45 +686,45 @@
 }
 
 .dashboard-section {
-  animation: dashboardFadeUp 360ms ease both;
+  animation: dashboardFadeUp 650ms ease both;
 }
 
 .dashboard-section h3,
 .dashboard-metric,
 .dashboard-panel {
-  animation: dashboardFadeUp 420ms ease both;
+  animation: dashboardFadeUp 700ms ease both;
 }
 
 .dashboard-section h3 {
-  animation-delay: 20ms;
+  animation-delay: 60ms;
 }
 
 .dashboard-metric:nth-child(1) {
-  animation-delay: 70ms;
+  animation-delay: 140ms;
 }
 
 .dashboard-metric:nth-child(2) {
-  animation-delay: 120ms;
+  animation-delay: 240ms;
 }
 
 .dashboard-metric:nth-child(3) {
-  animation-delay: 170ms;
-}
-
-.dashboard-metric:nth-child(4) {
-  animation-delay: 220ms;
-}
-
-.dashboard-panel:nth-child(1) {
-  animation-delay: 280ms;
-}
-
-.dashboard-panel:nth-child(2) {
   animation-delay: 340ms;
 }
 
+.dashboard-metric:nth-child(4) {
+  animation-delay: 440ms;
+}
+
+.dashboard-panel:nth-child(1) {
+  animation-delay: 560ms;
+}
+
+.dashboard-panel:nth-child(2) {
+  animation-delay: 680ms;
+}
+
 .dashboard-monthly-panel {
-  animation-delay: 400ms;
+  animation-delay: 820ms;
 }
 
 .dashboard-metrics {
@@ -856,36 +856,36 @@ button.dashboard-bar-column.active .dashboard-bar-track {
   background: var(--ticket-blue);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   transform-origin: bottom;
-  animation: dashboardBarGrow 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: dashboardBarGrow 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   transition: height var(--transition);
 }
 
 .dashboard-bar-column:nth-child(1) .dashboard-bar-fill {
-  animation-delay: 360ms;
+  animation-delay: 700ms;
 }
 
 .dashboard-bar-column:nth-child(2) .dashboard-bar-fill {
-  animation-delay: 410ms;
+  animation-delay: 800ms;
 }
 
 .dashboard-bar-column:nth-child(3) .dashboard-bar-fill {
-  animation-delay: 460ms;
+  animation-delay: 900ms;
 }
 
 .dashboard-bar-column:nth-child(4) .dashboard-bar-fill {
-  animation-delay: 510ms;
+  animation-delay: 1000ms;
 }
 
 .dashboard-bar-column:nth-child(5) .dashboard-bar-fill {
-  animation-delay: 560ms;
+  animation-delay: 1100ms;
 }
 
 .dashboard-bar-column:nth-child(6) .dashboard-bar-fill {
-  animation-delay: 610ms;
+  animation-delay: 1200ms;
 }
 
 .dashboard-bar-column:nth-child(7) .dashboard-bar-fill {
-  animation-delay: 660ms;
+  animation-delay: 1300ms;
 }
 
 .dashboard-bar-fill.monthly {
@@ -944,7 +944,7 @@ button.dashboard-bar-column.active .dashboard-bar-track {
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  animation: dashboardFadeUp 260ms ease both;
+  animation: dashboardFadeUp 450ms ease both;
 }
 
 .dashboard-access-user strong {
@@ -976,15 +976,15 @@ button.dashboard-bar-column.active .dashboard-bar-track {
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  animation: dashboardFadeUp 360ms ease both;
+  animation: dashboardFadeUp 650ms ease both;
 }
 
 .dashboard-monthly-summary div:nth-child(1) {
-  animation-delay: 440ms;
+  animation-delay: 900ms;
 }
 
 .dashboard-monthly-summary div:nth-child(2) {
-  animation-delay: 490ms;
+  animation-delay: 1020ms;
 }
 
 .dashboard-monthly-summary span {
@@ -1031,7 +1031,7 @@ button.dashboard-bar-column.active .dashboard-bar-track {
     var(--ticket-blue) 0 var(--dashboard-adopted),
     #c5ced4 var(--dashboard-adopted) 100%
   );
-  animation: dashboardDonutPop 520ms cubic-bezier(0.2, 0.8, 0.2, 1) 480ms both;
+  animation: dashboardDonutPop 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 780ms both;
 }
 
 .dashboard-donut:focus-visible,

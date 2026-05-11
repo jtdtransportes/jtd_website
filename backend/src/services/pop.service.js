@@ -5,6 +5,7 @@ import drive from "../config/googleDrive.js";
 import { fixMojibake, fixObjectTextFields } from "../utils/textEncoding.js";
 
 const POP_TEXT_FIELDS = ["title", "file_name", "original_name", "sector_name"];
+const MOTORISTA_SECTOR_ID = Number(process.env.MOTORISTA_SECTOR_ID || 7);
 
 class PopService {
   normalizePop(pop) {
@@ -26,6 +27,34 @@ class PopService {
 
   getPopFolderId() {
     return process.env.GOOGLE_DRIVE_POP_FOLDER_ID || process.env.GOOGLE_DRIVE_FOLDER_ID;
+  }
+
+  normalizeSectorName(name) {
+    return String(fixMojibake(name) || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
+  }
+
+  isMotoristaSector(sectorId, sectorName) {
+    return (
+      Number(sectorId) === MOTORISTA_SECTOR_ID ||
+      this.normalizeSectorName(sectorName) === "motorista"
+    );
+  }
+
+  canUserAccessPop(user, pop) {
+    const userIsMotorista = this.isMotoristaSector(
+      user?.sector_id,
+      user?.sector_name
+    );
+    const popIsMotorista = this.isMotoristaSector(
+      pop?.sector_id,
+      pop?.sector_name
+    );
+
+    return userIsMotorista ? popIsMotorista : !popIsMotorista;
   }
 
   async upload(file, data, createdBy) {
@@ -102,7 +131,11 @@ class PopService {
       throw new Error("Usuario nao encontrado.");
     }
 
-    const pops = await popRepository.findActivePrioritizingSector(user.sector_id);
+    const pops = await popRepository.findActivePrioritizingSector({
+      sectorId: user.sector_id,
+      isMotoristaUser: this.isMotoristaSector(user.sector_id, user.sector_name),
+      motoristaSectorId: MOTORISTA_SECTOR_ID,
+    });
 
     return {
       sector_id: user.sector_id || null,
@@ -132,11 +165,20 @@ class PopService {
     await popRepository.deleteById(popId);
   }
 
-  async getDownloadStream(popId) {
+  async getDownloadStream(userId, popId) {
+    const user = await userRepository.findById(userId);
     const pop = await popRepository.findById(popId);
+
+    if (!user) {
+      throw new Error("Usuario nao encontrado.");
+    }
 
     if (!pop || Number(pop.is_active) !== 1) {
       throw new Error("POP nao encontrado.");
+    }
+
+    if (!this.canUserAccessPop(user, pop)) {
+      throw new Error("Voce nao tem acesso a este POP.");
     }
 
     if (!pop.drive_file_id) {
