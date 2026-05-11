@@ -297,6 +297,7 @@
 
 .profile-form label,
 .password-section label,
+.pop-sector-select label,
 .upload-form label,
 .sector-filter-box label,
 .sector-create-box label,
@@ -315,6 +316,7 @@
 .profile-form input,
 .profile-form select,
 .password-section input,
+.pop-sector-select select,
 .upload-form input,
 .upload-form select,
 .sector-filter-box select,
@@ -338,6 +340,7 @@
 .profile-form input:focus,
 .profile-form select:focus,
 .password-section input:focus,
+.pop-sector-select select:focus,
 .upload-form input:focus,
 .upload-form select:focus,
 .sector-filter-box select:focus,
@@ -358,6 +361,7 @@
 }
 
 .profile-form select option,
+.pop-sector-select select option,
 .upload-form select option,
 .sector-filter-box select option,
 .user-sector-edit-box select option {
@@ -366,14 +370,16 @@
 }
 
 /* ── Seção de senha ─────────────────────────────────────── */
-.password-section {
+.password-section,
+.pop-section {
   display: flex;
   flex-direction: column;
   gap: 18px;
   max-width: 440px;
 }
 
-.password-section h3 {
+.password-section h3,
+.pop-section h3 {
   font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 600;
@@ -381,6 +387,23 @@
   margin-bottom: 4px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
+}
+
+.pop-section {
+  max-width: 760px;
+}
+
+.pop-sector-select {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pop-sector-label {
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
 /* ── Botões ─────────────────────────────────────────────── */
@@ -614,13 +637,15 @@
 }
 
 /* input file styling */
-.upload-form input[type="file"] {
+.upload-form input[type="file"],
+.profile-form input[type="file"] {
   padding: 8px 12px;
   cursor: pointer;
   color: var(--text-secondary);
 }
 
-.upload-form input[type="file"]::-webkit-file-upload-button {
+.upload-form input[type="file"]::-webkit-file-upload-button,
+.profile-form input[type="file"]::-webkit-file-upload-button {
   background: var(--accent);
   color: #fff;
   border: none;
@@ -634,7 +659,8 @@
   transition: background var(--transition);
 }
 
-.upload-form input[type="file"]::-webkit-file-upload-button:hover {
+.upload-form input[type="file"]::-webkit-file-upload-button:hover,
+.profile-form input[type="file"]::-webkit-file-upload-button:hover {
   background: var(--accent-hover);
 }
 
@@ -930,7 +956,8 @@
 .remove-section p,
 .editar-usuarios-section p,
 .sectors-section p,
-.contracheque-section p {
+.contracheque-section p,
+.pop-section p {
   color: var(--text-muted);
   font-size: 0.875rem;
 }

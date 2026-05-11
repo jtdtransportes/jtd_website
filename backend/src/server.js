@@ -8,6 +8,7 @@ import { z } from "zod";
 import userRoutes from "./routes/user.routes.js";
 import contrachequeRoutes from "./routes/contracheque.routes.js";
 import sectorsRoutes from "./routes/sectors.routes.js";
+import popRoutes from "./routes/pop.routes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -224,6 +225,7 @@ app.post("/api/contact", async (req, res) => {
 
 app.use("/api/sectors", sectorsRoutes);
 app.use("/api/contracheques", contrachequeRoutes);
+app.use("/api/pops", popRoutes);
 app.use("/api/users", userRoutes);
 
 const __filename = fileURLToPath(import.meta.url);

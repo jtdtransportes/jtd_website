@@ -6,7 +6,9 @@ import { useState } from "react";
 
 const Footer = () => {
   const [openContact, setOpenContact] = useState(false);
+  // aqui estava o código como era antes:
   const API_URL = "https://jtd-website.onrender.com";
+  // const API_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:4000";
 
   const [sendingContact, setSendingContact] = useState(false);
   const [contactStatus, setContactStatus] = useState({ type: "", text: "" });

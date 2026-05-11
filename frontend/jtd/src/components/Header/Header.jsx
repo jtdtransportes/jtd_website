@@ -10,7 +10,9 @@ const Header = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [openFeedback, setOpenFeedback] = useState(false);
   const [openContact, setOpenContact] = useState(false);
+  // aqui estava o código como era antes:
   const API_URL = "https://jtd-website.onrender.com";
+  // const API_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:4000";
 
   const [sendingFeedback, setSendingFeedback] = useState(false);
   const [sendingContact, setSendingContact] = useState(false);

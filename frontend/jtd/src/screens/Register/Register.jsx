@@ -5,7 +5,10 @@ import Footer from "../../components/Footer/Footer";
 import { registerUser } from "../../services/authService";
 import "./Register.css";
 
-const SECTORS_API_URL = "https://jtd-website.onrender.com/api/sectors";
+// aqui estava o código como era antes:
+const API_BASE_URL = "https://jtd-website.onrender.com";
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:4000";
+const SECTORS_API_URL = `${API_BASE_URL}/api/sectors`;
 
 export default function Register() {
   const navigate = useNavigate();

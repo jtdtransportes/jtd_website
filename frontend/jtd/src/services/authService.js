@@ -1,4 +1,9 @@
-const API_URL = "https://jtd-website.onrender.com/api/users";
+// aqui estava o código como era antes:
+const API_BASE_URL = "https://jtd-website.onrender.com";
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:4000";
+const API_URL = `${API_BASE_URL}/api/users`;
+const CONTRACHEQUES_API_URL = `${API_BASE_URL}/api/contracheques`;
+const POPS_API_URL = `${API_BASE_URL}/api/pops`;
 
 async function parseResponse(response) {
   const contentType = response.headers.get("content-type") || "";
@@ -134,7 +139,9 @@ export async function changePassword(token, data) {
 
 export async function uploadContracheque(token, formData) {
   try {
-    const response = await fetch("https://jtd-website.onrender.com/api/contracheques/upload", {
+    // aqui estava o código como era antes:
+    // const response = await fetch("https://jtd-website.onrender.com/api/contracheques/upload", {
+    const response = await fetch(`${CONTRACHEQUES_API_URL}/upload`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -161,7 +168,9 @@ export async function uploadContracheque(token, formData) {
 }
 export async function getUsers(token) {
   try {
-    const response = await fetch("https://jtd-website.onrender.com/api/users", {
+    // aqui estava o código como era antes:
+    // const response = await fetch("https://jtd-website.onrender.com/api/users", {
+    const response = await fetch(API_URL, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -179,7 +188,9 @@ export async function getUsers(token) {
 }
 export async function getMyContracheques(token) {
   try {
-    const response = await fetch("https://jtd-website.onrender.com/api/contracheques", {
+    // aqui estava o código como era antes:
+    // const response = await fetch("https://jtd-website.onrender.com/api/contracheques", {
+    const response = await fetch(CONTRACHEQUES_API_URL, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -196,7 +207,9 @@ export async function getMyContracheques(token) {
 }
 export async function getAllUsers(token) {
   try {
-    const response = await fetch("https://jtd-website.onrender.com/api/users/admin/all", {
+    // aqui estava o código como era antes:
+    // const response = await fetch("https://jtd-website.onrender.com/api/users/admin/all", {
+    const response = await fetch(`${API_URL}/admin/all`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -214,7 +227,9 @@ export async function getAllUsers(token) {
 
 export async function deactivateUserByAdmin(token, userId) {
   try {
-    const response = await fetch(`https://jtd-website.onrender.com/api/users/${userId}/deactivate`, {
+    // aqui estava o código como era antes:
+    // const response = await fetch(`https://jtd-website.onrender.com/api/users/${userId}/deactivate`, {
+    const response = await fetch(`${API_URL}/${userId}/deactivate`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -231,8 +246,12 @@ export async function deactivateUserByAdmin(token, userId) {
 }
 export async function activateUserByAdmin(token, userId) {
   try {
+    // aqui estava o código como era antes:
+    // const response = await fetch(
+    //   `https://jtd-website.onrender.com/api/users/${userId}/activate`,
+    //   {
     const response = await fetch(
-      `https://jtd-website.onrender.com/api/users/${userId}/activate`,
+      `${API_URL}/${userId}/activate`,
       {
         method: "PATCH",
         headers: {
@@ -252,7 +271,9 @@ export async function activateUserByAdmin(token, userId) {
 }
 export async function getAllContrachequesForAdmin(token) {
   try {
-    const response = await fetch("https://jtd-website.onrender.com/api/contracheques/admin/all", {
+    // aqui estava o código como era antes:
+    // const response = await fetch("https://jtd-website.onrender.com/api/contracheques/admin/all", {
+    const response = await fetch(`${CONTRACHEQUES_API_URL}/admin/all`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -270,8 +291,12 @@ export async function getAllContrachequesForAdmin(token) {
 
 export async function removeContrachequeByAdmin(token, contrachequeId) {
   try {
+    // aqui estava o código como era antes:
+    // const response = await fetch(
+    //   `https://jtd-website.onrender.com/api/contracheques/${contrachequeId}`,
+    //   {
     const response = await fetch(
-      `https://jtd-website.onrender.com/api/contracheques/${contrachequeId}`,
+      `${CONTRACHEQUES_API_URL}/${contrachequeId}`,
       {
         method: "DELETE",
         headers: {
@@ -285,6 +310,79 @@ export async function removeContrachequeByAdmin(token, contrachequeId) {
     return {
       ok: false,
       message: "Não foi possível conectar ao backend.",
+    };
+  }
+}
+
+export async function getMyPops(token) {
+  try {
+    const response = await fetch(POPS_API_URL, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.json();
+  } catch {
+    return {
+      ok: false,
+      message: "Nao foi possivel conectar ao backend.",
+    };
+  }
+}
+
+export async function uploadPop(token, formData) {
+  try {
+    const response = await fetch(`${POPS_API_URL}/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    return response.json();
+  } catch {
+    return {
+      ok: false,
+      message: "Nao foi possivel conectar ao backend.",
+    };
+  }
+}
+
+export async function getAllPopsForAdmin(token) {
+  try {
+    const response = await fetch(`${POPS_API_URL}/admin/all`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.json();
+  } catch {
+    return {
+      ok: false,
+      message: "Nao foi possivel conectar ao backend.",
+    };
+  }
+}
+
+export async function removePopByAdmin(token, popId) {
+  try {
+    const response = await fetch(`${POPS_API_URL}/${popId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.json();
+  } catch {
+    return {
+      ok: false,
+      message: "Nao foi possivel conectar ao backend.",
     };
   }
 }

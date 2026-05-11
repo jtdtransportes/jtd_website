@@ -13,11 +13,19 @@ import {
   activateUserByAdmin,
   getAllContrachequesForAdmin,
   removeContrachequeByAdmin,
+  getMyPops,
+  uploadPop,
+  getAllPopsForAdmin,
+  removePopByAdmin,
 } from "../../services/authService";
 import "./Profile.css";
 
-const API_URL = "https://jtd-website.onrender.com/api/contracheques";
-const SECTORS_API_URL = "https://jtd-website.onrender.com/api/sectors";
+// aqui estava o código como era antes:
+const API_BASE_URL = "https://jtd-website.onrender.com";
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:4000";
+const API_URL = `${API_BASE_URL}/api/contracheques`;
+const POPS_API_URL = `${API_BASE_URL}/api/pops`;
+const SECTORS_API_URL = `${API_BASE_URL}/api/sectors`;
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -29,16 +37,21 @@ export default function Profile() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingContracheque, setUploadingContracheque] = useState(false);
+  const [uploadingPop, setUploadingPop] = useState(false);
+  const [updatingPopSector, setUpdatingPopSector] = useState(false);
 
   const [searchColaborador, setSearchColaborador] = useState("");
   const [searchUsuario, setSearchUsuario] = useState("");
   const [searchSector, setSearchSector] = useState("");
+  const [searchPop, setSearchPop] = useState("");
 
   const [selectedUserSectorFilter, setSelectedUserSectorFilter] =
     useState("todos");
   const [selectedUploadSectorFilter, setSelectedUploadSectorFilter] =
     useState("todos");
   const [selectedRemoveSectorFilter, setSelectedRemoveSectorFilter] =
+    useState("todos");
+  const [selectedRemovePopSectorFilter, setSelectedRemovePopSectorFilter] =
     useState("todos");
 
   const [users, setUsers] = useState([]);
@@ -59,11 +72,21 @@ export default function Profile() {
     contracheque: null,
   });
 
+  const [popUploadData, setPopUploadData] = useState({
+    sector_id: "",
+    pop: null,
+  });
+
   const [contracheques, setContracheques] = useState([]);
   const [allContracheques, setAllContracheques] = useState([]);
+  const [pops, setPops] = useState([]);
+  const [allPops, setAllPops] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const downloadingContrachequeIdsRef = useRef(new Set());
   const [downloadingContrachequeIds, setDownloadingContrachequeIds] = useState([]);
+  const downloadingPopIdsRef = useRef(new Set());
+  const [downloadingPopIds, setDownloadingPopIds] = useState([]);
+  const [selectedPopSectorId, setSelectedPopSectorId] = useState("");
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -200,6 +223,11 @@ export default function Profile() {
     if (result.ok) setContracheques(result.contracheques || []);
   }, []);
 
+  const reloadMyPopsData = useCallback(async (token) => {
+    const result = await getMyPops(token);
+    if (result.ok) setPops(result.pops || []);
+  }, []);
+
   const reloadAdminUsersData = useCallback(
     async (token) => {
       try {
@@ -228,6 +256,11 @@ export default function Profile() {
   const reloadAdminContrachequesData = useCallback(async (token) => {
     const result = await getAllContrachequesForAdmin(token);
     if (result.ok) setAllContracheques(result.contracheques || []);
+  }, []);
+
+  const reloadAdminPopsData = useCallback(async (token) => {
+    const result = await getAllPopsForAdmin(token);
+    if (result.ok) setAllPops(result.pops || []);
   }, []);
 
   const reloadSectorsData = useCallback(
@@ -281,6 +314,7 @@ export default function Profile() {
       const setorId = getSectorIdFromUser(result.user, loadedSectors);
 
       setUser(result.user);
+      setSelectedPopSectorId(setorId);
 
       setFormData({
         nome: result.user.nome || "",
@@ -297,10 +331,12 @@ export default function Profile() {
 
       await reloadUsersData(token);
       await reloadMyContrachequesData(token);
+      await reloadMyPopsData(token);
 
       if (result.user.role === "admin") {
         await reloadAdminUsersData(token);
         await reloadAdminContrachequesData(token);
+        await reloadAdminPopsData(token);
       }
     }
 
@@ -311,8 +347,10 @@ export default function Profile() {
     getSectorNameFromUser,
     reloadUsersData,
     reloadMyContrachequesData,
+    reloadMyPopsData,
     reloadAdminUsersData,
     reloadAdminContrachequesData,
+    reloadAdminPopsData,
     reloadSectorsData,
   ]);
 
@@ -354,6 +392,11 @@ export default function Profile() {
 
     if (tab === "contracheque") await reloadMyContrachequesData(token);
 
+    if (tab === "pop") {
+      await reloadSectorsData(token);
+      await reloadMyPopsData(token);
+    }
+
     if (tab === "enviar-contracheque" && user?.role === "admin") {
       await reloadSectorsData(token);
       await reloadAdminUsersData(token);
@@ -373,6 +416,15 @@ export default function Profile() {
 
     if (tab === "gerenciar-setores" && user?.role === "admin") {
       await reloadSectorsData(token);
+    }
+
+    if (tab === "adicionar-pop" && user?.role === "admin") {
+      await reloadSectorsData(token);
+    }
+
+    if (tab === "remover-pop" && user?.role === "admin") {
+      await reloadSectorsData(token);
+      await reloadAdminPopsData(token);
     }
   }
 
@@ -420,6 +472,7 @@ export default function Profile() {
       const setorId = getSectorIdFromUser(result.user, loadedSectors);
 
       setUser(result.user);
+      setSelectedPopSectorId(setorId);
       localStorage.setItem("user", JSON.stringify(result.user));
 
       setFormData({
@@ -437,6 +490,10 @@ export default function Profile() {
 
       showSuccess("Perfil atualizado com sucesso.");
       setEditing(false);
+
+      if (activeTab === "pop") {
+        await reloadMyPopsData(token);
+      }
     } finally {
       setSavingProfile(false);
     }
@@ -597,10 +654,124 @@ export default function Profile() {
     }
   }
 
+  function handlePopUploadChange(e) {
+    const { name, value, files } = e.target;
+
+    if (name === "pop") {
+      setPopUploadData((prev) => ({
+        ...prev,
+        pop: files[0] || null,
+      }));
+      return;
+    }
+
+    setPopUploadData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  async function handleUploadPop() {
+    if (uploadingPop) {
+      return;
+    }
+
+    if (!popUploadData.sector_id || !popUploadData.pop) {
+      showError("Selecione o setor e escolha o PDF do POP.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    const form = new FormData();
+    form.append("sector_id", popUploadData.sector_id);
+    form.append("pop", popUploadData.pop);
+
+    setUploadingPop(true);
+
+    try {
+      const result = await uploadPop(token, form);
+
+      if (!result.ok) {
+        showError(result.message || "Erro ao enviar POP.");
+        return;
+      }
+
+      showSuccess("POP enviado com sucesso.");
+      setPopUploadData({
+        sector_id: "",
+        pop: null,
+      });
+
+      if (result.pop) {
+        setAllPops((prev) => [result.pop, ...prev]);
+
+        if (Number(result.pop.sector_id) === Number(user?.sector_id)) {
+          setPops((prev) => [result.pop, ...prev]);
+        }
+      } else {
+        await reloadAdminPopsData(token);
+        await reloadMyPopsData(token);
+      }
+    } finally {
+      setUploadingPop(false);
+    }
+  }
+
+  async function handleSavePopSector() {
+    if (updatingPopSector) {
+      return;
+    }
+
+    if (!selectedPopSectorId) {
+      showError("Selecione seu setor para consultar os POPs disponiveis.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    setUpdatingPopSector(true);
+
+    try {
+      const result = await updateProfile(token, {
+        nome: formData.nome,
+        email: formData.email,
+        telefone: formData.telefone,
+        sexo: formData.sexo,
+        data_nascimento: formData.data_nascimento,
+        sector_id: Number(selectedPopSectorId),
+      });
+
+      if (!result.ok) {
+        showError(result.message || "Erro ao atualizar setor.");
+        return;
+      }
+
+      const setorNome = getSectorNameFromUser(result.user, sectors);
+      const setorId = getSectorIdFromUser(result.user, sectors);
+
+      setUser(result.user);
+      setSelectedPopSectorId(setorId);
+      setFormData((prev) => ({
+        ...prev,
+        sector_id: setorId,
+        setor: setorNome,
+      }));
+      localStorage.setItem("user", JSON.stringify(result.user));
+
+      showSuccess("Setor atualizado com sucesso.");
+      await reloadMyPopsData(token);
+    } finally {
+      setUpdatingPopSector(false);
+    }
+  }
+
   const contrachequesSeguros = Array.isArray(contracheques)
     ? contracheques.filter(
         (item) => item && item.id != null && item.ano != null && item.mes != null
       )
+    : [];
+
+  const popsSeguros = Array.isArray(pops)
+    ? pops.filter((item) => item && item.id != null)
     : [];
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
@@ -674,6 +845,25 @@ export default function Profile() {
     setContracheques((prev) =>
       prev.filter((item) => Number(item.id) !== Number(contrachequeId))
     );
+  }
+
+  async function handleRemovePop(popId) {
+    const confirmAction = window.confirm("Tem certeza que deseja remover este POP?");
+
+    if (!confirmAction) return;
+
+    const token = localStorage.getItem("token");
+    const result = await removePopByAdmin(token, popId);
+
+    if (!result.ok) {
+      showError(result.message || "Erro ao remover POP.");
+      return;
+    }
+
+    showSuccess("POP removido com sucesso.");
+
+    setAllPops((prev) => prev.filter((item) => Number(item.id) !== Number(popId)));
+    setPops((prev) => prev.filter((item) => Number(item.id) !== Number(popId)));
   }
 
   async function handleCreateSector() {
@@ -842,13 +1032,17 @@ export default function Profile() {
 
         if (updatedProfile.ok) {
           const sectorName = getSectorNameFromUser(updatedProfile.user, sectors);
+          const sectorId = getSectorIdFromUser(updatedProfile.user, sectors);
 
           setUser(updatedProfile.user);
+          setSelectedPopSectorId(sectorId);
           setFormData((prev) => ({
             ...prev,
             setor: sectorName,
+            sector_id: sectorId,
           }));
           localStorage.setItem("user", JSON.stringify(updatedProfile.user));
+          await reloadMyPopsData(token);
         }
       }
     } catch (error) {
@@ -879,6 +1073,12 @@ export default function Profile() {
     if (selectedSector === "todos") return true;
     if (selectedSector === "sem-setor") return !sectorId;
     return Number(sectorId) === Number(selectedSector);
+  }
+
+  function popMatchesSectorFilter(item, selectedSector) {
+    if (selectedSector === "todos") return true;
+    if (selectedSector === "sem-setor") return !item.sector_id;
+    return Number(item.sector_id) === Number(selectedSector);
   }
 
   function groupUsersBySector(usersList) {
@@ -964,6 +1164,38 @@ export default function Profile() {
       });
   }
 
+  function groupPopsBySector(popsList) {
+    const groups = {};
+
+    popsList.forEach((item) => {
+      const key = item.sector_id ? String(item.sector_id) : "sem-setor";
+      const name = item.sector_name || "Sem setor";
+
+      if (!groups[key]) {
+        groups[key] = {
+          sector_id: key,
+          sector_name: name,
+          pops: [],
+        };
+      }
+
+      groups[key].pops.push(item);
+    });
+
+    return Object.values(groups)
+      .map((group) => ({
+        ...group,
+        pops: group.pops.sort((a, b) =>
+          String(a.title || "").localeCompare(String(b.title || ""))
+        ),
+      }))
+      .sort((a, b) => {
+        if (a.sector_id === "sem-setor") return 1;
+        if (b.sector_id === "sem-setor") return -1;
+        return a.sector_name.localeCompare(b.sector_name);
+      });
+  }
+
   const allUsersFiltrados = allUsers
     .filter((item) =>
       item.nome?.toLowerCase().includes(searchUsuario.toLowerCase().trim())
@@ -1005,6 +1237,14 @@ export default function Profile() {
   const contrachequesAgrupadosPorSetor =
     groupContrachequesBySector(contrachequesAdminFiltrados);
 
+  const allPopsFiltrados = allPops
+    .filter((item) =>
+      item.title?.toLowerCase().includes(searchPop.toLowerCase().trim())
+    )
+    .filter((item) => popMatchesSectorFilter(item, selectedRemovePopSectorFilter));
+
+  const popsAgrupadosPorSetor = groupPopsBySector(allPopsFiltrados);
+
   const sectorsFiltrados = sectors.filter((item) =>
     getSectorDisplayName(item)
       .toLowerCase()
@@ -1013,6 +1253,10 @@ export default function Profile() {
 
   function isContrachequeDownloading(id) {
     return downloadingContrachequeIds.includes(String(id));
+  }
+
+  function isPopDownloading(id) {
+    return downloadingPopIds.includes(String(id));
   }
 
   async function handleDownloadContracheque(id) {
@@ -1079,6 +1323,70 @@ export default function Profile() {
     }
   }
 
+  async function handleDownloadPop(id) {
+    const downloadId = String(id);
+
+    if (downloadingPopIdsRef.current.has(downloadId)) {
+      return;
+    }
+
+    downloadingPopIdsRef.current.add(downloadId);
+    setDownloadingPopIds([...downloadingPopIdsRef.current]);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Usuario nao autenticado.");
+        return;
+      }
+
+      const response = await fetch(`${POPS_API_URL}/${id}/download`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Erro ao baixar POP.";
+
+        try {
+          const errorData = await response.json();
+          if (errorData?.message) errorMessage = errorData.message;
+        } catch {}
+
+        throw new Error(errorMessage);
+      }
+
+      const blob = await response.blob();
+      const fileURL = window.URL.createObjectURL(blob);
+
+      let fileName = "pop.pdf";
+      const disposition = response.headers.get("content-disposition");
+
+      if (disposition) {
+        const match = disposition.match(/filename="?([^"]+)"?/i);
+        if (match && match[1]) fileName = match[1];
+      }
+
+      const link = document.createElement("a");
+      link.href = fileURL;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(fileURL);
+    } catch (error) {
+      console.error("Erro ao baixar POP:", error);
+      alert(error.message || "Erro ao baixar POP.");
+    } finally {
+      downloadingPopIdsRef.current.delete(downloadId);
+      setDownloadingPopIds([...downloadingPopIdsRef.current]);
+    }
+  }
+
   return (
     <>
       <Header />
@@ -1128,6 +1436,10 @@ export default function Profile() {
             Alterar Senha
           </button>
 
+          <button className="sidebar-title" onClick={() => changeTab("pop")}>
+            POP
+          </button>
+
           {user?.role === "admin" && (
             <>
               <button
@@ -1142,6 +1454,20 @@ export default function Profile() {
                 onClick={() => changeTab("remover-contracheque")}
               >
                 Remover Contracheque
+              </button>
+
+              <button
+                className="sidebar-title"
+                onClick={() => changeTab("adicionar-pop")}
+              >
+                Adicionar POP
+              </button>
+
+              <button
+                className="sidebar-title"
+                onClick={() => changeTab("remover-pop")}
+              >
+                Remover POP
               </button>
 
               <button
@@ -1400,6 +1726,75 @@ export default function Profile() {
               </div>
             )}
 
+            {activeTab === "pop" && (
+              <div className="pop-section">
+                <h3>Procedimento Operacional Padrão</h3>
+
+                {formData.sector_id ? (
+                  <p className="pop-sector-label">
+                    <strong>Setor:</strong>{" "}
+                    {formData.setor || getSectorNameFromUser(user, sectors)}
+                  </p>
+                ) : (
+                  <div className="pop-sector-select">
+                    <p>Selecione seu setor para visualizar os POPs disponíveis.</p>
+
+                    <div className="profile-form">
+                      <label>
+                        Selecione seu setor
+                        <select
+                          value={selectedPopSectorId}
+                          onChange={(e) => setSelectedPopSectorId(e.target.value)}
+                        >
+                          <option value="">Selecione seu setor</option>
+                          {sectors.map((sector) => (
+                            <option key={sector.id} value={sector.id}>
+                              {getSectorDisplayName(sector)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <button
+                      className="action-button password-save-button"
+                      onClick={handleSavePopSector}
+                      disabled={updatingPopSector}
+                    >
+                      {updatingPopSector ? "Salvando..." : "Salvar setor"}
+                    </button>
+                  </div>
+                )}
+
+                {formData.sector_id &&
+                  (popsSeguros.length === 0 ? (
+                    <p>
+                      Nenhum POP foi disponibilizado para este setor ainda. Assim
+                      que houver um documento publicado, ele aparecerá aqui.
+                    </p>
+                  ) : (
+                    <div className="contracheque-list">
+                      {popsSeguros.map((item) => (
+                        <div key={item.id} className="contracheque-item">
+                          <span>
+                            <strong>{item.title}</strong>
+                          </span>
+
+                          <button
+                            type="button"
+                            className="action-button password-save-button contracheque-download-button"
+                            disabled={isPopDownloading(item.id)}
+                            onClick={() => handleDownloadPop(item.id)}
+                          >
+                            {isPopDownloading(item.id) ? "Baixando..." : "Baixar POP"}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+              </div>
+            )}
+
             {activeTab === "enviar-contracheque" && user?.role === "admin" && (
               <div className="upload-section">
                 <h3>Adicionar Contracheque</h3>
@@ -1632,6 +2027,130 @@ export default function Profile() {
                               ))}
                           </div>
                         ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "adicionar-pop" && user?.role === "admin" && (
+              <div className="upload-section">
+                <h3>Adicionar POP</h3>
+
+                <div className="profile-form">
+                  <label>
+                    Setor
+                    <select
+                      name="sector_id"
+                      value={popUploadData.sector_id}
+                      onChange={handlePopUploadChange}
+                    >
+                      <option value="">Selecione o setor</option>
+                      {sectors.map((sector) => (
+                        <option key={sector.id} value={sector.id}>
+                          {getSectorDisplayName(sector)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    Arquivo PDF
+                    <input
+                      type="file"
+                      name="pop"
+                      accept="application/pdf"
+                      onChange={handlePopUploadChange}
+                    />
+                  </label>
+                </div>
+
+                <button
+                  className="action-button password-save-button"
+                  onClick={handleUploadPop}
+                  disabled={uploadingPop}
+                >
+                  {uploadingPop ? "Salvando..." : "Adicionar POP"}
+                </button>
+              </div>
+            )}
+
+            {activeTab === "remover-pop" && user?.role === "admin" && (
+              <div className="admin-contracheque-section">
+                <h3>Remover POP</h3>
+
+                <div className="filter-row">
+                  <input
+                    type="text"
+                    placeholder="Pesquisar POP"
+                    className="search-colaborador-input"
+                    value={searchPop}
+                    onChange={(e) => setSearchPop(e.target.value)}
+                  />
+
+                  <div className="sector-filter-box inline-filter">
+                    <label>
+                      <select
+                        value={selectedRemovePopSectorFilter}
+                        onChange={(e) =>
+                          setSelectedRemovePopSectorFilter(e.target.value)
+                        }
+                      >
+                        <option value="todos">Todos os setores</option>
+                        <option value="sem-setor">Sem setor</option>
+                        {sectors.map((sector) => (
+                          <option key={sector.id} value={sector.id}>
+                            {getSectorDisplayName(sector)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </div>
+
+                {allPops.length === 0 ? (
+                  <p>Nenhum POP cadastrado.</p>
+                ) : popsAgrupadosPorSetor.length === 0 ? (
+                  <p>Nenhum POP encontrado com esse filtro.</p>
+                ) : (
+                  <div className="sector-group-list">
+                    {popsAgrupadosPorSetor.map((sectorGroup) => (
+                      <div
+                        key={sectorGroup.sector_id}
+                        className="sector-group-block"
+                      >
+                        <h4>{sectorGroup.sector_name || "Sem setor"}</h4>
+
+                        <div className="admin-contracheque-list">
+                          {sectorGroup.pops.map((item) => (
+                            <div key={item.id} className="admin-contracheque-card">
+                              <span>
+                                <strong>{item.title}</strong>
+                                {item.file_name ? ` - ${item.file_name}` : ""}
+                              </span>
+
+                              <div className="admin-contracheque-actions">
+                                <button
+                                  className="download-button"
+                                  disabled={isPopDownloading(item.id)}
+                                  onClick={() => handleDownloadPop(item.id)}
+                                >
+                                  {isPopDownloading(item.id)
+                                    ? "Baixando..."
+                                    : "Baixar"}
+                                </button>
+
+                                <button
+                                  className="danger-button"
+                                  onClick={() => handleRemovePop(item.id)}
+                                >
+                                  Remover
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
