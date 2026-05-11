@@ -225,6 +225,24 @@ export async function getAllUsers(token) {
   }
 }
 
+export async function getAdminDashboard(token) {
+  try {
+    const response = await fetch(`${API_URL}/admin/dashboard`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return await parseResponse(response);
+  } catch {
+    return {
+      ok: false,
+      message: "Nao foi possivel conectar ao backend.",
+    };
+  }
+}
+
 export async function deactivateUserByAdmin(token, userId) {
   try {
     // aqui estava o código como era antes:

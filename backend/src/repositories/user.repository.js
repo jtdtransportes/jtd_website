@@ -1,4 +1,4 @@
-import pool from "../config/db.js";
+import pool, { DB_TIMEZONE } from "../config/db.js";
 
 class UserRepository {
   async findByEmail(email) {
@@ -86,7 +86,10 @@ class UserRepository {
   }
 
   async updateLastLogin(id) {
-    await pool.execute("UPDATE users SET last_login = NOW() WHERE id = ?", [id]);
+    await pool.execute(
+      "UPDATE users SET last_login = CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', ?) WHERE id = ?",
+      [DB_TIMEZONE, id]
+    );
   }
 
   async updateProfile(id, data) {
@@ -183,6 +186,52 @@ class UserRepository {
     );
 
     return rows;
+  }
+
+  async getAdminDashboardStats() {
+    const [summaryRows] = await pool.execute(
+      `
+      SELECT
+        COUNT(*) AS total_users,
+        SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS active_users,
+        SUM(CASE WHEN last_login IS NOT NULL THEN 1 ELSE 0 END) AS adopted_users,
+        SUM(CASE WHEN last_login IS NULL THEN 1 ELSE 0 END) AS not_adopted_users,
+        SUM(
+          CASE
+            WHEN last_login IS NOT NULL
+             AND last_login >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+            THEN 1
+            ELSE 0
+          END
+        ) AS logins_last_24h
+      FROM users
+      `
+    );
+
+    const [dailyRows] = await pool.execute(
+      `
+      SELECT
+        DATE_FORMAT(last_login, '%Y-%m-%d') AS login_date,
+        COUNT(*) AS access_count,
+        COUNT(DISTINCT id) AS user_count
+      FROM users
+      WHERE last_login IS NOT NULL
+        AND last_login >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        AND last_login < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+      GROUP BY DATE_FORMAT(last_login, '%Y-%m-%d')
+      ORDER BY login_date ASC
+      `
+    );
+
+    const [dateRows] = await pool.execute(
+      "SELECT DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS today"
+    );
+
+    return {
+      summary: summaryRows[0] || {},
+      daily: dailyRows,
+      today: dateRows[0]?.today,
+    };
   }
 
   async adminDeactivateUser(userId) {

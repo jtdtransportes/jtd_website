@@ -102,18 +102,10 @@ class PopService {
       throw new Error("Usuario nao encontrado.");
     }
 
-    if (!user.sector_id) {
-      return {
-        sector_id: null,
-        sector_name: null,
-        pops: [],
-      };
-    }
-
-    const pops = await popRepository.findActiveBySectorId(user.sector_id);
+    const pops = await popRepository.findActivePrioritizingSector(user.sector_id);
 
     return {
-      sector_id: user.sector_id,
+      sector_id: user.sector_id || null,
       sector_name: fixMojibake(user.sector_name) || null,
       pops: this.normalizePops(pops),
     };
@@ -140,19 +132,11 @@ class PopService {
     await popRepository.deleteById(popId);
   }
 
-  async getDownloadStream(userId, popId, isAdmin = false) {
+  async getDownloadStream(popId) {
     const pop = await popRepository.findById(popId);
 
     if (!pop || Number(pop.is_active) !== 1) {
       throw new Error("POP nao encontrado.");
-    }
-
-    if (!isAdmin) {
-      const user = await userRepository.findById(userId);
-
-      if (!user || Number(user.sector_id) !== Number(pop.sector_id)) {
-        throw new Error("Voce nao tem acesso a este POP.");
-      }
     }
 
     if (!pop.drive_file_id) {

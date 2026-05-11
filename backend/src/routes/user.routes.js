@@ -12,6 +12,7 @@ router.patch("/deactivate", authMiddleware, (req, res) => userController.deactiv
 router.put("/change-password", authMiddleware, (req, res) => userController.changePassword(req, res));
 router.get("/", authMiddleware, (req, res) => userController.listUsers(req, res));
 router.get("/admin/all", authMiddleware, adminMiddleware, (req, res) => userController.listUsersForAdmin(req, res));
+router.get("/admin/dashboard", authMiddleware, adminMiddleware, (req, res) => userController.adminDashboard(req, res));
 router.patch("/:id/deactivate", authMiddleware, adminMiddleware, (req, res) => userController.adminDeactivateUser(req, res));
 router.patch("/:id/activate", authMiddleware, adminMiddleware, (req, res) =>userController.adminActivateUser(req, res));
 export default router;

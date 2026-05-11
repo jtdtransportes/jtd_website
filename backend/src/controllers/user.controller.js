@@ -146,6 +146,23 @@ class UserController {
       });
     }
   }
+
+  async adminDashboard(req, res) {
+    try {
+      const dashboard = await userService.getAdminDashboardStats();
+
+      return res.status(200).json({
+        ok: true,
+        dashboard,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        message: error.message,
+      });
+    }
+  }
+
   async adminDeactivateUser(req, res) {
     try {
       await userService.adminDeactivateUser(req.params.id);

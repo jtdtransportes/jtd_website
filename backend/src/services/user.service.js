@@ -2,6 +2,20 @@ import userRepository from "../repositories/user.repository.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import { generateToken } from "../utils/jwt.js";
 
+function addDaysToDateString(dateString, days) {
+  const [year, month, day] = String(dateString || "")
+    .split("-")
+    .map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function toNumber(value) {
+  return Number(value || 0);
+}
+
 class UserService {
   normalizeCpf(cpf) {
     return String(cpf || "").replace(/\D/g, "");
@@ -244,6 +258,65 @@ class UserService {
 
   async listUsersForAdmin() {
     return userRepository.findAllForAdmin();
+  }
+
+  async getAdminDashboardStats() {
+    const dashboard = await userRepository.getAdminDashboardStats();
+    const summary = dashboard.summary || {};
+    const dailyByDate = new Map(
+      (dashboard.daily || []).map((item) => [
+        item.login_date,
+        {
+          accesses: toNumber(item.access_count),
+          users: toNumber(item.user_count),
+        },
+      ])
+    );
+
+    const today = dashboard.today || new Date().toISOString().slice(0, 10);
+    const week = Array.from({ length: 7 }, (_, index) => {
+      const date = addDaysToDateString(today, index - 6);
+      const dayData = dailyByDate.get(date) || { accesses: 0, users: 0 };
+
+      return {
+        date,
+        accesses: dayData.accesses,
+        users: dayData.users,
+      };
+    });
+
+    const totalWeekAccesses = week.reduce(
+      (total, day) => total + day.accesses,
+      0
+    );
+    const totalWeekUsers = week.reduce((total, day) => total + day.users, 0);
+    const totalUsers = toNumber(summary.total_users);
+    const adoptedUsers = toNumber(summary.adopted_users);
+    const notAdoptedUsers = toNumber(summary.not_adopted_users);
+    const adoptedPercentage = totalUsers
+      ? Number(((adoptedUsers / totalUsers) * 100).toFixed(1))
+      : 0;
+    const notAdoptedPercentage = totalUsers
+      ? Number(((notAdoptedUsers / totalUsers) * 100).toFixed(1))
+      : 0;
+
+    return {
+      totalUsers,
+      activeUsers: toNumber(summary.active_users),
+      loginsLast24Hours: toNumber(summary.logins_last_24h),
+      week: {
+        days: week,
+        totalAccesses: totalWeekAccesses,
+        averageAccessesPerDay: Number((totalWeekAccesses / 7).toFixed(1)),
+        averageUsersPerDay: Number((totalWeekUsers / 7).toFixed(1)),
+      },
+      adoption: {
+        adoptedUsers,
+        notAdoptedUsers,
+        adoptedPercentage,
+        notAdoptedPercentage,
+      },
+    };
   }
 
   async adminDeactivateUser(userId) {

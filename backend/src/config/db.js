@@ -3,7 +3,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const pool = mysql.createPool({
+export const DB_TIMEZONE = process.env.DB_TIMEZONE || "-03:00";
+const configuredConnections = new WeakSet();
+
+const basePool = mysql.createPool({
   // aqui estava o código como era antes:
   // host: process.env.DB_HOST,
   host: process.env.DB_HOST || "localhost",
@@ -19,9 +22,47 @@ const pool = mysql.createPool({
   // aqui estava o código como era antes:
   // database: process.env.DB_NAME,
   database: process.env.DB_NAME || "jtd_website",
+  timezone: DB_TIMEZONE,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
 });
+
+async function getTimezoneAwareConnection() {
+  const connection = await basePool.getConnection();
+  const connectionKey = connection.connection || connection;
+
+  if (!configuredConnections.has(connectionKey)) {
+    await connection.query("SET time_zone = ?", [DB_TIMEZONE]);
+    configuredConnections.add(connectionKey);
+  }
+
+  return connection;
+}
+
+const pool = {
+  async execute(sql, params) {
+    const connection = await getTimezoneAwareConnection();
+
+    try {
+      return await connection.execute(sql, params);
+    } finally {
+      connection.release();
+    }
+  },
+
+  async query(sql, params) {
+    const connection = await getTimezoneAwareConnection();
+
+    try {
+      return await connection.query(sql, params);
+    } finally {
+      connection.release();
+    }
+  },
+
+  getConnection: getTimezoneAwareConnection,
+  end: (...args) => basePool.end(...args),
+};
 
 export default pool;

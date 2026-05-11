@@ -12,6 +12,7 @@ import {
   getMyContracheques,
   deactivateUserByAdmin,
   activateUserByAdmin,
+  getAdminDashboard,
   getAllContrachequesForAdmin,
   removeContrachequeByAdmin,
   getMyPops,
@@ -39,7 +40,6 @@ export default function Profile() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingContracheque, setUploadingContracheque] = useState(false);
   const [uploadingPop, setUploadingPop] = useState(false);
-  const [updatingPopSector, setUpdatingPopSector] = useState(false);
 
   const [searchColaborador, setSearchColaborador] = useState("");
   const [searchUsuario, setSearchUsuario] = useState("");
@@ -83,11 +83,12 @@ export default function Profile() {
   const [pops, setPops] = useState([]);
   const [allPops, setAllPops] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const [adminDashboard, setAdminDashboard] = useState(null);
+  const [loadingDashboard, setLoadingDashboard] = useState(false);
   const downloadingContrachequeIdsRef = useRef(new Set());
   const [downloadingContrachequeIds, setDownloadingContrachequeIds] = useState([]);
   const downloadingPopIdsRef = useRef(new Set());
   const [downloadingPopIds, setDownloadingPopIds] = useState([]);
-  const [selectedPopSectorId, setSelectedPopSectorId] = useState("");
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -256,6 +257,29 @@ export default function Profile() {
     [showError]
   );
 
+  const reloadAdminDashboardData = useCallback(
+    async (token) => {
+      setLoadingDashboard(true);
+
+      try {
+        const result = await getAdminDashboard(token);
+
+        if (result.ok) {
+          setAdminDashboard(result.dashboard || null);
+          return;
+        }
+
+        showError(result.message || "Erro ao carregar dashboard.");
+      } catch (error) {
+        console.error("Erro ao carregar dashboard:", error);
+        showError("Erro ao carregar dashboard.");
+      } finally {
+        setLoadingDashboard(false);
+      }
+    },
+    [showError]
+  );
+
   const reloadAdminContrachequesData = useCallback(async (token) => {
     const result = await getAllContrachequesForAdmin(token);
     if (result.ok) setAllContracheques(result.contracheques || []);
@@ -317,8 +341,6 @@ export default function Profile() {
       const setorId = getSectorIdFromUser(result.user, loadedSectors);
 
       setUser(result.user);
-      setSelectedPopSectorId(setorId);
-
       setFormData({
         nome: result.user.nome || "",
         email: result.user.email || "",
@@ -421,6 +443,10 @@ export default function Profile() {
       await reloadSectorsData(token);
     }
 
+    if (tab === "dashboard" && user?.role === "admin") {
+      await reloadAdminDashboardData(token);
+    }
+
     if (tab === "adicionar-pop" && user?.role === "admin") {
       await reloadSectorsData(token);
     }
@@ -475,7 +501,6 @@ export default function Profile() {
       const setorId = getSectorIdFromUser(result.user, loadedSectors);
 
       setUser(result.user);
-      setSelectedPopSectorId(setorId);
       localStorage.setItem("user", JSON.stringify(result.user));
 
       setFormData({
@@ -709,10 +734,7 @@ export default function Profile() {
         const normalizedPop = normalizePopText(result.pop);
 
         setAllPops((prev) => [normalizedPop, ...prev]);
-
-        if (Number(normalizedPop.sector_id) === Number(user?.sector_id)) {
-          setPops((prev) => [normalizedPop, ...prev]);
-        }
+        setPops((prev) => [normalizedPop, ...prev]);
       } else {
         await reloadAdminPopsData(token);
         await reloadMyPopsData(token);
@@ -722,61 +744,41 @@ export default function Profile() {
     }
   }
 
-  async function handleSavePopSector() {
-    if (updatingPopSector) {
-      return;
-    }
-
-    if (!selectedPopSectorId) {
-      showError("Selecione seu setor para consultar os POPs disponiveis.");
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-    setUpdatingPopSector(true);
-
-    try {
-      const result = await updateProfile(token, {
-        nome: formData.nome,
-        email: formData.email,
-        telefone: formData.telefone,
-        sexo: formData.sexo,
-        data_nascimento: formData.data_nascimento,
-        sector_id: Number(selectedPopSectorId),
-      });
-
-      if (!result.ok) {
-        showError(result.message || "Erro ao atualizar setor.");
-        return;
-      }
-
-      const setorNome = getSectorNameFromUser(result.user, sectors);
-      const setorId = getSectorIdFromUser(result.user, sectors);
-
-      setUser(result.user);
-      setSelectedPopSectorId(setorId);
-      setFormData((prev) => ({
-        ...prev,
-        sector_id: setorId,
-        setor: setorNome,
-      }));
-      localStorage.setItem("user", JSON.stringify(result.user));
-
-      showSuccess("Setor atualizado com sucesso.");
-      await reloadMyPopsData(token);
-    } finally {
-      setUpdatingPopSector(false);
-    }
-  }
-
   const contrachequesSeguros = Array.isArray(contracheques)
     ? contracheques.filter(
         (item) => item && item.id != null && item.ano != null && item.mes != null
       )
     : [];
 
+  function comparePopText(a, b) {
+    return String(fixMojibake(a) || "").localeCompare(
+      String(fixMojibake(b) || ""),
+      "pt-BR",
+      { sensitivity: "base" }
+    );
+  }
+
+  function sortPopsByCurrentSector(a, b) {
+    const currentSectorId = formData.sector_id || user?.sector_id || null;
+    const aIsCurrentSector =
+      currentSectorId && Number(a.sector_id) === Number(currentSectorId);
+    const bIsCurrentSector =
+      currentSectorId && Number(b.sector_id) === Number(currentSectorId);
+
+    if (aIsCurrentSector !== bIsCurrentSector) {
+      return aIsCurrentSector ? -1 : 1;
+    }
+
+    const sectorCompare = comparePopText(a.sector_name, b.sector_name);
+    if (sectorCompare !== 0) return sectorCompare;
+
+    return comparePopText(a.title, b.title);
+  }
+
   const popsSeguros = Array.isArray(pops)
-    ? pops.filter((item) => item && item.id != null)
+    ? pops
+        .filter((item) => item && item.id != null)
+        .sort(sortPopsByCurrentSector)
     : [];
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
@@ -1040,7 +1042,6 @@ export default function Profile() {
           const sectorId = getSectorIdFromUser(updatedProfile.user, sectors);
 
           setUser(updatedProfile.user);
-          setSelectedPopSectorId(sectorId);
           setFormData((prev) => ({
             ...prev,
             setor: sectorName,
@@ -1268,6 +1269,48 @@ export default function Profile() {
     return downloadingPopIds.includes(String(id));
   }
 
+  function formatDashboardNumber(value) {
+    return Number(value || 0).toLocaleString("pt-BR");
+  }
+
+  function formatDashboardDecimal(value) {
+    return Number(value || 0).toLocaleString("pt-BR", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+  }
+
+  function formatDashboardPercent(value) {
+    return `${formatDashboardDecimal(value)}%`;
+  }
+
+  function formatDashboardDay(dateString) {
+    const [year, month, day] = String(dateString || "")
+      .split("-")
+      .map(Number);
+
+    if (!year || !month || !day) return "--";
+
+    return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      timeZone: "UTC",
+    });
+  }
+
+  function getDashboardBarHeight(value, maxValue) {
+    if (!maxValue || !value) return 0;
+    return Math.max(8, Math.round((Number(value) / Number(maxValue)) * 100));
+  }
+
+  const dashboardWeekDays = adminDashboard?.week?.days || [];
+  const maxDashboardAccesses = Math.max(
+    0,
+    ...dashboardWeekDays.map((day) => Number(day.accesses || 0))
+  );
+  const dashboardAdoptedPercentage =
+    adminDashboard?.adoption?.adoptedPercentage || 0;
+
   async function handleDownloadContracheque(id) {
     const downloadId = String(id);
 
@@ -1491,6 +1534,13 @@ export default function Profile() {
                 onClick={() => changeTab("gerenciar-setores")}
               >
                 Gerenciar Setores
+              </button>
+
+              <button
+                className="sidebar-title"
+                onClick={() => changeTab("dashboard")}
+              >
+                Dashboard
               </button>
             </>
           )}
@@ -1739,68 +1789,39 @@ export default function Profile() {
               <div className="pop-section">
                 <h3>Procedimento Operacional Padrão</h3>
 
-                {formData.sector_id ? (
-                  <p className="pop-sector-label">
-                    <strong>Setor:</strong>{" "}
-                    {formData.setor || getSectorNameFromUser(user, sectors)}
+                <p className="pop-sector-label">
+                  <strong>Seu setor:</strong>{" "}
+                  {formData.setor || getSectorNameFromUser(user, sectors)}
+                </p>
+
+                {popsSeguros.length === 0 ? (
+                  <p>
+                    Nenhum POP foi disponibilizado ainda. Assim que houver um
+                    documento publicado, ele aparecerá aqui.
                   </p>
                 ) : (
-                  <div className="pop-sector-select">
-                    <p>Selecione seu setor para visualizar os POPs disponíveis.</p>
+                  <div className="contracheque-list">
+                    {popsSeguros.map((item) => (
+                      <div key={item.id} className="contracheque-item">
+                        <span className="pop-item-info">
+                          <strong>{fixMojibake(item.title)}</strong>
+                          <small>
+                            {fixMojibake(item.sector_name || "Sem setor")}
+                          </small>
+                        </span>
 
-                    <div className="profile-form">
-                      <label>
-                        Selecione seu setor
-                        <select
-                          value={selectedPopSectorId}
-                          onChange={(e) => setSelectedPopSectorId(e.target.value)}
+                        <button
+                          type="button"
+                          className="action-button password-save-button contracheque-download-button"
+                          disabled={isPopDownloading(item.id)}
+                          onClick={() => handleDownloadPop(item.id)}
                         >
-                          <option value="">Selecione seu setor</option>
-                          {sectors.map((sector) => (
-                            <option key={sector.id} value={sector.id}>
-                              {getSectorDisplayName(sector)}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
-
-                    <button
-                      className="action-button password-save-button"
-                      onClick={handleSavePopSector}
-                      disabled={updatingPopSector}
-                    >
-                      {updatingPopSector ? "Salvando..." : "Salvar setor"}
-                    </button>
+                          {isPopDownloading(item.id) ? "Baixando..." : "Baixar POP"}
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
-
-                {formData.sector_id &&
-                  (popsSeguros.length === 0 ? (
-                    <p>
-                      Nenhum POP foi disponibilizado para este setor ainda. Assim
-                      que houver um documento publicado, ele aparecerá aqui.
-                    </p>
-                  ) : (
-                    <div className="contracheque-list">
-                      {popsSeguros.map((item) => (
-                        <div key={item.id} className="contracheque-item">
-                          <span>
-                            <strong>{fixMojibake(item.title)}</strong>
-                          </span>
-
-                          <button
-                            type="button"
-                            className="action-button password-save-button contracheque-download-button"
-                            disabled={isPopDownloading(item.id)}
-                            onClick={() => handleDownloadPop(item.id)}
-                          >
-                            {isPopDownloading(item.id) ? "Baixando..." : "Baixar POP"}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
               </div>
             )}
 
@@ -2423,6 +2444,141 @@ export default function Profile() {
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "dashboard" && user?.role === "admin" && (
+              <div className="dashboard-section">
+                <h3>Dashboard</h3>
+
+                {loadingDashboard && !adminDashboard ? (
+                  <p>Carregando dashboard...</p>
+                ) : !adminDashboard ? (
+                  <p>Nenhuma informacao encontrada para o dashboard.</p>
+                ) : (
+                  <>
+                    <div className="dashboard-metrics">
+                      <div className="dashboard-metric">
+                        <span>Login nas ultimas 24 horas</span>
+                        <strong>
+                          {formatDashboardNumber(
+                            adminDashboard.loginsLast24Hours
+                          )}
+                        </strong>
+                      </div>
+
+                      <div className="dashboard-metric">
+                        <span>Usuarios cadastrados</span>
+                        <strong>
+                          {formatDashboardNumber(adminDashboard.totalUsers)}
+                        </strong>
+                      </div>
+
+                      <div className="dashboard-metric">
+                        <span>Media de acessos/dia</span>
+                        <strong>
+                          {formatDashboardDecimal(
+                            adminDashboard.week?.averageAccessesPerDay
+                          )}
+                        </strong>
+                      </div>
+
+                      <div className="dashboard-metric">
+                        <span>Media de usuarios/dia</span>
+                        <strong>
+                          {formatDashboardDecimal(
+                            adminDashboard.week?.averageUsersPerDay
+                          )}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="dashboard-layout">
+                      <section className="dashboard-panel dashboard-activity-panel">
+                        <div className="dashboard-panel-header">
+                          <h4>Atividade da semana</h4>
+                          <span>
+                            {formatDashboardNumber(
+                              adminDashboard.week?.totalAccesses
+                            )}{" "}
+                            acessos
+                          </span>
+                        </div>
+
+                        <div className="dashboard-bar-chart">
+                          {dashboardWeekDays.map((day) => (
+                            <div className="dashboard-bar-column" key={day.date}>
+                              <span className="dashboard-bar-value">
+                                {formatDashboardNumber(day.accesses)}
+                              </span>
+                              <div className="dashboard-bar-track">
+                                <div
+                                  className="dashboard-bar-fill"
+                                  style={{
+                                    height: `${getDashboardBarHeight(
+                                      day.accesses,
+                                      maxDashboardAccesses
+                                    )}%`,
+                                  }}
+                                />
+                              </div>
+                              <span className="dashboard-bar-label">
+                                {formatDashboardDay(day.date)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="dashboard-panel dashboard-adoption-panel">
+                        <div className="dashboard-panel-header">
+                          <h4>Adesao ao sistema</h4>
+                          <span>
+                            {formatDashboardPercent(dashboardAdoptedPercentage)}
+                          </span>
+                        </div>
+
+                        <div className="dashboard-adoption-content">
+                          <div
+                            className="dashboard-donut"
+                            style={{
+                              "--dashboard-adopted": `${dashboardAdoptedPercentage}%`,
+                            }}
+                            aria-label={`${formatDashboardPercent(
+                              dashboardAdoptedPercentage
+                            )} dos usuarios aderiram`}
+                          >
+                            <span>
+                              {formatDashboardPercent(dashboardAdoptedPercentage)}
+                            </span>
+                          </div>
+
+                          <div className="dashboard-legend">
+                            <div>
+                              <span className="dashboard-legend-dot adopted" />
+                              <strong>
+                                {formatDashboardNumber(
+                                  adminDashboard.adoption?.adoptedUsers
+                                )}
+                              </strong>
+                              <small>Aderiram</small>
+                            </div>
+
+                            <div>
+                              <span className="dashboard-legend-dot pending" />
+                              <strong>
+                                {formatDashboardNumber(
+                                  adminDashboard.adoption?.notAdoptedUsers
+                                )}
+                              </strong>
+                              <small>Nao aderiram</small>
+                            </div>
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+                  </>
                 )}
               </div>
             )}
