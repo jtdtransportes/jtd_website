@@ -87,6 +87,7 @@ export default function Profile() {
   const [adminDashboard, setAdminDashboard] = useState(null);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
   const [selectedDashboardDay, setSelectedDashboardDay] = useState("");
+  const [selectedDashboardMonth, setSelectedDashboardMonth] = useState("");
   const [selectedDashboardAdoption, setSelectedDashboardAdoption] = useState("");
   const [dashboardViewKey, setDashboardViewKey] = useState(0);
   const downloadingContrachequeIdsRef = useRef(new Set());
@@ -271,6 +272,8 @@ export default function Profile() {
         if (result.ok) {
           setAdminDashboard(result.dashboard || null);
           setSelectedDashboardDay("");
+          setSelectedDashboardMonth("");
+          setSelectedDashboardAdoption("");
           return;
         }
 
@@ -1383,6 +1386,9 @@ export default function Profile() {
   );
   const selectedDashboardDayData =
     dashboardWeekDays.find((day) => day.date === selectedDashboardDay) || null;
+  const selectedDashboardMonthData =
+    dashboardMonths.find((month) => month.month === selectedDashboardMonth) ||
+    null;
   const dashboardAdoptedPercentage =
     adminDashboard?.adoption?.adoptedPercentage || 0;
   const selectedDashboardAdoptionUsers =
@@ -2713,7 +2719,11 @@ export default function Profile() {
                                 : ""
                             }`}
                             type="button"
-                            onClick={() => setSelectedDashboardAdoption("adopted")}
+                            onClick={() =>
+                              setSelectedDashboardAdoption((currentGroup) =>
+                                currentGroup === "adopted" ? "" : "adopted"
+                              )
+                            }
                             style={{
                               "--dashboard-adopted": `${dashboardAdoptedPercentage}%`,
                             }}
@@ -2734,7 +2744,11 @@ export default function Profile() {
                                   : ""
                               }`}
                               type="button"
-                              onClick={() => setSelectedDashboardAdoption("adopted")}
+                              onClick={() =>
+                                setSelectedDashboardAdoption((currentGroup) =>
+                                  currentGroup === "adopted" ? "" : "adopted"
+                                )
+                              }
                             >
                               <span className="dashboard-legend-dot adopted" />
                               <strong>
@@ -2752,7 +2766,11 @@ export default function Profile() {
                                   : ""
                               }`}
                               type="button"
-                              onClick={() => setSelectedDashboardAdoption("pending")}
+                              onClick={() =>
+                                setSelectedDashboardAdoption((currentGroup) =>
+                                  currentGroup === "pending" ? "" : "pending"
+                                )
+                              }
                             >
                               <span className="dashboard-legend-dot pending" />
                               <strong>
@@ -2840,7 +2858,20 @@ export default function Profile() {
 
                       <div className="dashboard-bar-chart dashboard-monthly-chart">
                         {dashboardMonths.map((month) => (
-                          <div className="dashboard-bar-column" key={month.month}>
+                          <button
+                            className={`dashboard-bar-column ${
+                              selectedDashboardMonth === month.month
+                                ? "active"
+                                : ""
+                            }`}
+                            key={month.month}
+                            type="button"
+                            onClick={() =>
+                              setSelectedDashboardMonth((currentMonth) =>
+                                currentMonth === month.month ? "" : month.month
+                              )
+                            }
+                          >
                             <span className="dashboard-bar-value">
                               {formatDashboardNumber(month.accesses)}
                             </span>
@@ -2858,9 +2889,51 @@ export default function Profile() {
                             <span className="dashboard-bar-label">
                               {formatDashboardMonth(month.month)}
                             </span>
-                          </div>
+                          </button>
                         ))}
                       </div>
+
+                      {selectedDashboardMonthData && (
+                        <div className="dashboard-access-list">
+                          <div className="dashboard-access-list-header">
+                            <strong>
+                              {formatDashboardMonth(
+                                selectedDashboardMonthData.month
+                              )}
+                            </strong>
+                            <span>
+                              {formatDashboardNumber(
+                                selectedDashboardMonthData.accessedUsers?.length
+                              )}{" "}
+                              usuarios
+                            </span>
+                          </div>
+
+                          {selectedDashboardMonthData.accessedUsers?.length ? (
+                            <div className="dashboard-access-users">
+                              {selectedDashboardMonthData.accessedUsers.map(
+                                (accessUser) => (
+                                  <div
+                                    className="dashboard-access-user"
+                                    key={`${selectedDashboardMonthData.month}-${accessUser.id}`}
+                                  >
+                                    <strong>{accessUser.nome}</strong>
+                                    <span>{accessUser.email}</span>
+                                    <small>
+                                      {accessUser.sectorName || "Sem setor"} -{" "}
+                                      {formatDashboardDateTime(
+                                        accessUser.lastLogin
+                                      )}
+                                    </small>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            <p>Nenhum usuario acessou nesse mes.</p>
+                          )}
+                        </div>
+                      )}
                     </section>
                   </>
                 )}

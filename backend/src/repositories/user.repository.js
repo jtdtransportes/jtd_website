@@ -257,6 +257,25 @@ class UserRepository {
       `
     );
 
+    const [monthlyUserRows] = await pool.execute(
+      `
+      SELECT
+        DATE_FORMAT(u.last_login, '%Y-%m') AS login_month,
+        u.id,
+        u.nome,
+        u.email,
+        DATE_FORMAT(u.last_login, '%Y-%m-%d %H:%i:%s') AS last_login,
+        u.sector_id,
+        s.name AS sector_name
+      FROM users u
+      LEFT JOIN sectors s ON s.id = u.sector_id
+      WHERE u.last_login IS NOT NULL
+        AND u.last_login >= DATE_SUB(CAST(DATE_FORMAT(CURDATE(), '%Y-%m-01') AS DATE), INTERVAL 5 MONTH)
+        AND u.last_login < DATE_ADD(LAST_DAY(CURDATE()), INTERVAL 1 DAY)
+      ORDER BY u.last_login DESC, u.nome ASC
+      `
+    );
+
     const [adoptionUserRows] = await pool.execute(
       `
       SELECT
@@ -289,6 +308,7 @@ class UserRepository {
       daily: dailyRows,
       dailyUsers: dailyUserRows,
       monthly: monthlyRows,
+      monthlyUsers: monthlyUserRows,
       adoptionUsers: adoptionUserRows,
       today: dateRows[0]?.today,
       currentMonth: dateRows[0]?.current_month,

@@ -315,6 +315,15 @@ class UserService {
         },
       ])
     );
+    const monthlyUsersByMonth = new Map();
+
+    (dashboard.monthlyUsers || []).forEach((item) => {
+      if (!monthlyUsersByMonth.has(item.login_month)) {
+        monthlyUsersByMonth.set(item.login_month, []);
+      }
+
+      monthlyUsersByMonth.get(item.login_month).push(mapDashboardUser(item));
+    });
 
     const today = dashboard.today || new Date().toISOString().slice(0, 10);
     const currentMonth =
@@ -338,6 +347,7 @@ class UserService {
         month,
         accesses: monthData.accesses,
         users: monthData.users,
+        accessedUsers: monthlyUsersByMonth.get(month) || [],
       };
     });
 
