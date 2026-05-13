@@ -86,10 +86,33 @@ class UserRepository {
   }
 
   async updateLastLogin(id) {
-    await pool.execute(
-      "UPDATE users SET last_login = CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', ?) WHERE id = ?",
-      [DB_TIMEZONE, id]
-    );
+    const connection = await pool.getConnection();
+
+    try {
+      await connection.beginTransaction();
+
+      const [[loginTimeRow]] = await connection.execute(
+        "SELECT CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', ?) AS login_time",
+        [DB_TIMEZONE]
+      );
+      const loginTime = loginTimeRow.login_time;
+
+      await connection.execute("UPDATE users SET last_login = ? WHERE id = ?", [
+        loginTime,
+        id,
+      ]);
+      await connection.execute(
+        "INSERT INTO user_login_events (user_id, logged_at) VALUES (?, ?)",
+        [id, loginTime]
+      );
+
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
   }
 
   async updateProfile(id, data) {
@@ -196,13 +219,10 @@ class UserRepository {
         SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS active_users,
         SUM(CASE WHEN last_login IS NOT NULL THEN 1 ELSE 0 END) AS adopted_users,
         SUM(CASE WHEN last_login IS NULL THEN 1 ELSE 0 END) AS not_adopted_users,
-        SUM(
-          CASE
-            WHEN last_login IS NOT NULL
-             AND last_login >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-            THEN 1
-            ELSE 0
-          END
+        (
+          SELECT COUNT(*)
+          FROM user_login_events
+          WHERE logged_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
         ) AS logins_last_24h
       FROM users
       `
@@ -211,14 +231,13 @@ class UserRepository {
     const [dailyRows] = await pool.execute(
       `
       SELECT
-        DATE_FORMAT(last_login, '%Y-%m-%d') AS login_date,
+        DATE_FORMAT(logged_at, '%Y-%m-%d') AS login_date,
         COUNT(*) AS access_count,
-        COUNT(DISTINCT id) AS user_count
-      FROM users
-      WHERE last_login IS NOT NULL
-        AND last_login >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-        AND last_login < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-      GROUP BY DATE_FORMAT(last_login, '%Y-%m-%d')
+        COUNT(DISTINCT user_id) AS user_count
+      FROM user_login_events
+      WHERE logged_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        AND logged_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+      GROUP BY DATE_FORMAT(logged_at, '%Y-%m-%d')
       ORDER BY login_date ASC
       `
     );
@@ -226,33 +245,39 @@ class UserRepository {
     const [dailyUserRows] = await pool.execute(
       `
       SELECT
-        DATE_FORMAT(u.last_login, '%Y-%m-%d') AS login_date,
+        day_access.login_date,
         u.id,
         u.nome,
         u.email,
-        DATE_FORMAT(u.last_login, '%Y-%m-%d %H:%i:%s') AS last_login,
+        DATE_FORMAT(day_access.last_login, '%Y-%m-%d %H:%i:%s') AS last_login,
         u.sector_id,
         s.name AS sector_name
-      FROM users u
+      FROM (
+        SELECT
+          DATE_FORMAT(logged_at, '%Y-%m-%d') AS login_date,
+          user_id,
+          MAX(logged_at) AS last_login
+        FROM user_login_events
+        WHERE logged_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+          AND logged_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+        GROUP BY DATE_FORMAT(logged_at, '%Y-%m-%d'), user_id
+      ) day_access
+      INNER JOIN users u ON u.id = day_access.user_id
       LEFT JOIN sectors s ON s.id = u.sector_id
-      WHERE u.last_login IS NOT NULL
-        AND u.last_login >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-        AND u.last_login < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-      ORDER BY u.last_login DESC, u.nome ASC
+      ORDER BY day_access.last_login DESC, u.nome ASC
       `
     );
 
     const [monthlyRows] = await pool.execute(
       `
       SELECT
-        DATE_FORMAT(last_login, '%Y-%m') AS login_month,
+        DATE_FORMAT(logged_at, '%Y-%m') AS login_month,
         COUNT(*) AS access_count,
-        COUNT(DISTINCT id) AS user_count
-      FROM users
-      WHERE last_login IS NOT NULL
-        AND last_login >= DATE_SUB(CAST(DATE_FORMAT(CURDATE(), '%Y-%m-01') AS DATE), INTERVAL 5 MONTH)
-        AND last_login < DATE_ADD(LAST_DAY(CURDATE()), INTERVAL 1 DAY)
-      GROUP BY DATE_FORMAT(last_login, '%Y-%m')
+        COUNT(DISTINCT user_id) AS user_count
+      FROM user_login_events
+      WHERE logged_at >= DATE_SUB(CAST(DATE_FORMAT(CURDATE(), '%Y-%m-01') AS DATE), INTERVAL 5 MONTH)
+        AND logged_at < DATE_ADD(LAST_DAY(CURDATE()), INTERVAL 1 DAY)
+      GROUP BY DATE_FORMAT(logged_at, '%Y-%m')
       ORDER BY login_month ASC
       `
     );
@@ -260,19 +285,26 @@ class UserRepository {
     const [monthlyUserRows] = await pool.execute(
       `
       SELECT
-        DATE_FORMAT(u.last_login, '%Y-%m') AS login_month,
+        month_access.login_month,
         u.id,
         u.nome,
         u.email,
-        DATE_FORMAT(u.last_login, '%Y-%m-%d %H:%i:%s') AS last_login,
+        DATE_FORMAT(month_access.last_login, '%Y-%m-%d %H:%i:%s') AS last_login,
         u.sector_id,
         s.name AS sector_name
-      FROM users u
+      FROM (
+        SELECT
+          DATE_FORMAT(logged_at, '%Y-%m') AS login_month,
+          user_id,
+          MAX(logged_at) AS last_login
+        FROM user_login_events
+        WHERE logged_at >= DATE_SUB(CAST(DATE_FORMAT(CURDATE(), '%Y-%m-01') AS DATE), INTERVAL 5 MONTH)
+          AND logged_at < DATE_ADD(LAST_DAY(CURDATE()), INTERVAL 1 DAY)
+        GROUP BY DATE_FORMAT(logged_at, '%Y-%m'), user_id
+      ) month_access
+      INNER JOIN users u ON u.id = month_access.user_id
       LEFT JOIN sectors s ON s.id = u.sector_id
-      WHERE u.last_login IS NOT NULL
-        AND u.last_login >= DATE_SUB(CAST(DATE_FORMAT(CURDATE(), '%Y-%m-01') AS DATE), INTERVAL 5 MONTH)
-        AND u.last_login < DATE_ADD(LAST_DAY(CURDATE()), INTERVAL 1 DAY)
-      ORDER BY u.last_login DESC, u.nome ASC
+      ORDER BY month_access.last_login DESC, u.nome ASC
       `
     );
 
