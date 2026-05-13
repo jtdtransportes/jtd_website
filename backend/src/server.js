@@ -15,33 +15,45 @@ import { fileURLToPath } from "url";
 dotenv.config();
 
 const app = express();
+
+
 app.set("trust proxy", 1);
 
 app.use(helmet());
 app.use(express.json({ limit: "200kb" }));
 
-const allowedOrigins = (process.env.CORS_ORIGIN || "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+const allowedOrigins = [
+  "http://www.jtdtransportes.com.br",
+  "https://www.jtdtransportes.com.br",
+  "http://jtdtransportes.com.br",
+  "https://jtdtransportes.com.br",
+  "http://localhost:3000",
+  "http://localhost:5173",
+  ...(process.env.CORS_ORIGIN || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
+];
 
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true);
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
 
-      if (allowedOrigins.length === 0) return cb(null, true);
-      if (allowedOrigins.includes(origin)) return cb(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return cb(null, true);
+    }
 
-      return cb(new Error("Not allowed by CORS"));
-    },
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    optionsSuccessStatus: 204,
-  })
-);
+    return cb(new Error(`Not allowed by CORS: ${origin}`));
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
 
-app.options(/^\/api\/.*$/, cors());
+app.use(cors(corsOptions));
+
+app.options(/^\/api\/.*$/, cors(corsOptions));
 
 app.use(
   "/api/",
