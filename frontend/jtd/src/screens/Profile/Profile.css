@@ -571,6 +571,11 @@
   border-bottom: 1px solid var(--border);
 }
 
+.contracheque-notice {
+  margin-top: -10px;
+  line-height: 1.45;
+}
+
 .contracheque-list {
   display: flex;
   flex-direction: column;
@@ -1241,6 +1246,24 @@ button.dashboard-bar-column.active .dashboard-bar-track {
   letter-spacing: 0.08em;
   color: var(--accent);
   border-bottom: 1px solid var(--border);
+}
+
+.pop-sector-toggle {
+  display: block;
+  width: 100%;
+  border-top: 0;
+  border-right: 0;
+  border-left: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pop-sector-toggle:hover {
+  background: var(--bg-elevated);
+}
+
+.pop-sector-group:not(.is-open) .pop-sector-toggle {
+  border-bottom: 0;
 }
 
 .colaborador-group {

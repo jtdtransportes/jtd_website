@@ -94,6 +94,7 @@ export default function Profile() {
   const [downloadingContrachequeIds, setDownloadingContrachequeIds] = useState([]);
   const downloadingPopIdsRef = useRef(new Set());
   const [downloadingPopIds, setDownloadingPopIds] = useState([]);
+  const [expandedPopSectorIds, setExpandedPopSectorIds] = useState([]);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -824,6 +825,16 @@ export default function Profile() {
     popsSeguros,
     formData.sector_id || user?.sector_id
   );
+
+  function togglePopSector(sectorId) {
+    const normalizedSectorId = String(sectorId);
+
+    setExpandedPopSectorIds((prev) =>
+      prev.includes(normalizedSectorId)
+        ? prev.filter((item) => item !== normalizedSectorId)
+        : [...prev, normalizedSectorId]
+    );
+  }
 
   const contrachequesAgrupados = contrachequesSeguros.reduce((acc, item) => {
     const ano = String(item.ano);
@@ -1782,6 +1793,10 @@ export default function Profile() {
             {activeTab === "contracheque" && (
               <div className="contracheque-section">
                 <h3>Baixar Contracheque</h3>
+                <p className="contracheque-notice">
+                  Somente o contracheque final será exibido. Para dúvidas sobre
+                  o adiantamento salarial, favor consultar o setor de RH.
+                </p>
 
                 {contrachequesSeguros.length === 0 ? (
                   <p>Nenhum contracheque disponível.</p>
@@ -1894,42 +1909,62 @@ export default function Profile() {
                   </p>
                 ) : (
                   <div className="pop-sector-groups">
-                    {popsAgrupadosUsuario.map((sectorGroup) => (
-                      <div key={sectorGroup.sector_id} className="sector-group">
-                        <h4 className="sector-group-title">
-                          {sectorGroup.sector_name || "Sem setor"}
-                        </h4>
+                    {popsAgrupadosUsuario.map((sectorGroup) => {
+                      const isSectorExpanded = expandedPopSectorIds.includes(
+                        String(sectorGroup.sector_id)
+                      );
 
-                        <div className="contracheque-list pop-group-list">
-                          {sectorGroup.pops.map((item) => {
-                            const canDownloadPop = canCurrentUserAccessPop(item);
+                      return (
+                        <div
+                          key={sectorGroup.sector_id}
+                          className={`sector-group pop-sector-group${
+                            isSectorExpanded ? " is-open" : ""
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            className="sector-group-title pop-sector-toggle"
+                            aria-expanded={isSectorExpanded}
+                            onClick={() => togglePopSector(sectorGroup.sector_id)}
+                          >
+                            {sectorGroup.sector_name || "Sem setor"}
+                          </button>
 
-                            return (
-                              <div key={item.id} className="contracheque-item">
-                                <span className="pop-item-info">
-                                  <strong>{fixMojibake(item.title)}</strong>
-                                </span>
+                          {isSectorExpanded && (
+                            <div className="contracheque-list pop-group-list">
+                              {sectorGroup.pops.map((item) => {
+                                const canDownloadPop =
+                                  canCurrentUserAccessPop(item);
 
-                                <button
-                                  type="button"
-                                  className="action-button password-save-button contracheque-download-button"
-                                  disabled={
-                                    !canDownloadPop || isPopDownloading(item.id)
-                                  }
-                                  onClick={() => handleDownloadPop(item.id)}
-                                >
-                                  {!canDownloadPop
-                                    ? "Restrito"
-                                    : isPopDownloading(item.id)
-                                    ? "Baixando..."
-                                    : "Baixar POP"}
-                                </button>
-                              </div>
-                            );
-                          })}
+                                return (
+                                  <div key={item.id} className="contracheque-item">
+                                    <span className="pop-item-info">
+                                      <strong>{fixMojibake(item.title)}</strong>
+                                    </span>
+
+                                    <button
+                                      type="button"
+                                      className="action-button password-save-button contracheque-download-button"
+                                      disabled={
+                                        !canDownloadPop ||
+                                        isPopDownloading(item.id)
+                                      }
+                                      onClick={() => handleDownloadPop(item.id)}
+                                    >
+                                      {!canDownloadPop
+                                        ? "Restrito"
+                                        : isPopDownloading(item.id)
+                                        ? "Baixando..."
+                                        : "Baixar POP"}
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
