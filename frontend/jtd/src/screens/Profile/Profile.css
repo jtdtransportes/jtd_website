@@ -567,12 +567,14 @@
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 .contracheque-notice {
   margin-top: -10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
   line-height: 1.45;
 }
 
