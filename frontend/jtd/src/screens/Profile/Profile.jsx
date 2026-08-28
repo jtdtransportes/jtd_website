@@ -54,6 +54,10 @@ export default function Profile() {
     useState("todos");
   const [selectedRemoveSectorFilter, setSelectedRemoveSectorFilter] =
     useState("todos");
+  const [selectedRemoveYearFilter, setSelectedRemoveYearFilter] =
+    useState("todos");
+  const [selectedRemoveMonthFilter, setSelectedRemoveMonthFilter] =
+    useState("todos");
   const [selectedRemovePopSectorFilter, setSelectedRemovePopSectorFilter] =
     useState("todos");
 
@@ -1282,6 +1286,16 @@ export default function Profile() {
     return Number(sectorId) === Number(selectedSector);
   }
 
+  function contrachequeMatchesYearFilter(item, selectedYear) {
+    if (selectedYear === "todos") return true;
+    return Number(item.ano) === Number(selectedYear);
+  }
+
+  function contrachequeMatchesMonthFilter(item, selectedMonth) {
+    if (selectedMonth === "todos") return true;
+    return Number(item.mes) === Number(selectedMonth);
+  }
+
   function popMatchesSectorFilter(item, selectedSector) {
     if (selectedSector === "todos") return true;
     if (selectedSector === "sem-setor") return !item.sector_id;
@@ -1436,11 +1450,25 @@ export default function Profile() {
     };
   });
 
+  const anosContrachequesParaRemocao = Array.from(
+    new Set(
+      allContrachequesComSetor
+        .map((item) => Number(item.ano))
+        .filter((ano) => Number.isInteger(ano))
+    )
+  ).sort((a, b) => b - a);
+
   const contrachequesAdminFiltrados = allContrachequesComSetor
     .filter((item) =>
       item.user_nome
         ?.toLowerCase()
         .includes(searchColaborador.toLowerCase().trim())
+    )
+    .filter((item) =>
+      contrachequeMatchesYearFilter(item, selectedRemoveYearFilter)
+    )
+    .filter((item) =>
+      contrachequeMatchesMonthFilter(item, selectedRemoveMonthFilter)
     )
     .filter((item) =>
       contrachequeMatchesSectorFilter(item, selectedRemoveSectorFilter)
@@ -2241,6 +2269,45 @@ export default function Profile() {
 
                   <div className="sector-filter-box inline-filter">
                     <label>
+                      Ano
+                      <select
+                        value={selectedRemoveYearFilter}
+                        onChange={(e) =>
+                          setSelectedRemoveYearFilter(e.target.value)
+                        }
+                      >
+                        <option value="todos">Todos os anos</option>
+                        {anosContrachequesParaRemocao.map((ano) => (
+                          <option key={ano} value={ano}>
+                            {ano}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="sector-filter-box inline-filter">
+                    <label>
+                      Mês
+                      <select
+                        value={selectedRemoveMonthFilter}
+                        onChange={(e) =>
+                          setSelectedRemoveMonthFilter(e.target.value)
+                        }
+                      >
+                        <option value="todos">Todos os meses</option>
+                        {meses.map((mes) => (
+                          <option key={mes.value} value={mes.value}>
+                            {mes.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="sector-filter-box inline-filter">
+                    <label>
+                      Setor
                       <select
                         value={selectedRemoveSectorFilter}
                         onChange={(e) =>
