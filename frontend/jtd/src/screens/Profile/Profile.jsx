@@ -755,6 +755,92 @@ export default function Profile() {
     }
   }
 
+  const handleUploadMissingContracheque = useCallback(
+    async ({ user: missingUser, file, ano, mes }) => {
+      const token = localStorage.getItem("token");
+      const userIdSelecionado = Number(missingUser?.userId);
+
+      if (!token || !userIdSelecionado || !ano || !mes || !file) {
+        showError("Não foi possível identificar o usuário, a competência e o arquivo.");
+        return;
+      }
+
+      const form = new FormData();
+      form.append("user_id", String(userIdSelecionado));
+      form.append("ano", String(ano));
+      form.append("mes", String(mes));
+      form.append("contracheque", file);
+
+      const result = await uploadContracheque(token, form);
+
+      if (!result.ok) {
+        showError(result.message || "Erro ao enviar contracheque.");
+        return;
+      }
+
+      const novoContracheque = result.contracheque;
+      showSuccess("Contracheque enviado com sucesso.");
+
+      if (novoContracheque) {
+        if (Number(user?.id) === userIdSelecionado) {
+          setContracheques((prev) => [novoContracheque, ...prev]);
+        }
+
+        const usuarioSelecionado =
+          allUsers.find((u) => Number(u.id) === userIdSelecionado) ||
+          users.find((u) => Number(u.id) === userIdSelecionado);
+        const sectorNameFromUser = usuarioSelecionado
+          ? getSectorNameFromUser(usuarioSelecionado, sectors)
+          : "";
+
+        const itemAdmin = {
+          ...novoContracheque,
+          user_id: novoContracheque.user_id || userIdSelecionado,
+          ano: novoContracheque.ano || ano,
+          mes: novoContracheque.mes || mes,
+          user_nome:
+            usuarioSelecionado?.nome || missingUser?.nome || novoContracheque.user_nome || "",
+          user_email:
+            usuarioSelecionado?.email ||
+            missingUser?.email ||
+            novoContracheque.user_email ||
+            "",
+          user_cpf:
+            usuarioSelecionado?.cpf || missingUser?.cpf || novoContracheque.user_cpf || "",
+          sector_id: usuarioSelecionado?.sector_id || novoContracheque.sector_id || null,
+          sector_name:
+            sectorNameFromUser ||
+            missingUser?.sectorName ||
+            novoContracheque.sector_name ||
+            "Sem setor",
+          user_is_active:
+            usuarioSelecionado?.is_active ??
+            novoContracheque.user_is_active ??
+            (missingUser?.accountStatus === "active"
+              ? 1
+              : missingUser?.accountStatus === "inactive"
+              ? 0
+              : undefined),
+        };
+
+        setAllContracheques((prev) => [itemAdmin, ...prev]);
+        return;
+      }
+
+      await reloadAdminContrachequesData(token);
+    },
+    [
+      allUsers,
+      getSectorNameFromUser,
+      reloadAdminContrachequesData,
+      sectors,
+      showError,
+      showSuccess,
+      user?.id,
+      users,
+    ]
+  );
+
   function handlePopUploadChange(e) {
     const { name, value, files } = e.target;
 
@@ -2675,6 +2761,7 @@ export default function Profile() {
                   loading={loadingAdminContracheques || loadingAdminUsers}
                   error={adminContrachequesError}
                   accountStatusError={adminUsersError}
+                  onUploadMissingPaycheck={handleUploadMissingContracheque}
                 />
 
                 <div className="dashboard-access-list-header">

@@ -97,6 +97,7 @@ export default function PaycheckDashboard({
   loading = false,
   error = "",
   accountStatusError = "",
+  onUploadMissingPaycheck,
 }) {
   const componentId = useId();
   const chartScrollRef = useRef(null);
@@ -104,6 +105,7 @@ export default function PaycheckDashboard({
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState("all");
+  const [uploadingMissingUserIds, setUploadingMissingUserIds] = useState([]);
 
   const analytics = useMemo(
     () =>
@@ -160,6 +162,34 @@ export default function PaycheckDashboard({
   const hasComparisonBase = analytics.comparison.previousUserCount > 0;
   const hasMissingUsers = analytics.comparison.missingCount > 0;
   const coverage = analytics.comparison.coverage;
+  const canUploadMissingPaycheck =
+    typeof onUploadMissingPaycheck === "function";
+
+  async function handleMissingPaycheckFileChange(event, missingUser) {
+    const file = event.target.files?.[0] || null;
+    event.target.value = "";
+
+    if (!file || !canUploadMissingPaycheck) return;
+
+    const parsedMonth = parseMonthKey(analytics.selectedMonth);
+    if (!parsedMonth) return;
+
+    setUploadingMissingUserIds((prev) => [...prev, missingUser.userId]);
+
+    try {
+      await onUploadMissingPaycheck({
+        user: missingUser,
+        file,
+        ano: parsedMonth.year,
+        mes: parsedMonth.month,
+        monthKey: analytics.selectedMonth,
+      });
+    } finally {
+      setUploadingMissingUserIds((prev) =>
+        prev.filter((userId) => userId !== missingUser.userId)
+      );
+    }
+  }
 
   return (
     <section
@@ -494,20 +524,44 @@ export default function PaycheckDashboard({
                   >
                     {filteredMissingUsers.map((missingUser) => (
                       <li key={`${analytics.selectedMonth}-${missingUser.userId}`}>
-                        <div className="paycheck-dashboard-missing-main">
-                          <strong>{missingUser.nome}</strong>
-                          <span>{missingUser.email || "E-mail não informado"}</span>
+                        <div className="paycheck-dashboard-missing-content">
+                          <div className="paycheck-dashboard-missing-main">
+                            <strong>{missingUser.nome}</strong>
+                            <span>{missingUser.email || "E-mail não informado"}</span>
+                          </div>
+
+                          <div className="paycheck-dashboard-missing-details">
+                            <span>
+                              <b>CPF</b> {formatCpf(missingUser.cpf)}
+                            </span>
+                            <span>{missingUser.sectorName || "Sem setor"}</span>
+                            <span
+                              className={`paycheck-dashboard-account-status ${missingUser.accountStatus}`}
+                            >
+                              {getAccountStatusLabel(missingUser.accountStatus)}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="paycheck-dashboard-missing-details">
-                          <span>{formatCpf(missingUser.cpf)}</span>
-                          <span>{missingUser.sectorName || "Sem setor"}</span>
-                          <span
-                            className={`paycheck-dashboard-account-status ${missingUser.accountStatus}`}
-                          >
-                            {getAccountStatusLabel(missingUser.accountStatus)}
-                          </span>
-                        </div>
+                        {canUploadMissingPaycheck && (
+                          <label className="paycheck-dashboard-upload-button">
+                            <input
+                              type="file"
+                              accept="application/pdf"
+                              disabled={uploadingMissingUserIds.includes(
+                                missingUser.userId
+                              )}
+                              onChange={(event) =>
+                                handleMissingPaycheckFileChange(event, missingUser)
+                              }
+                            />
+                            <span>
+                              {uploadingMissingUserIds.includes(missingUser.userId)
+                                ? "Enviando..."
+                                : "Adicionar contracheque"}
+                            </span>
+                          </label>
+                        )}
                       </li>
                     ))}
                   </ul>

@@ -523,13 +523,22 @@
 .paycheck-dashboard-missing-list li {
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 11px;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
   padding: 14px;
   background: var(--paycheck-surface);
   border: 1px solid var(--paycheck-border);
   border-left: 4px solid var(--paycheck-alert);
   border-radius: 8px;
+}
+
+.paycheck-dashboard-missing-content {
+  min-width: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 11px;
 }
 
 .paycheck-dashboard-missing-main,
@@ -554,6 +563,11 @@
   overflow-wrap: anywhere;
   color: var(--paycheck-muted);
   font-size: 0.76rem;
+}
+
+.paycheck-dashboard-missing-details b {
+  color: var(--paycheck-navy);
+  font-weight: 700;
 }
 
 .paycheck-dashboard-missing-details {
@@ -595,6 +609,42 @@
   color: var(--paycheck-muted);
   background: #f2f3f4;
   border-color: var(--paycheck-border);
+}
+
+.paycheck-dashboard-upload-button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 11px;
+  color: var(--paycheck-navy);
+  background: var(--paycheck-blue-soft);
+  border: 1px solid rgba(11, 114, 201, 0.28);
+  border-radius: 8px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.paycheck-dashboard-upload-button:hover {
+  color: #ffffff;
+  background: var(--paycheck-blue);
+  border-color: var(--paycheck-blue);
+}
+
+.paycheck-dashboard-upload-button input {
+  display: none;
+}
+
+.paycheck-dashboard-upload-button:has(input:disabled) {
+  color: var(--paycheck-muted);
+  background: #f2f3f4;
+  border-color: var(--paycheck-border);
+  cursor: wait;
 }
 
 .paycheck-dashboard-sr-only {
@@ -662,6 +712,14 @@
   .paycheck-dashboard-comparison-cards,
   .paycheck-dashboard-missing-list {
     grid-template-columns: 1fr;
+  }
+
+  .paycheck-dashboard-missing-list li {
+    flex-direction: column;
+  }
+
+  .paycheck-dashboard-upload-button {
+    width: 100%;
   }
 
   .paycheck-dashboard-missing-controls {
