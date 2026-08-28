@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import { fixMojibake, normalizePopText } from "../../utils/textEncoding";
+import PaycheckDashboard from "./components/PaycheckDashboard/PaycheckDashboard";
 import {
   getProfile,
   updateProfile,
@@ -84,12 +85,19 @@ export default function Profile() {
   const [pops, setPops] = useState([]);
   const [allPops, setAllPops] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const [loadingAdminUsers, setLoadingAdminUsers] = useState(false);
+  const [adminUsersError, setAdminUsersError] = useState("");
   const [adminDashboard, setAdminDashboard] = useState(null);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
+  const [loadingAdminContracheques, setLoadingAdminContracheques] =
+    useState(false);
+  const [adminContrachequesError, setAdminContrachequesError] = useState("");
   const [selectedDashboardDay, setSelectedDashboardDay] = useState("");
   const [selectedDashboardMonth, setSelectedDashboardMonth] = useState("");
   const [selectedDashboardAdoption, setSelectedDashboardAdoption] = useState("");
   const [dashboardViewKey, setDashboardViewKey] = useState(0);
+  const adminUsersRequestIdRef = useRef(0);
+  const adminContrachequesRequestIdRef = useRef(0);
   const downloadingContrachequeIdsRef = useRef(new Set());
   const [downloadingContrachequeIds, setDownloadingContrachequeIds] = useState([]);
   const downloadingPopIdsRef = useRef(new Set());
@@ -240,6 +248,10 @@ export default function Profile() {
 
   const reloadAdminUsersData = useCallback(
     async (token) => {
+      const requestId = ++adminUsersRequestIdRef.current;
+      setLoadingAdminUsers(true);
+      setAdminUsersError("");
+
       try {
         const response = await fetch(`${SECTORS_API_URL}/users`, {
           method: "GET",
@@ -249,15 +261,27 @@ export default function Profile() {
         });
 
         const result = await response.json();
+        if (requestId !== adminUsersRequestIdRef.current) return;
 
         if (result.ok) {
           setAllUsers(result.users || []);
-        } else {
-          showError(result.message || "Erro ao carregar usuários.");
+          setAdminUsersError("");
+          return;
         }
+
+        const errorMessage = result.message || "Erro ao carregar usuários.";
+        setAdminUsersError(errorMessage);
+        showError(errorMessage);
       } catch (error) {
+        if (requestId !== adminUsersRequestIdRef.current) return;
+
         console.error("Erro ao carregar usuários:", error);
+        setAdminUsersError("Erro ao carregar usuários.");
         showError("Erro ao carregar usuários.");
+      } finally {
+        if (requestId === adminUsersRequestIdRef.current) {
+          setLoadingAdminUsers(false);
+        }
       }
     },
     [showError]
@@ -289,10 +313,42 @@ export default function Profile() {
     [showError]
   );
 
-  const reloadAdminContrachequesData = useCallback(async (token) => {
-    const result = await getAllContrachequesForAdmin(token);
-    if (result.ok) setAllContracheques(result.contracheques || []);
-  }, []);
+  const reloadAdminContrachequesData = useCallback(
+    async (token) => {
+      const requestId = ++adminContrachequesRequestIdRef.current;
+      setLoadingAdminContracheques(true);
+      setAdminContrachequesError("");
+
+      try {
+        const result = await getAllContrachequesForAdmin(token);
+        if (requestId !== adminContrachequesRequestIdRef.current) return;
+
+        if (result.ok) {
+          setAllContracheques(result.contracheques || []);
+          setAdminContrachequesError("");
+          return;
+        }
+
+        const errorMessage =
+          result.message || "Erro ao carregar dados dos contracheques.";
+        setAdminContrachequesError(errorMessage);
+        showError(errorMessage);
+      } catch (error) {
+        if (requestId !== adminContrachequesRequestIdRef.current) return;
+
+        console.error("Erro ao carregar dados dos contracheques:", error);
+        setAdminContrachequesError(
+          "Não foi possível atualizar os dados dos contracheques."
+        );
+        showError("Erro ao carregar dados dos contracheques.");
+      } finally {
+        if (requestId === adminContrachequesRequestIdRef.current) {
+          setLoadingAdminContracheques(false);
+        }
+      }
+    },
+    [showError]
+  );
 
   const reloadAdminPopsData = useCallback(async (token) => {
     const result = await getAllPopsForAdmin(token);
@@ -457,7 +513,11 @@ export default function Profile() {
     }
 
     if (tab === "dashboard" && user?.role === "admin") {
-      await reloadAdminDashboardData(token);
+      await Promise.all([
+        reloadAdminDashboardData(token),
+        reloadAdminContrachequesData(token),
+        reloadAdminUsersData(token),
+      ]);
     }
 
     if (tab === "adicionar-pop" && user?.role === "admin") {
@@ -1285,6 +1345,8 @@ export default function Profile() {
       user_nome: item.user_nome || foundUser?.nome || "Usuário",
       user_email: item.user_email || foundUser?.email || "",
       user_cpf: item.user_cpf || foundUser?.cpf || "",
+      user_is_active:
+        item.user_is_active ?? foundUser?.is_active,
     };
   });
 
@@ -2607,6 +2669,18 @@ export default function Profile() {
             {activeTab === "dashboard" && user?.role === "admin" && (
               <div className="dashboard-section" key={dashboardViewKey}>
                 <h3>Dashboard</h3>
+
+                <PaycheckDashboard
+                  paychecks={allContrachequesComSetor}
+                  loading={loadingAdminContracheques || loadingAdminUsers}
+                  error={adminContrachequesError}
+                  accountStatusError={adminUsersError}
+                />
+
+                <div className="dashboard-access-list-header">
+                  <strong>Indicadores de acesso ao sistema</strong>
+                  <span>Uso e adesão</span>
+                </div>
 
                 {loadingDashboard && !adminDashboard ? (
                   <p>Carregando dashboard...</p>

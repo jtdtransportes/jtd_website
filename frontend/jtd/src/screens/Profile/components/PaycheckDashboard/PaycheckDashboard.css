@@ -1,0 +1,704 @@
+.paycheck-dashboard {
+  --paycheck-navy: #01304a;
+  --paycheck-blue: #0b72c9;
+  --paycheck-blue-dark: #085fa8;
+  --paycheck-blue-soft: #e8f2fb;
+  --paycheck-surface: #ffffff;
+  --paycheck-panel: #f4f5f6;
+  --paycheck-border: #d8dde1;
+  --paycheck-text: #01304a;
+  --paycheck-muted: #5d6970;
+  --paycheck-alert: #d95f4b;
+  --paycheck-alert-soft: #fff0ed;
+  --paycheck-amber: #c98516;
+  --paycheck-amber-soft: #fff6e5;
+  --paycheck-success: #287a60;
+  --paycheck-success-soft: #e9f6f1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: var(--paycheck-text);
+}
+
+.paycheck-dashboard * {
+  box-sizing: border-box;
+}
+
+.paycheck-dashboard-header,
+.paycheck-dashboard-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.paycheck-dashboard-header {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--paycheck-border);
+}
+
+.paycheck-dashboard-header h4,
+.paycheck-dashboard-panel-header h5 {
+  margin: 0;
+  color: var(--paycheck-navy);
+  font-family: var(--font-display, "Sora", sans-serif);
+}
+
+.paycheck-dashboard-header h4 {
+  margin-top: 3px;
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+
+.paycheck-dashboard-header p,
+.paycheck-dashboard-panel-header p {
+  max-width: 720px;
+  margin: 6px 0 0;
+  color: var(--paycheck-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.paycheck-dashboard-eyebrow,
+.paycheck-dashboard-competence-select > span,
+.paycheck-dashboard-metric > span,
+.paycheck-dashboard-panel-header > span,
+.paycheck-dashboard-missing-controls label > span {
+  color: var(--paycheck-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.paycheck-dashboard-competence-select {
+  min-width: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.paycheck-dashboard select,
+.paycheck-dashboard input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  color: var(--paycheck-text);
+  background: var(--paycheck-surface);
+  border: 1px solid var(--paycheck-border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.88rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.paycheck-dashboard select:focus,
+.paycheck-dashboard input:focus {
+  border-color: var(--paycheck-blue);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(11, 114, 201, 0.15);
+}
+
+.paycheck-dashboard select:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.paycheck-dashboard-loading {
+  min-height: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 28px;
+  color: var(--paycheck-muted);
+  background: var(--paycheck-panel);
+  border: 1px solid var(--paycheck-border);
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.paycheck-dashboard-error {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 24px;
+  color: #8e382c;
+  background: var(--paycheck-alert-soft);
+  border: 1px solid rgba(217, 95, 75, 0.42);
+  border-radius: 10px;
+}
+
+.paycheck-dashboard-error strong {
+  color: #8e382c;
+  font-family: var(--font-display, "Sora", sans-serif);
+  font-size: 0.96rem;
+}
+
+.paycheck-dashboard-error span,
+.paycheck-dashboard-error small {
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.paycheck-dashboard-error small {
+  color: var(--paycheck-muted);
+}
+
+.paycheck-dashboard-loading-indicator {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--paycheck-border);
+  border-top-color: var(--paycheck-blue);
+  border-radius: 50%;
+  animation: paycheck-dashboard-spin 700ms linear infinite;
+}
+
+.paycheck-dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.paycheck-dashboard-metric {
+  min-width: 0;
+  min-height: 126px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 17px;
+  background: var(--paycheck-panel);
+  border: 1px solid var(--paycheck-border);
+  border-radius: 10px;
+  animation: paycheck-dashboard-rise 420ms ease both;
+}
+
+.paycheck-dashboard-metric:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.paycheck-dashboard-metric:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.paycheck-dashboard-metric:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.paycheck-dashboard-metric strong {
+  color: var(--paycheck-navy);
+  font-family: var(--font-display, "Sora", sans-serif);
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.paycheck-dashboard-metric small {
+  color: var(--paycheck-muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.paycheck-dashboard-metric-alert {
+  background: var(--paycheck-alert-soft);
+  border-color: rgba(217, 95, 75, 0.4);
+}
+
+.paycheck-dashboard-metric-alert strong {
+  color: var(--paycheck-alert);
+}
+
+.paycheck-dashboard-panel {
+  min-width: 0;
+  padding: 20px;
+  background: var(--paycheck-panel);
+  border: 1px solid var(--paycheck-border);
+  border-radius: 10px;
+}
+
+.paycheck-dashboard-panel-header {
+  margin-bottom: 18px;
+}
+
+.paycheck-dashboard-panel-header h5 {
+  font-size: 0.98rem;
+  line-height: 1.4;
+}
+
+.paycheck-dashboard-panel-header > span {
+  flex: 0 0 auto;
+  padding-top: 2px;
+  color: var(--paycheck-navy);
+  text-align: right;
+}
+
+.paycheck-dashboard-chart-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--paycheck-border) transparent;
+}
+
+.paycheck-dashboard-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: -6px 0 12px;
+  color: var(--paycheck-muted);
+  font-size: 0.72rem;
+}
+
+.paycheck-dashboard-chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paycheck-dashboard-chart-legend i {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border-radius: 3px;
+}
+
+.paycheck-dashboard-chart-legend i.documents {
+  background: var(--paycheck-blue);
+}
+
+.paycheck-dashboard-chart-legend i.missing {
+  background: var(--paycheck-amber);
+  border-radius: 999px;
+}
+
+.paycheck-dashboard-chart {
+  min-width: 820px;
+  min-height: 276px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(58px, 1fr));
+  gap: 9px;
+  align-items: end;
+}
+
+.paycheck-dashboard-bar {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: 20px 176px 22px 22px;
+  justify-items: center;
+  align-items: end;
+  gap: 7px;
+  padding: 4px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.paycheck-dashboard-bar:hover {
+  background: rgba(1, 48, 74, 0.05);
+}
+
+.paycheck-dashboard-bar:focus-visible {
+  outline: 2px solid var(--paycheck-blue);
+  outline-offset: 2px;
+}
+
+.paycheck-dashboard-bar-value {
+  color: var(--paycheck-navy);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.paycheck-dashboard-bar-track {
+  width: 100%;
+  max-width: 38px;
+  height: 176px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background: var(--paycheck-surface);
+  border: 1px solid var(--paycheck-border);
+  border-radius: 6px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.paycheck-dashboard-bar-fill {
+  width: 100%;
+  display: block;
+  background: var(--paycheck-blue);
+  border-radius: 5px 5px 0 0;
+  transform-origin: bottom;
+  animation: paycheck-dashboard-grow 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.paycheck-dashboard-bar-warning .paycheck-dashboard-bar-fill {
+  background: linear-gradient(
+    180deg,
+    var(--paycheck-amber) 0 16%,
+    var(--paycheck-blue) 16% 100%
+  );
+}
+
+.paycheck-dashboard-bar-selected .paycheck-dashboard-bar-track {
+  border-color: var(--paycheck-blue-dark);
+  box-shadow: 0 0 0 3px rgba(11, 114, 201, 0.16);
+}
+
+.paycheck-dashboard-bar-label {
+  color: var(--paycheck-navy);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.paycheck-dashboard-bar-pending {
+  align-self: center;
+  padding: 2px 5px;
+  color: #8f4f00;
+  background: var(--paycheck-amber-soft);
+  border-radius: 999px;
+  font-size: 0.63rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.paycheck-dashboard-bar-pending-empty {
+  color: var(--paycheck-muted);
+  background: transparent;
+  font-weight: 500;
+}
+
+.paycheck-dashboard-comparison-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.paycheck-dashboard-comparison-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 10px;
+  align-items: center;
+  padding: 14px;
+  background: var(--paycheck-surface);
+  border: 1px solid var(--paycheck-border);
+  border-left-width: 4px;
+  border-radius: 8px;
+}
+
+.paycheck-dashboard-comparison-card > span {
+  color: var(--paycheck-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.paycheck-dashboard-comparison-card strong {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: var(--paycheck-navy);
+  font-family: var(--font-display, "Sora", sans-serif);
+  font-size: 1.45rem;
+}
+
+.paycheck-dashboard-comparison-card small {
+  color: var(--paycheck-muted);
+  font-size: 0.72rem;
+}
+
+.paycheck-dashboard-comparison-card.maintained {
+  border-left-color: var(--paycheck-blue);
+}
+
+.paycheck-dashboard-comparison-card.new {
+  border-left-color: var(--paycheck-success);
+}
+
+.paycheck-dashboard-comparison-card.missing {
+  border-left-color: var(--paycheck-alert);
+}
+
+.paycheck-dashboard-comparison-card.missing strong {
+  color: var(--paycheck-alert);
+}
+
+.paycheck-dashboard-coverage {
+  margin-top: 18px;
+}
+
+.paycheck-dashboard-coverage-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+  color: var(--paycheck-muted);
+  font-size: 0.78rem;
+}
+
+.paycheck-dashboard-coverage-labels strong {
+  color: var(--paycheck-navy);
+}
+
+.paycheck-dashboard-coverage-track {
+  height: 12px;
+  overflow: hidden;
+  background: var(--paycheck-alert-soft);
+  border: 1px solid rgba(217, 95, 75, 0.24);
+  border-radius: 999px;
+}
+
+.paycheck-dashboard-coverage-track span {
+  height: 100%;
+  display: block;
+  background: var(--paycheck-blue);
+  border-radius: inherit;
+  transition: width 300ms ease;
+}
+
+.paycheck-dashboard-state {
+  margin: 18px 0 0;
+  padding: 13px 14px;
+  border: 1px solid;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.paycheck-dashboard-state-neutral {
+  color: var(--paycheck-muted);
+  background: var(--paycheck-surface);
+  border-color: var(--paycheck-border);
+}
+
+.paycheck-dashboard-state-success {
+  color: #1d614c;
+  background: var(--paycheck-success-soft);
+  border-color: rgba(40, 122, 96, 0.28);
+}
+
+.paycheck-dashboard-state-warning {
+  color: #7a4c00;
+  background: var(--paycheck-amber-soft);
+  border-color: rgba(201, 133, 22, 0.34);
+}
+
+.paycheck-dashboard-missing-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(170px, 230px);
+  gap: 12px;
+  align-items: end;
+}
+
+.paycheck-dashboard-missing-controls label {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.paycheck-dashboard-results-summary {
+  margin: 14px 0 9px;
+  color: var(--paycheck-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.paycheck-dashboard-missing-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.paycheck-dashboard-missing-list li {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 14px;
+  background: var(--paycheck-surface);
+  border: 1px solid var(--paycheck-border);
+  border-left: 4px solid var(--paycheck-alert);
+  border-radius: 8px;
+}
+
+.paycheck-dashboard-missing-main,
+.paycheck-dashboard-missing-details {
+  min-width: 0;
+  display: flex;
+  gap: 5px;
+}
+
+.paycheck-dashboard-missing-main {
+  flex-direction: column;
+}
+
+.paycheck-dashboard-missing-main strong {
+  overflow-wrap: anywhere;
+  color: var(--paycheck-navy);
+  font-size: 0.9rem;
+}
+
+.paycheck-dashboard-missing-main span,
+.paycheck-dashboard-missing-details > span:not(.paycheck-dashboard-account-status) {
+  overflow-wrap: anywhere;
+  color: var(--paycheck-muted);
+  font-size: 0.76rem;
+}
+
+.paycheck-dashboard-missing-details {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.paycheck-dashboard-missing-details > span:not(:last-child)::after {
+  content: "•";
+  margin-left: 5px;
+  color: #a6afb4;
+}
+
+.paycheck-dashboard-account-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 8px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.paycheck-dashboard-account-status.active {
+  color: #1d614c;
+  background: var(--paycheck-success-soft);
+  border-color: rgba(40, 122, 96, 0.3);
+}
+
+.paycheck-dashboard-account-status.inactive {
+  color: #a54435;
+  background: var(--paycheck-alert-soft);
+  border-color: rgba(217, 95, 75, 0.35);
+}
+
+.paycheck-dashboard-account-status.unknown {
+  color: var(--paycheck-muted);
+  background: #f2f3f4;
+  border-color: var(--paycheck-border);
+}
+
+.paycheck-dashboard-sr-only {
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes paycheck-dashboard-grow {
+  from {
+    opacity: 0.45;
+    transform: scaleY(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes paycheck-dashboard-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes paycheck-dashboard-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1100px) {
+  .paycheck-dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .paycheck-dashboard-header,
+  .paycheck-dashboard-panel-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .paycheck-dashboard-competence-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .paycheck-dashboard-panel-header > span {
+    text-align: left;
+  }
+
+  .paycheck-dashboard-comparison-cards,
+  .paycheck-dashboard-missing-list {
+    grid-template-columns: 1fr;
+  }
+
+  .paycheck-dashboard-missing-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .paycheck-dashboard-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .paycheck-dashboard-panel {
+    padding: 15px;
+  }
+
+  .paycheck-dashboard-chart {
+    min-width: 780px;
+  }
+
+  .paycheck-dashboard-missing-details > span {
+    width: 100%;
+  }
+
+  .paycheck-dashboard-missing-details > span:not(:last-child)::after {
+    content: "";
+    margin: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paycheck-dashboard *,
+  .paycheck-dashboard *::before,
+  .paycheck-dashboard *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
