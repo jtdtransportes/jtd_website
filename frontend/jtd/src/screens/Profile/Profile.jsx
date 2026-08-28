@@ -31,6 +31,28 @@ const POPS_API_URL = `${API_BASE_URL}/api/pops`;
 const SECTORS_API_URL = `${API_BASE_URL}/api/sectors`;
 const MOTORISTA_SECTOR_ID = 7;
 
+function normalizeSearchText(value) {
+  return String(value || "").toLowerCase().trim();
+}
+
+function normalizeCpfDigits(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function pessoaMatchesNomeOuCpf(nome, cpf, search) {
+  const searchText = normalizeSearchText(search);
+
+  if (!searchText) return true;
+
+  const searchCpfDigits = normalizeCpfDigits(searchText);
+  const cpfDigits = normalizeCpfDigits(cpf);
+  const matchesNome = normalizeSearchText(nome).includes(searchText);
+  const matchesCpf =
+    searchCpfDigits.length > 0 && cpfDigits.includes(searchCpfDigits);
+
+  return matchesNome || matchesCpf;
+}
+
 export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -1421,9 +1443,7 @@ export default function Profile() {
   }
 
   const allUsersFiltrados = allUsers
-    .filter((item) =>
-      item.nome?.toLowerCase().includes(searchUsuario.toLowerCase().trim())
-    )
+    .filter((item) => pessoaMatchesNomeOuCpf(item.nome, item.cpf, searchUsuario))
     .filter((item) => userMatchesSectorFilter(item, selectedUserSectorFilter));
 
   const usuariosAgrupadosPorSetor = groupUsersBySector(allUsersFiltrados);
@@ -1460,9 +1480,7 @@ export default function Profile() {
 
   const contrachequesAdminFiltrados = allContrachequesComSetor
     .filter((item) =>
-      item.user_nome
-        ?.toLowerCase()
-        .includes(searchColaborador.toLowerCase().trim())
+      pessoaMatchesNomeOuCpf(item.user_nome, item.user_cpf, searchColaborador)
     )
     .filter((item) =>
       contrachequeMatchesYearFilter(item, selectedRemoveYearFilter)
@@ -2261,7 +2279,7 @@ export default function Profile() {
                 <div className="filter-row">
                   <input
                     type="text"
-                    placeholder="Pesquisar colaborador"
+                    placeholder="Pesquisar colaborador por nome ou CPF"
                     className="search-colaborador-input"
                     value={searchColaborador}
                     onChange={(e) => setSearchColaborador(e.target.value)}
@@ -2568,7 +2586,7 @@ export default function Profile() {
                 <div className="filter-row">
                   <input
                     type="text"
-                    placeholder="Pesquisar usuário"
+                    placeholder="Pesquisar usuário por nome ou CPF"
                     className="search-colaborador-input"
                     value={searchUsuario}
                     onChange={(e) => setSearchUsuario(e.target.value)}
