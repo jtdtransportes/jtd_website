@@ -5,6 +5,37 @@ const API_URL = `${API_BASE_URL}/api/users`;
 const CONTRACHEQUES_API_URL = `${API_BASE_URL}/api/contracheques`;
 const POPS_API_URL = `${API_BASE_URL}/api/pops`;
 
+export async function previewContrachequeImport(token, data) {
+  try {
+    const response = await fetch(`${CONTRACHEQUES_API_URL}/import/preview`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await parseResponse(response);
+  } catch {
+    return { ok: false, message: "Não foi possível conferir os arquivos. Tente novamente." };
+  }
+}
+
+export async function importContrachequeFile(token, file, ticket) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 150000);
+  try {
+    const body = new FormData();
+    body.append("ticket", ticket);
+    // Alguns navegadores não informam MIME para PDFs locais.
+    body.append("contracheque", file.type ? file : new Blob([file], { type: "application/pdf" }), file.name);
+    const response = await fetch(`${CONTRACHEQUES_API_URL}/import/file`, {
+      method: "POST", headers: { Authorization: `Bearer ${token}` }, body,
+      signal: controller.signal,
+    });
+    return await parseResponse(response);
+  } catch {
+    return { ok: false, message: "Envio não confirmado. Tente novamente; registros existentes serão preservados." };
+  } finally { clearTimeout(timeout); }
+}
+
 async function parseResponse(response) {
   const contentType = response.headers.get("content-type") || "";
 

@@ -4,6 +4,7 @@ import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import { fixMojibake, normalizePopText } from "../../utils/textEncoding";
 import PaycheckDashboard from "./components/PaycheckDashboard/PaycheckDashboard";
+import PaycheckImport from "./components/PaycheckImport/PaycheckImport";
 import {
   getProfile,
   updateProfile,
@@ -1840,6 +1841,12 @@ export default function Profile() {
               >
                 Dashboard
               </button>
+              <button
+                className="sidebar-title"
+                onClick={() => changeTab("importar-contracheques")}
+              >
+                Importar Contracheques
+              </button>
             </>
           )}
         </aside>
@@ -2834,6 +2841,12 @@ export default function Profile() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {user?.role === "admin" && (
+              <div hidden={activeTab !== "importar-contracheques"}>
+                <PaycheckImport />
               </div>
             )}
 

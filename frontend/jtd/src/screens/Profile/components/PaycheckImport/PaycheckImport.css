@@ -1,0 +1,35 @@
+.profile-page .paycheck-import { display: grid; gap: 18px; min-width: 0; }
+.profile-page .paycheck-import h3 { margin: 0; }
+.profile-page .paycheck-import p { line-height: 1.6; }
+.profile-page .paycheck-import-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 240px)); gap: 16px; }
+.profile-page .paycheck-import label { display: grid; gap: 8px; font-weight: 600; min-width: 0; }
+.profile-page .paycheck-import input, .profile-page .paycheck-import select { width: 100%; min-width: 0; padding: 12px; border: 1px solid #bacbd5; border-radius: 8px; background: #fff; color: #01304a; font: inherit; }
+.profile-page .paycheck-import-picker { padding: 18px; border: 1px dashed #92afc0; border-radius: 10px; background: #f6f9fc; }
+.profile-page .paycheck-import-help { font-size: 13px; color: #4b6473; }
+.profile-page .paycheck-import-error { padding: 12px; background: #fff0f0; color: #a12626; border-radius: 8px; }
+.profile-page .paycheck-import-summary { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 16px; border-radius: 10px; background: #edf5fb; font-size: 14px; }
+.profile-page .paycheck-import-summary strong { font-size: 19px; }
+.profile-page .paycheck-import-table { max-height: 540px; overflow: auto; width: 100%; border: 1px solid #d3dfe6; border-radius: 10px; }
+.profile-page .paycheck-import-table table { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; min-width: 720px; }
+.profile-page .paycheck-import-table th, .profile-page .paycheck-import-table td { padding: 12px 14px; border-bottom: 1px solid #e1e8ee; vertical-align: top; overflow-wrap: anywhere; font-size: 13px; }
+.profile-page .paycheck-import-table th { position: sticky; top: 0; background: #eaf1f7; z-index: 1; }
+.profile-page .paycheck-import-table th:first-child { width: 32%; }
+.profile-page .paycheck-import-table th:nth-child(2) { width: 18%; }
+.profile-page .paycheck-import-table th:nth-child(3) { width: 22%; }
+.profile-page .paycheck-import-table small { display: block; margin-top: 7px; line-height: 1.5; }
+.profile-page .paycheck-import-status { display: inline-block; padding: 3px 8px; border-radius: 5px; font-weight: 600; background: #edf1f5; }
+.profile-page .paycheck-import-status.status-ready, .profile-page .paycheck-import-status.status-imported { color: #155a39; background: #e3f5ea; }
+.profile-page .paycheck-import-status.status-error, .profile-page .paycheck-import-status.status-invalid, .profile-page .paycheck-import-status.status-duplicate, .profile-page .paycheck-import-status.status-ambiguous, .profile-page .paycheck-import-status.status-unmatched { color: #8b3022; background: #fff0e8; }
+.profile-page .paycheck-import-status.status-uploading { color: #075c9d; background: #e2f2ff; }
+.profile-page .paycheck-import-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.profile-page .paycheck-import-actions button { padding: 13px 24px; border: 0; border-radius: 8px; color: white; background: #0b72c9; font: inherit; font-weight: 600; cursor: pointer; }
+.profile-page .paycheck-import-actions button.paycheck-import-recheck { background: #edf3f7; color: #01304a; }
+.profile-page .paycheck-import-actions button:disabled { opacity: .55; cursor: not-allowed; }
+.profile-page .paycheck-import :focus-visible { outline: 3px solid #0b72c9; outline-offset: 3px; }
+.profile-page .paycheck-import-progress { display: grid; gap: 8px; font-size: 14px; }
+.profile-page .paycheck-import-progress progress { width: 100%; height: 15px; accent-color: #0b72c9; }
+@media (max-width: 600px) {
+  .profile-page .paycheck-import-fields { grid-template-columns: 1fr; }
+  .profile-page .paycheck-import-actions button { width: 100%; }
+  .profile-page .paycheck-import-picker { padding: 12px; }
+}

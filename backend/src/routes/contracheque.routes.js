@@ -3,8 +3,11 @@ import { authMiddleware } from "../middlewares/auth.middleware.js";
 import contrachequeController from "../controllers/contracheque.controller.js";
 import uploadContracheque from "../config/multer.contracheque.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
+import contrachequeImportRoutes from "./contrachequeImport.routes.js";
 
 const router = Router();
+
+router.use("/import", contrachequeImportRoutes);
 
 router.post(
   "/upload",
