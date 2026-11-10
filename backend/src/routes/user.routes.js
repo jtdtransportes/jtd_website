@@ -15,4 +15,5 @@ router.get("/admin/all", authMiddleware, adminMiddleware, (req, res) => userCont
 router.get("/admin/dashboard", authMiddleware, adminMiddleware, (req, res) => userController.adminDashboard(req, res));
 router.patch("/:id/deactivate", authMiddleware, adminMiddleware, (req, res) => userController.adminDeactivateUser(req, res));
 router.patch("/:id/activate", authMiddleware, adminMiddleware, (req, res) =>userController.adminActivateUser(req, res));
+router.patch("/:id/reset-password", authMiddleware, adminMiddleware, (req, res) => userController.adminResetPassword(req, res));
 export default router;

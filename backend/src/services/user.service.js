@@ -2,6 +2,8 @@ import userRepository from "../repositories/user.repository.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import { generateToken } from "../utils/jwt.js";
 
+export const DEFAULT_RESET_PASSWORD = "123456";
+
 function addDaysToDateString(dateString, days) {
   const [year, month, day] = String(dateString || "")
     .split("-")
@@ -419,6 +421,18 @@ class UserService {
     }
 
     await userRepository.adminActivateUser(userId);
+  }
+
+  async adminResetPassword(userId) {
+    const user = await userRepository.findById(userId);
+
+    if (!user) {
+      throw new Error("Usuário não encontrado.");
+    }
+
+    const passwordHash = await hashPassword(DEFAULT_RESET_PASSWORD);
+
+    await userRepository.updatePassword(user.id, passwordHash);
   }
 }
 

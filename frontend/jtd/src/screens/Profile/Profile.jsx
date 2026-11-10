@@ -14,6 +14,7 @@ import {
   getMyContracheques,
   deactivateUserByAdmin,
   activateUserByAdmin,
+  resetUserPasswordByAdmin,
   getAdminDashboard,
   getAllContrachequesForAdmin,
   removeContrachequeByAdmin,
@@ -94,6 +95,10 @@ export default function Profile() {
 
   const [editingUserSectorId, setEditingUserSectorId] = useState(null);
   const [selectedUserSectorId, setSelectedUserSectorId] = useState("");
+
+  // Modal de reiniciar senha: usuário alvo + estado da requisição
+  // status: "confirm" | "loading" | "success" | "error"
+  const [resetPasswordModal, setResetPasswordModal] = useState(null);
 
   const [uploadData, setUploadData] = useState({
     user_id: "",
@@ -1055,6 +1060,64 @@ export default function Profile() {
     showSuccess("Usuário ativado com sucesso.");
     await reloadAdminUsersData(token);
   }
+
+  function handleOpenResetPasswordModal(item) {
+    setResetPasswordModal({
+      user: item,
+      status: "confirm",
+      errorMessage: "",
+    });
+  }
+
+  function handleCloseResetPasswordModal() {
+    setResetPasswordModal((prev) =>
+      prev?.status === "loading" ? prev : null
+    );
+  }
+
+  async function handleConfirmResetPassword() {
+    if (!resetPasswordModal || resetPasswordModal.status === "loading") return;
+
+    const targetUser = resetPasswordModal.user;
+
+    setResetPasswordModal((prev) => ({
+      ...prev,
+      status: "loading",
+      errorMessage: "",
+    }));
+
+    const token = localStorage.getItem("token");
+    const result = await resetUserPasswordByAdmin(token, targetUser.id);
+
+    setResetPasswordModal((prev) =>
+      prev
+        ? {
+            ...prev,
+            status: result.ok ? "success" : "error",
+            errorMessage: result.ok
+              ? ""
+              : result.message || "Erro ao reiniciar a senha.",
+          }
+        : prev
+    );
+  }
+
+  const isResetPasswordModalOpen = Boolean(resetPasswordModal);
+
+  useEffect(() => {
+    if (!isResetPasswordModalOpen) return undefined;
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setResetPasswordModal((prev) =>
+          prev?.status === "loading" ? prev : null
+        );
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isResetPasswordModalOpen]);
 
   async function handleRemoveContracheque(contrachequeId) {
     const confirmAction = window.confirm(
@@ -2711,6 +2774,15 @@ export default function Profile() {
                                   </button>
                                 )}
 
+                                <button
+                                  className="download-button"
+                                  onClick={() =>
+                                    handleOpenResetPasswordModal(item)
+                                  }
+                                >
+                                  Reiniciar senha
+                                </button>
+
                                 {Number(item.is_active) === 1 ? (
                                   <button
                                     className="danger-button"
@@ -3251,6 +3323,87 @@ export default function Profile() {
             </button>
           </div>
         </section>
+
+      {resetPasswordModal && (
+        <div
+          className="confirm-modal-overlay"
+          onClick={handleCloseResetPasswordModal}
+        >
+          <div
+            className="confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reset-password-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="reset-password-modal-title" className="confirm-modal-title">
+              Reiniciar senha
+            </h3>
+
+            {resetPasswordModal.status === "success" ? (
+              <p className="confirm-modal-text">
+                A senha de <strong>{resetPasswordModal.user.nome}</strong> foi
+                redefinida para <strong>123456</strong>. Oriente o usuário a
+                alterá-la após o próximo acesso.
+              </p>
+            ) : (
+              <>
+                <p className="confirm-modal-text">
+                  Tem certeza que deseja redefinir a senha de{" "}
+                  <strong>{resetPasswordModal.user.nome}</strong>
+                  {resetPasswordModal.user.cpf
+                    ? ` (CPF ${resetPasswordModal.user.cpf})`
+                    : ""}{" "}
+                  para <strong>123456</strong>?
+                </p>
+                <p className="confirm-modal-text confirm-modal-hint">
+                  A senha atual deixará de funcionar imediatamente.
+                </p>
+              </>
+            )}
+
+            {resetPasswordModal.status === "error" && (
+              <p className="confirm-modal-error" role="alert">
+                {resetPasswordModal.errorMessage}
+              </p>
+            )}
+
+            <div className="confirm-modal-actions">
+              {resetPasswordModal.status === "success" ? (
+                <button
+                  className="success-button"
+                  onClick={handleCloseResetPasswordModal}
+                  autoFocus
+                >
+                  OK
+                </button>
+              ) : (
+                <>
+                  <button
+                    className="download-button"
+                    onClick={handleCloseResetPasswordModal}
+                    disabled={resetPasswordModal.status === "loading"}
+                    autoFocus
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="danger-button"
+                    onClick={handleConfirmResetPassword}
+                    disabled={resetPasswordModal.status === "loading"}
+                  >
+                    {resetPasswordModal.status === "loading"
+                      ? "Reiniciando..."
+                      : resetPasswordModal.status === "error"
+                      ? "Tentar novamente"
+                      : "Confirmar"}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       </main>
 
       <Footer />

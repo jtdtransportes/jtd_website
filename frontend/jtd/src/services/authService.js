@@ -316,7 +316,24 @@ export async function activateUserByAdmin(token, userId) {
       message: "Não foi possível conectar ao backend.",
     };
   }
-  
+
+}
+export async function resetUserPasswordByAdmin(token, userId) {
+  try {
+    const response = await fetch(`${API_URL}/${userId}/reset-password`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return await parseResponse(response);
+  } catch {
+    return {
+      ok: false,
+      message: "Não foi possível conectar ao backend.",
+    };
+  }
 }
 export async function getAllContrachequesForAdmin(token) {
   try {

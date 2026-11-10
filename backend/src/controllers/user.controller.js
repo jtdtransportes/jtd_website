@@ -195,6 +195,21 @@ class UserController {
     }
   }
 
+  async adminResetPassword(req, res) {
+    try {
+      await userService.adminResetPassword(req.params.id);
+
+      return res.status(200).json({
+        ok: true,
+        message: "Senha redefinida com sucesso.",
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        message: error.message,
+      });
+    }
+  }
 
 }
 
