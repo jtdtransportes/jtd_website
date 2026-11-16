@@ -9,6 +9,10 @@ import userRoutes from "./routes/user.routes.js";
 import contrachequeRoutes from "./routes/contracheque.routes.js";
 import sectorsRoutes from "./routes/sectors.routes.js";
 import popRoutes from "./routes/pop.routes.js";
+import anttRoutes from "./routes/antt.routes.js";
+import { webhookResend } from "./antt/notificacoes.js";
+import { iniciarAgendadorAnp } from "./antt/anpSync.js";
+import { migrateAntt } from "./Script/migrateAntt.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -20,6 +24,8 @@ const app = express();
 app.set("trust proxy", 1);
 
 app.use(helmet());
+// Webhook do Resend (status de entrega das notificações ANTT): corpo bruto para validar a assinatura (RESEND_WEBHOOK_SECRET).
+app.post("/api/antt/webhooks/resend", express.raw({ type: "*/*", limit: "200kb" }), webhookResend);
 app.use(express.json({ limit: "200kb" }));
 
 const allowedOrigins = [
@@ -239,6 +245,7 @@ app.use("/api/sectors", sectorsRoutes);
 app.use("/api/contracheques", contrachequeRoutes);
 app.use("/api/pops", popRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/antt", anttRoutes);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -249,4 +256,10 @@ const port = Number(process.env.PORT || 4000);
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`API rodando na porta ${port}`);
+  // Módulo ANTT: garante as tabelas antt_* (idempotente) e liga o agendador da ANP.
+  // ANTT_AUTO_MIGRATE=false desativa a migração automática (aí use `npm run migrate:antt`).
+  const prepararAntt = process.env.ANTT_AUTO_MIGRATE === "false" ? Promise.resolve() : migrateAntt();
+  prepararAntt
+    .then(() => iniciarAgendadorAnp())
+    .catch((e) => console.error("[ANTT] migração automática falhou; módulo ANTT indisponível até corrigir:", e.message));
 });

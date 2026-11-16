@@ -26,7 +26,7 @@ import {
 import "./Profile.css";
 
 // aqui estava o código como era antes:
-const API_BASE_URL = "https://jtd-website.onrender.com";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://jtd-website.onrender.com"; // produção: Render (padrão); dev: defina REACT_APP_API_BASE_URL
 // const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:4000";
 const API_URL = `${API_BASE_URL}/api/contracheques`;
 const POPS_API_URL = `${API_BASE_URL}/api/pops`;

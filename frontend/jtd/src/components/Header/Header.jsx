@@ -4,8 +4,11 @@ import JTDLogo from "../../assets/icons/jtd_logo_azul.png";
 import { IoChevronDown, IoMenu, IoClose } from "react-icons/io5";
 import { Link } from "react-router-dom";
 import BaseModal from "../ModalContact/BaseModal";
+import useAnttAccess from "../../screens/Antt/useAnttAccess";
 
 const Header = () => {
+  // Item "ANTT" aparece apenas para usuário autenticado e autorizado no módulo.
+  const hasAnttAccess = useAnttAccess();
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [openFeedback, setOpenFeedback] = useState(false);
@@ -102,6 +105,12 @@ const Header = () => {
             </div>
           </li>
 
+          {hasAnttAccess && (
+            <li className="header-list-item">
+              <Link to="/antt">ANTT</Link>
+            </li>
+          )}
+
           <li>
             <button className="header-button-location">
               <a href="/blog">Blog</a>
@@ -197,6 +206,12 @@ const Header = () => {
               <Link to="/codeofethics">Código de Ética</Link>
               <Link to="/etibasecodes">Código Base ETI</Link>
             </div>
+          )}
+
+          {hasAnttAccess && (
+            <li>
+              <Link to="/antt" onClick={() => setMenuOpen(false)}>ANTT</Link>
+            </li>
           )}
 
           <li>
