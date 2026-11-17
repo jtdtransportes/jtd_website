@@ -1,4 +1,13 @@
-import { fmtBRL, fmtDifRs, fmtPct, rotuloMes, textoGatilho } from "./format";
+import { contaVariacao, descreverVariacao, fmtBRL, fmtDifRs, fmtPct, rotuloMes, textoGatilho } from "./format";
+
+test("acumulado sempre descrito: o que é o número, de que mês e contra qual marco, com a conta", () => {
+  expect(descreverVariacao({ indicador: "NENO", ano: 2026, mes: 11, parcial: true, marco: { ano: 2026, mes: 7 } }))
+    .toBe("Variação acumulada da média NE/NO do Diesel S10 em novembro/2026 (mês em andamento) em relação ao marco de julho/2026");
+  expect(descreverVariacao({ indicador: "BA", ano: 2026, mes: 10, marco: { ano: 2026, mes: 7 } }))
+    .toBe("Variação acumulada do preço médio do Diesel S10 na Bahia em outubro/2026 em relação ao marco de julho/2026");
+  expect(contaVariacao("7.422500", "7.158750", "3.6843")).toBe("(7,4225 ÷ 7,1588 − 1) × 100 = +3,68%");
+  expect(contaVariacao(null, "7.1", "1")).toBe("");
+});
 
 test("formatação em R$ e % no padrão brasileiro", () => {
   expect(fmtBRL("7.167", 4)).toBe("R$ 7,1670");

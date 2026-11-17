@@ -46,11 +46,12 @@ test("sem permissão: não carrega dados nem permite envio", () => {
 });
 
 test("reajuste já vem preenchido com o acumulado do mês, editável e restaurável", async () => {
-  comunicadosApi.contexto.mockResolvedValue({ ...CTX, acumulado: { pct: "5.29", ano: 2026, mes: 11, mes_parcial: false, marco: { ano: 2026, mes: 1 } } });
+  comunicadosApi.contexto.mockResolvedValue({ ...CTX, acumulado: { pct: "5.29", indicador: "NENO", ano: 2026, mes: 11, mes_parcial: false, semanas: 4, preco_mes: "6.422690", marco: { ano: 2026, mes: 1, preco: "6.100000" } } });
   renderizar();
   const campo = await screen.findByPlaceholderText("ex.: 5,29");
   await waitFor(() => expect(campo).toHaveValue("5,29"));
-  expect(screen.getByText(/acumulado do Diesel S10 de novembro de 2026/)).toBeInTheDocument();
+  expect(screen.getByText(/Variação acumulada da média NE\/NO do Diesel S10 em novembro\/2026 em relação ao marco de janeiro\/2026/)).toBeInTheDocument();
+  expect(screen.getByText("Conta: (6,4227 ÷ 6,1000 − 1) × 100 = +5,29%")).toBeInTheDocument();
   const editor = screen.getByRole("textbox", { name: "Mensagem" });
   await waitFor(() => expect(editor.innerHTML).toContain("o reajuste acumulado do óleo diesel S10 atingiu <strong>5,29%</strong> em novembro de 2026."));
   expect(editor.innerHTML).not.toMatch(/propomos/i);

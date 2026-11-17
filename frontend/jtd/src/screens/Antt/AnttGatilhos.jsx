@@ -1,13 +1,14 @@
 // Tela principal do módulo ANTT. Ordem: filtros → resumo compacto → TABELA MENSAL (sempre visível) →
 // gráfico de acompanhamento → mais gráficos e detalhes só sob demanda.
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { anttApi } from "../../services/anttService";
 import { useAntt } from "./AnttContext";
 import { Badge, Chips, Help, Loading, Notice, Segmented } from "./components/Ui";
 import { ComboChart, LineChart, TriggerGauge } from "./components/Charts";
 import { SemanalAnp } from "./AnttHistorico";
 import {
-  COR_INDICADOR, LOCALIDADES, MESES, ROTULO_INDICADOR, SIGLA_INDICADOR, completo, fmtBRL, fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtRsL, num, rotuloMes, rotuloMesLongo,
+  COR_INDICADOR, LOCALIDADES, MESES, ROTULO_INDICADOR, SIGLA_INDICADOR, completo, contaVariacao, descreverVariacao, fmtBRL, fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtRsL,
+  mesBarraAno, num, rotuloMes, rotuloMesLongo,
 } from "./format";
 
 const COR = { alta: "#b42318", baixa: "#0f7a4a" };
@@ -35,48 +36,175 @@ const EVENTO = { INICIAL: "Marco inicial", ALTA: "Gatilho de aumento", BAIXA: "G
  * Valores e ACUM vêm prontos do backend (precisão completa); aqui só a exibição com 2 casas.
  * ACUM: preços = média dos meses do ano; variação = acumulado do ano (metodologia gerencial já implementada).
  */
-const LINHAS_PLANILHA = [["preco_ba", "Preço Médio BA"], ["preco_ne", "Preço Médio NE"], ["preco_no", "Preço Médio NO"], ["preco_neno", "Preço Médio NE/NO"]];
-function PlanilhaMensal({ tabela }) {
+// [nome completo, nome curto (celular)]
+const LINHAS_PLANILHA = [["preco_ba", "Preço Médio BA", "BA"], ["preco_ne", "Preço Médio NE", "NE"], ["preco_no", "Preço Médio NO", "NO"], ["preco_neno", "Preço Médio NE/NO", "NE/NO"]];
+
+/** Rótulo da linha: completo no computador; curto no celular (o completo continua para leitores de tela). */
+const NomeLinha = ({ longo, curto }) => (
+  <><span className="antt-xls__longo">{longo}</span><span className="antt-xls__curto" aria-hidden="true">{curto}</span></>
+);
+
+/**
+ * Mês que virou marco zero: variação que ele atingiu contra o marco ANTERIOR (o motivo de virar marco).
+ * null = não é mês de marco · { inicial: true } = marco inicial (jan/2026).
+ */
+function infoMarco(serie, ano, mes) {
+  const i = serie.findIndex((m) => m.ano === ano && m.mes === mes);
+  const r = serie[i];
+  if (!r?.marco_inicia_aqui) return null;
+  const anterior = serie[i - 1]?.marco_ref;
+  if (!anterior?.preco) return { inicial: true };
+  return { pct: (Number(r.preco_medio) / Number(anterior.preco) - 1) * 100, preco: r.preco_medio, de: anterior };
+}
+
+/** Preço na célula: "R$" some no celular (o título da tabela já diz R$/litro) para o número caber inteiro. */
+const Preco = ({ v }) => <><span className="antt-xls__rs">R$ </span>{fmtNumber(v, 2)}</>;
+
+/** Símbolo da média (𝑀𝑎) — encurta "Média NE/NO" nos títulos das linhas. */
+export const Ma = () => <span className="antt-ma" title="Média" aria-label="Média">Ma</span>;
+/** Nome do indicador nos títulos das linhas: "𝑀𝑎 NE/NO" para a média; "Bahia", "Nordeste", "Norte" para os demais. */
+const NomeIndicador = ({ chave }) => (chave === "NENO" ? <><Ma /> NE/NO</> : ROTULO_INDICADOR[chave]);
+
+/** A tabela em si (usada na página e na visualização em tela cheia). */
+function TabelaMensal({ tabela, serie }) {
   const L = tabela.linhas;
   const v = L.variacao_mensal_pct;
+  const g = L.variacao_acumulada_pct;
   // localidade escolhida no filtro do topo: o backend já calculou a variação/ACUM sobre ela (tabela.base)
   const chaveBase = tabela.base || "NENO";
   const base = SIGLA_INDICADOR[chaveBase] || "NE/NO";
+  const nome = <NomeIndicador chave={chaveBase} />;
   const linhaBase = { BA: "preco_ba", NE: "preco_ne", N: "preco_no", NENO: "preco_neno" }[chaveBase];
+  return (
+    <table className="antt-xls">
+      {/* larguras fixas: a tabela não muda de tamanho ao trocar a localidade */}
+      <colgroup><col className="antt-xls__col-nome" />{MESES.map((m) => <col key={m} />)}<col className="antt-xls__col-acum" /></colgroup>
+      <thead>
+        <tr><th className="antt-xls__ano">{tabela.ano}</th>{MESES.map((m) => <th key={m}>{m}</th>)}<th className="antt-xls__acum">ACUM</th></tr>
+      </thead>
+      <tbody>
+        {LINHAS_PLANILHA.map(([k, nome, curto]) => (
+          <tr key={k} className={k === linhaBase ? "is-sel" : undefined}>
+            <th scope="row"><NomeLinha longo={nome} curto={curto} /></th>
+            {L[k].valores.map((x, i) => (
+              <td key={i} className={x?.parcial ? "is-parcial" : ""} title={x ? `${completo(x.valor, " R$/L")}${x.parcial ? " · mês parcial" : ""}` : undefined}>
+                {x ? <><Preco v={x.valor} />{x.parcial && <sup>*</sup>}</> : ""}
+              </td>
+            ))}
+            <td className="antt-xls__acum" title={L[k].acum ? `Média dos meses do ano: ${completo(L[k].acum, " R$/L")}` : undefined}>{L[k].acum ? <Preco v={L[k].acum} /> : ""}</td>
+          </tr>
+        ))}
+        <tr className="antt-xls__var">
+          <th scope="row">
+            <span className="antt-xls__vtit"><NomeLinha longo={<>Variação mensal — {nome} (%)</>} curto="Var. mensal %" /></span>
+            <small>Calculada sobre o Preço Médio {base}</small>
+          </th>
+          {v.valores.map((x, i) => <td key={i} className={tomNum(x)} title={x == null ? undefined : `${base}: ${completo(x, "%")}`}>{x == null ? "" : fmtPct(x)}</td>)}
+          <td className={`antt-xls__acum ${tomNum(v.acum)}`} title={v.acum == null ? undefined : `Acumulado do ano (${base}): ${completo(v.acum, "%")}`}>{v.acum == null ? "" : fmtPct(v.acum)}</td>
+        </tr>
+        {g && (
+          <tr className="antt-xls__var antt-xls__gat">
+            <th scope="row">
+              <span className="antt-xls__vtit"><NomeLinha longo={<>Variação desde o marco — {nome} (%)</>} curto="Desde o marco %" /></span>
+              <small>Número do gatilho ±5% · ◆ mês que virou marco</small>
+            </th>
+            {g.valores.map((x, i) => {
+              const mk = infoMarco(serie, tabela.ano, i + 1);
+              if (mk?.inicial) return <td key={i} className="is-marco" title="Marco inicial: média de janeiro/2026">◆ inicial</td>;
+              if (mk) {
+                return (
+                  <td key={i} className={`is-marco ${tomNum(mk.pct)}`}
+                    title={`Atingiu ${fmtPct(mk.pct)} contra o marco de ${rotuloMes(mk.de.ano, mk.de.mes)} (${fmtBRL(mk.de.preco, 4)}) e virou o novo marco zero: (${fmtNumber(mk.preco, 4)} ÷ ${fmtNumber(mk.de.preco, 4)} − 1) × 100. O acumulado recomeça neste mês.`}>
+                    {fmtPct(mk.pct)} ◆
+                  </td>
+                );
+              }
+              return <td key={i} className={tomNum(x)} title={x == null ? undefined : `${MESES[i]}: preço do mês ÷ preço do marco em vigor − 1 = ${completo(x, "%")}`}>{x == null ? "" : fmtPct(x)}</td>;
+            })}
+            <td className={`antt-xls__acum ${tomNum(g.acum)}`} title="Valor do último mês (o mesmo do resumo do gatilho)">{g.acum == null ? "" : fmtPct(g.acum)}</td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  );
+}
+
+/**
+ * Tabela em tela cheia, deitada (paisagem) no celular: pede tela cheia + giro do aparelho (Android/Chrome) e, se o
+ * navegador não deixar (iPhone), gira o conteúdo 90° por CSS. Zoom por botões e pelo gesto de pinça.
+ */
+function TabelaTelaCheia({ titulo, onClose, children }) {
+  const ref = useRef(null);
+  const [zoom, setZoom] = useState(1);
+  const [girar, setGirar] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    let travou = false;
+    (async () => {
+      try { if (el?.requestFullscreen && !document.fullscreenElement) await el.requestFullscreen({ navigationUI: "hide" }); } catch { /* sem tela cheia */ }
+      try { await window.screen?.orientation?.lock?.("landscape"); travou = true; } catch { /* iPhone/desktop: giro por CSS */ }
+    })();
+    const tecla = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", tecla);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", tecla);
+      document.body.style.overflow = overflow;
+      try { if (travou) window.screen.orientation.unlock(); } catch { /* nada */ }
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    };
+  }, [onClose]);
+  const mudarZoom = (d) => setZoom((z) => Math.min(2, Math.max(0.6, Math.round((z + d) * 10) / 10)));
+  return (
+    <div ref={ref} className={`antt-xls-full${girar ? " is-girar" : ""}`} role="dialog" aria-modal="true" aria-label={titulo}>
+      <div className="antt-xls-full__palco">
+        <header className="antt-xls-full__barra">
+          <strong>{titulo}</strong>
+          <div className="antt-xls-full__botoes">
+            <button type="button" onClick={() => mudarZoom(-0.1)} aria-label="Diminuir zoom">−</button>
+            <span aria-live="polite">{Math.round(zoom * 100)}%</span>
+            <button type="button" onClick={() => mudarZoom(0.1)} aria-label="Aumentar zoom">+</button>
+            <button type="button" className="antt-xls-full__girar" onClick={() => setGirar((x) => !x)} aria-pressed={girar} title="Deitar a tabela na tela">↻ Girar</button>
+            <button type="button" onClick={onClose} aria-label="Fechar tabela em tela cheia">✕</button>
+          </div>
+        </header>
+        <div className="antt-xls-full__corpo">
+          <div style={{ zoom }}>{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function PlanilhaMensal({ tabela, serie = [] }) {
+  const L = tabela.linhas;
+  const g = L.variacao_acumulada_pct;
   const temParcial = LINHAS_PLANILHA.some(([k]) => L[k].valores.some((x) => x?.parcial));
+  const [cheia, setCheia] = useState(false);
+  const fechar = useCallback(() => setCheia(false), []);
+  const legenda = (
+    <div className="antt-legenda antt-xls__legenda">
+      {temParcial && <p>* mês parcial (ainda faltam pesquisas semanais da ANP).</p>}
+      <p><Ma /> = média · <strong>Variação mensal</strong> = preço do mês ÷ preço do mês anterior − 1 (ex.: novembro contra outubro).</p>
+      {g && <p><strong>Variação desde o marco</strong> = preço do mês ÷ preço do marco em vigor − 1. É este o número comparado com o gatilho de ±5%; ao atingir o limite, o mês vira o novo marco (◆) e a contagem recomeça.</p>}
+      <p><strong>ACUM</strong>: nos preços, média dos meses do ano · na variação mensal, último mês ÷ primeiro mês do ano − 1 (acumulado do ano) · na variação desde o marco, o valor do último mês.</p>
+    </div>
+  );
   return (
     <>
-      <div className="antt-xls-wrap">
-        <table className="antt-xls">
-          {/* larguras fixas: a tabela não muda de tamanho ao trocar a localidade */}
-          <colgroup><col className="antt-xls__col-nome" />{MESES.map((m) => <col key={m} />)}<col className="antt-xls__col-acum" /></colgroup>
-          <thead>
-            <tr><th className="antt-xls__ano">{tabela.ano}</th>{MESES.map((m) => <th key={m}>{m}</th>)}<th className="antt-xls__acum">ACUM</th></tr>
-          </thead>
-          <tbody>
-            {LINHAS_PLANILHA.map(([k, nome]) => (
-              <tr key={k} className={k === linhaBase ? "is-sel" : undefined}>
-                <th scope="row">{nome}</th>
-                {L[k].valores.map((x, i) => (
-                  <td key={i} className={x?.parcial ? "is-parcial" : ""} title={x ? `${completo(x.valor, " R$/L")}${x.parcial ? " · mês parcial" : ""}` : undefined}>
-                    {x ? <>{fmtBRL(x.valor)}{x.parcial && <sup>*</sup>}</> : ""}
-                  </td>
-                ))}
-                <td className="antt-xls__acum" title={L[k].acum ? `Média dos meses do ano: ${completo(L[k].acum, " R$/L")}` : undefined}>{L[k].acum ? fmtBRL(L[k].acum) : ""}</td>
-              </tr>
-            ))}
-            <tr className="antt-xls__var">
-              <th scope="row">
-                <span className="antt-xls__vtit">Variação mensal — {ROTULO_INDICADOR[chaveBase]} (%)</span>
-                <small>Calculada sobre o Preço Médio {base}</small>
-              </th>
-              {v.valores.map((x, i) => <td key={i} className={tomNum(x)} title={x == null ? undefined : `${base}: ${completo(x, "%")}`}>{x == null ? "" : fmtPct(x)}</td>)}
-              <td className={`antt-xls__acum ${tomNum(v.acum)}`} title={v.acum == null ? undefined : `Acumulado do ano (${base}): ${completo(v.acum, "%")}`}>{v.acum == null ? "" : fmtPct(v.acum)}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div className="antt-xls-ferramentas">
+        <span className="antt-xls__dica">Deslize para o lado para ver todos os meses, ou</span>
+        <button type="button" className="antt-linkbtn antt-xls__expandir" onClick={() => setCheia(true)}>⤢ Ver tabela inteira</button>
       </div>
-      {temParcial && <p className="antt-legenda">* mês parcial</p>}
+      <div className="antt-xls-wrap"><TabelaMensal tabela={tabela} serie={serie} /></div>
+      {legenda}
+      {cheia && (
+        <TabelaTelaCheia titulo={`Tabela mensal ANP · Diesel S10 · R$/litro · ${tabela.ano}`} onClose={fechar}>
+          <TabelaMensal tabela={tabela} serie={serie} />
+          {legenda}
+        </TabelaTelaCheia>
+      )}
     </>
   );
 }
@@ -250,19 +378,19 @@ export default function AnttGatilhos() {
           {/* 2. Resumo compacto: preço, marco, variação e gatilho */}
           <section className={`antt-resumo${pendentes.length ? " is-pendente" : ""}`} aria-label={`Resumo · ${ROTULO_INDICADOR[loc]}`}>
             <div className="antt-resumo__item">
-              <span>Preço médio</span>
+              <span>Preço médio · {SIGLA_INDICADOR[loc]}</span>
               <strong title={completo(sit.atual.preco_medio, " R$/L")}>{fmtBRL(sit.atual.preco_medio)}</strong>
-              <small>{rotuloMes(sit.atual.ano, sit.atual.mes)}{sit.atual.mes_completo ? "" : " · parcial"}</small>
+              <small>{ROTULO_INDICADOR[loc]} em {mesBarraAno(sit.atual.ano, sit.atual.mes)}{sit.atual.mes_completo ? "" : " · mês em andamento"}</small>
             </div>
             <div className="antt-resumo__item">
               <span>Marco atual</span>
               <strong title={sit.ref ? completo(sit.ref.preco, " R$/L") : undefined}>{sit.ref ? fmtBRL(sit.ref.preco) : "—"}</strong>
-              <small>{sit.ref ? rotuloMes(sit.ref.ano, sit.ref.mes) : "aguardando jan/2026"}</small>
+              <small>{sit.ref ? `${ROTULO_INDICADOR[loc]} em ${mesBarraAno(sit.ref.ano, sit.ref.mes)} · base do acumulado` : "aguardando jan/2026"}</small>
             </div>
             <div className="antt-resumo__item">
               <span>Variação acumulada</span>
               <strong className={tomNum(sit.variacao)} title={sit.ref ? completo(sit.variacao, "%") : undefined}>{sit.ref ? fmtPct(sit.variacao) : "—"}</strong>
-              <small>{sit.ref ? `${fmtRsL(sit.diferenca)} desde o marco` : ""}</small>
+              <small>{sit.ref ? `${rotuloMes(sit.atual.ano, sit.atual.mes)} contra o marco de ${rotuloMes(sit.ref.ano, sit.ref.mes)} · ${fmtRsL(sit.diferenca)}` : ""}</small>
             </div>
             <div className="antt-resumo__item antt-resumo__gatilho">
               <span>Gatilho ±{limite}%{loc !== "NENO" && <Help texto={`Comparativo: ${ROTULO_INDICADOR[loc]} contra o seu próprio preço no mês do marco. O gatilho de reajuste e os marcos seguem a média NE/NO.`} />}</span>
@@ -275,6 +403,21 @@ export default function AnttGatilhos() {
               {sit.ref && <TriggerGauge value={sit.variacao} limit={limite} />}
               {sit.ref && <small>faltam {fmtNumber(Math.max(0, sit.faltaAlta), 2)} p.p. para +{limite}% · {fmtNumber(Math.max(0, sit.faltaBaixa), 2)} p.p. para -{limite}%</small>}
             </div>
+            {sit.ref && (
+              <div className="antt-resumo__explica" aria-label="O que significa o número exibido">
+                <p>
+                  <strong className={tomNum(sit.variacao)}>{fmtPct(sit.variacao)}</strong> = {descreverVariacao({
+                    indicador: loc, ano: sit.atual.ano, mes: sit.atual.mes, parcial: !sit.atual.mes_completo, marco: sit.ref,
+                  })}.
+                  {!sit.atual.mes_completo && sit.atual.n_semanas ? ` Considera ${sit.atual.n_semanas} semana(s) da ANP até agora; o valor muda a cada nova pesquisa.` : ""}
+                  {sit.atual.marco_inicia_aqui ? " Este mês virou o novo marco zero: o acumulado recomeça em 0%." : ""}
+                </p>
+                <p className="antt-resumo__conta">
+                  Conta: {contaVariacao(sit.atual.preco_medio, sit.ref.preco, sit.variacao)}
+                  <span> — preço {loc === "NENO" ? "médio NE/NO" : `de ${ROTULO_INDICADOR[loc]}`} de {rotuloMes(sit.atual.ano, sit.atual.mes)} ÷ preço do marco de {rotuloMes(sit.ref.ano, sit.ref.mes)}</span>
+                </p>
+              </div>
+            )}
           </section>
           {decidindo && pendentes.length > 0 && (
             <section className="antt-decisoes" aria-label="Confirmação de reajustes">
@@ -288,7 +431,7 @@ export default function AnttGatilhos() {
           {dash.tabela && (
             <section className="antt-sec" aria-label="Tabela mensal ANP">
               <div className="antt-sec__head"><h2>Tabela mensal ANP <span>Diesel S10 · R$/litro</span></h2></div>
-              <PlanilhaMensal tabela={dash.tabela} />
+              <PlanilhaMensal tabela={dash.tabela} serie={dash.series[dash.tabela.base || "NENO"] || []} />
             </section>
           )}
 

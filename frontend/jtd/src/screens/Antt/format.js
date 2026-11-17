@@ -50,6 +50,38 @@ export function fmtDateTime(iso) {
 }
 
 export const rotuloMes = (ano, mes) => `${MESES[mes - 1]}/${String(ano).slice(2)}`;
+/** "novembro/2026" */
+export const mesBarraAno = (ano, mes) => (ano && mes ? `${MESES_LONGOS[mes - 1]}/${ano}` : "");
+
+/** O que o número representa, por indicador: "da média NE/NO do Diesel S10", "do preço médio do Diesel S10 na Bahia"… */
+export const DESCRICAO_INDICADOR = {
+  NENO: "da média NE/NO do Diesel S10",
+  BA: "do preço médio do Diesel S10 na Bahia",
+  NE: "do preço médio do Diesel S10 no Nordeste",
+  N: "do preço médio do Diesel S10 no Norte",
+};
+
+/** Formata um preço da conta com 4 casas: 7.4225 → "7,4225". */
+const p4 = (v) => fmtNumber(v, 4);
+
+/**
+ * Conta da variação acumulada, com os mesmos valores do backend:
+ * "(7,4225 ÷ 7,1588 − 1) × 100 = +3,68%". Retorna "" se faltar algum valor.
+ */
+export function contaVariacao(preco, precoMarco, resultadoPct) {
+  if (num(preco) === null || num(precoMarco) === null || num(resultadoPct) === null) return "";
+  return `(${p4(preco)} ÷ ${p4(precoMarco)} − 1) × 100 = ${fmtPct(resultadoPct)}`;
+}
+
+/**
+ * Frase completa do número exibido:
+ * "Variação acumulada da média NE/NO do Diesel S10 em novembro/2026 (mês em andamento) em relação ao marco de julho/2026".
+ */
+export function descreverVariacao({ indicador = "NENO", ano, mes, parcial = false, marco }) {
+  const desc = DESCRICAO_INDICADOR[indicador] || DESCRICAO_INDICADOR.NENO;
+  const base = marco?.ano && marco?.mes ? ` em relação ao marco de ${mesBarraAno(marco.ano, marco.mes)}` : "";
+  return `Variação acumulada ${desc} em ${mesBarraAno(ano, mes)}${parcial ? " (mês em andamento)" : ""}${base}`;
+}
 export const rotuloMesLongo = (ano, mes) => `${MESES_LONGOS[mes - 1]} de ${ano}`;
 
 export const ROTULO_FONTE = {

@@ -162,8 +162,10 @@ export function acumuladoDoMes(serieNENO = []) {
   if (!ref || ref.preco == null || (ref.ano === atual.ano && ref.mes === atual.mes)) return null;
   return {
     pct: D.round(D.variacaoPct(atual.preco_medio, ref.preco), 2),
-    ano: atual.ano, mes: atual.mes, mes_parcial: !atual.mes_completo,
-    marco: { ano: ref.ano, mes: ref.mes },
+    indicador: "NENO",
+    ano: atual.ano, mes: atual.mes, mes_parcial: !atual.mes_completo, semanas: atual.n_semanas ?? null,
+    preco_mes: String(atual.preco_medio),
+    marco: { ano: ref.ano, mes: ref.mes, preco: String(ref.preco) },
   };
 }
 

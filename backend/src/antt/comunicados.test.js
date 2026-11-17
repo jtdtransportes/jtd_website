@@ -225,12 +225,16 @@ test("acumulado do mês (NE/NO): usa o marco em vigor; se o mês virou marco zer
   // out/2026 ainda sob o marco de jan: +3,00%
   const serie = [
     { ano: 2026, mes: 9, preco_medio: "6.200000", mes_completo: true, marco_ref: marcoJan, marco_inicia_aqui: false },
-    { ano: 2026, mes: 10, preco_medio: "6.283000", mes_completo: false, marco_ref: marcoJan, marco_inicia_aqui: false },
+    { ano: 2026, mes: 10, preco_medio: "6.283000", n_semanas: 2, mes_completo: false, marco_ref: marcoJan, marco_inicia_aqui: false },
   ];
-  assert.deepEqual(svc.acumuladoDoMes(serie), { pct: "3.00", ano: 2026, mes: 10, mes_parcial: true, marco: { ano: 2026, mes: 1 } });
+  assert.deepEqual(svc.acumuladoDoMes(serie), {
+    pct: "3.00", indicador: "NENO", ano: 2026, mes: 10, mes_parcial: true, semanas: 2, preco_mes: "6.283000", marco: { ano: 2026, mes: 1, preco: "6.100000" },
+  });
   // nov/2026 atingiu o gatilho e virou o novo marco zero: o acumulado é contra jan (5,29%), não 0%
-  serie.push({ ano: 2026, mes: 11, preco_medio: "6.422690", mes_completo: true, marco_ref: { ano: 2026, mes: 11, preco: "6.422690" }, marco_inicia_aqui: true });
-  assert.deepEqual(svc.acumuladoDoMes(serie), { pct: "5.29", ano: 2026, mes: 11, mes_parcial: false, marco: { ano: 2026, mes: 1 } });
+  serie.push({ ano: 2026, mes: 11, preco_medio: "6.422690", n_semanas: 4, mes_completo: true, marco_ref: { ano: 2026, mes: 11, preco: "6.422690" }, marco_inicia_aqui: true });
+  assert.deepEqual(svc.acumuladoDoMes(serie), {
+    pct: "5.29", indicador: "NENO", ano: 2026, mes: 11, mes_parcial: false, semanas: 4, preco_mes: "6.422690", marco: { ano: 2026, mes: 1, preco: "6.100000" },
+  });
   assert.equal(svc.acumuladoDoMes([]), null);
   assert.equal(svc.acumuladoDoMes([{ ano: 2026, mes: 1, preco_medio: "6.1", marco_ref: marcoJan, marco_inicia_aqui: true }]), null);   // só o marco inicial
 });

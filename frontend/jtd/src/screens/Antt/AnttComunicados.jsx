@@ -9,6 +9,7 @@ import { ClienteSelect, EditorSimples, Envelope, Modal, PreviaEmail } from "./co
 import ClientesPanel from "./comunicados/ClientesPanel";
 import Historico from "./comunicados/Historico";
 import { ASSUNTO_PADRAO, fmtBytes, fmtPercentual, mesPorExtenso, montarModelo, normalizarPercentual, novaChave, textoDe } from "./comunicados/modelo";
+import { contaVariacao, descreverVariacao } from "./format";
 import "./comunicados/Comunicados.css";
 
 const LIMITES_PADRAO = { max_arquivos: 10, max_bytes_arquivo: 10 * 1048576, max_bytes_total: 25 * 1048576, extensoes: [".pdf", ".xlsx", ".png", ".jpg", ".jpeg"] };
@@ -205,7 +206,12 @@ export default function AnttComunicados() {
             </div>
             <p className="antt-muted antt-com-nota">
               {acumulado
-                ? <>Reajuste preenchido com o acumulado do Diesel S10 de {referencia}{acumulado.mes_parcial ? " (mês em andamento)" : ""}: <strong>{fmtPercentual(acumulado.pct)}</strong> (média NE/NO · ANP, sobre o marco de {mesPorExtenso(acumulado.marco)}). Pode ser editado antes do envio.</>
+                ? <>
+                    Reajuste preenchido com <strong>{fmtPercentual(acumulado.pct)}</strong> = {descreverVariacao({ indicador: acumulado.indicador || "NENO", ano: acumulado.ano, mes: acumulado.mes, parcial: acumulado.mes_parcial, marco: acumulado.marco })} (dados da ANP{acumulado.mes_parcial && acumulado.semanas ? `, ${acumulado.semanas} semana(s) até agora` : ""}). Pode ser editado antes do envio.
+                    {contaVariacao(acumulado.preco_mes, acumulado.marco?.preco, acumulado.pct) && (
+                      <span className="antt-com-conta">Conta: {contaVariacao(acumulado.preco_mes, acumulado.marco.preco, acumulado.pct)}</span>
+                    )}
+                  </>
                 : "Acumulado do Diesel S10 indisponível no momento: informe o percentual manualmente."}
               {" "}Vigência e contrato são opcionais; em branco, o texto se adapta.
             </p>

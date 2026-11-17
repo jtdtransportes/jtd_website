@@ -126,3 +126,4 @@
   .antt-com-modal__body, .antt-com-modal__head, .antt-com-modal__foot { padding-left: 14px; padding-right: 14px; }
 }
 .antt-com-usar { align-self: flex-start; padding: 2px 0 !important; font-size: .76rem !important; }
+.antt-com-conta { display: block; margin-top: 3px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }

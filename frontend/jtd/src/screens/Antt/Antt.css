@@ -423,3 +423,75 @@
 /* tabela da planilha: 1ª coluna quebra linha para caber JAN..DEZ + ACUM */
 .antt-table td:first-child { white-space: normal; min-width: 150px; max-width: 190px; }
 .antt-table { font-size: .82rem; }
+
+/* Resumo: o que significa o número exibido + conta (sempre visível) */
+.antt-resumo__explica { grid-column: 1 / -1; margin: 12px 20px 0; padding-top: 10px; border-top: 1px solid #dde4ea; display: flex; flex-direction: column; gap: 3px; font-size: .8rem; color: #51626e; }
+.antt-resumo__explica strong.is-alta { color: var(--alta); }
+.antt-resumo__explica strong.is-baixa { color: var(--baixa); }
+.antt-resumo__conta { font-variant-numeric: tabular-nums; color: var(--text); font-weight: 600; }
+.antt-resumo__conta span { font-weight: 400; color: #6b7c88; }
+@media (max-width: 760px) { .antt-resumo__explica { margin: 10px 14px 0; } }
+
+/* Tabela mensal: linha do gatilho (variação desde o marco) e legenda sempre visível */
+.antt-xls .antt-xls__gat th, .antt-xls .antt-xls__gat td { background: #fdf3e1; }
+.antt-xls .antt-xls__gat td.antt-xls__acum { background: #f8e6c4; }
+.antt-xls .antt-xls__gat td.is-marco { font-weight: 700; box-shadow: inset 0 -3px 0 #6b4fbb; cursor: help; }
+.antt-xls__legenda { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.antt-xls__legenda p { margin: 0; }
+
+/* ── Tabela mensal: ferramentas, versão compacta no celular e tela cheia deitada ── */
+.antt-xls__curto { display: none; }
+.antt-xls-ferramentas { display: flex; justify-content: flex-end; align-items: center; gap: 4px 6px; flex-wrap: wrap; margin-bottom: 4px; font-size: .76rem; color: #6b7c88; }
+.antt-xls__dica { display: none; }
+.antt-xls__expandir { white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .antt-xls__dica { display: inline; }
+  .antt-xls-ferramentas { justify-content: flex-start; }
+  .antt-xls { min-width: 860px; font-size: .78rem; }
+  .antt-xls col.antt-xls__col-nome { width: 96px; }
+  .antt-xls col.antt-xls__col-acum { width: 64px; }
+  .antt-xls th, .antt-xls td { padding: 7px 3px; overflow: visible; text-overflow: clip; }
+  .antt-xls tbody th { padding-left: 8px; padding-right: 6px; z-index: 1; box-shadow: 3px 0 6px -2px rgba(1, 48, 74, .18); }
+  .antt-xls tbody tr.is-sel th { box-shadow: inset 3px 0 0 #2f6fa8, 3px 0 6px -2px rgba(1, 48, 74, .18); }
+  .antt-xls thead th.antt-xls__ano { padding-left: 8px; position: sticky; left: 0; z-index: 2; }
+  .antt-xls__rs { display: none; }
+  .antt-xls__longo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .antt-xls__curto { display: inline; }
+  .antt-xls .antt-xls__var th small { display: none; }
+  .antt-xls .antt-xls__var th .antt-xls__vtit { white-space: normal; font-size: .74rem; line-height: 1.2; }
+}
+
+/* Tela cheia (botão "Ver tabela inteira") */
+.antt-xls-full { position: fixed; inset: 0; z-index: 2000; background: #fff; overflow: hidden; }
+.antt-xls-full__palco { position: absolute; inset: 0; display: flex; flex-direction: column; background: #fff; }
+.antt-xls-full__barra { display: flex; justify-content: space-between; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 8px 12px; background: var(--accent, #01304a); color: #fff; font-size: .82rem; }
+.antt-xls-full__botoes { display: flex; align-items: center; gap: 6px; }
+.antt-xls-full__botoes span { min-width: 42px; text-align: center; font-variant-numeric: tabular-nums; }
+.antt-xls-full__botoes button { min-width: 34px; height: 32px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, .35); border-radius: 8px; background: transparent; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.antt-xls-full__botoes button:hover, .antt-xls-full__botoes button[aria-pressed="true"] { background: rgba(255, 255, 255, .16); }
+.antt-xls-full__corpo { flex: 1; overflow: auto; padding: 10px 12px 16px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.antt-xls-full .antt-xls { min-width: 900px; font-size: .8rem; }
+.antt-xls-full .antt-xls col.antt-xls__col-nome { width: 190px; }
+.antt-xls-full .antt-xls col.antt-xls__col-acum { width: 72px; }
+.antt-xls-full .antt-xls th, .antt-xls-full .antt-xls td { overflow: visible; text-overflow: clip; }
+.antt-xls-full .antt-xls__rs { display: none; }
+.antt-xls-full .antt-xls__longo { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+.antt-xls-full .antt-xls__curto { display: none; }
+.antt-xls-full .antt-xls .antt-xls__var th small { display: block; }
+.antt-xls-full .antt-xls .antt-xls__var th .antt-xls__vtit { white-space: normal; }
+.antt-xls-full .antt-xls__legenda { margin-top: 10px; }
+.antt-xls-full__girar { display: none; }
+/* celular em pé: deita o conteúdo (quando o navegador não gira a tela sozinho, ex.: iPhone) */
+@media (orientation: portrait) and (max-width: 900px) {
+  .antt-xls-full__girar { display: inline-block; }
+  .antt-xls-full.is-girar .antt-xls-full__palco {
+    inset: auto; top: 0; left: 100%;
+    width: 100vh; width: 100dvh; height: 100vw;
+    transform: rotate(90deg); transform-origin: top left;
+  }
+}
+
+/* Símbolo da média (𝑀𝑎) e títulos das linhas de variação sem corte */
+.antt-ma { font-family: "Cambria Math", "Cambria", "Times New Roman", serif; font-style: italic; font-weight: 600; letter-spacing: .01em; }
+.antt-xls .antt-xls__var th .antt-xls__vtit { white-space: normal; }
