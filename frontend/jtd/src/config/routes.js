@@ -4,6 +4,7 @@ import AntiCorruption from "../screens/Policy/AntiCorruption";
 import Environmental from "../screens/Policy/Environmental";
 import CodeOfEthics from "../screens/Policy/CodeOfEthics";
 import ETIBaseCodes from "../screens/Policy/ETIBaseCodes";
+import HealthSafety from "../screens/Policy/HealthSafety";
 import Login from "../screens/Login/Login"
 import Profile from "../screens/Profile/Profile"
 import Register from "../screens/Register/Register";
@@ -23,6 +24,7 @@ const AppRoutes = () => {
         <Route path="environmental" element={<Environmental />} />
         <Route path="codeofethics" element={<CodeOfEthics />} />
         <Route path="etibasecodes" element={<ETIBaseCodes />} />
+        <Route path="saude-seguranca" element={<HealthSafety />} />
         <Route path="login" element={<Login />} />
         <Route path="profile" element={<Profile />} />
         <Route path="register" element={<Register />} />

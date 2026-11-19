@@ -5,6 +5,7 @@ import Banner from "../../components/Banner/Banner";
 import StatCard from "../../components/StatCard/StatCard";
 import ServiceArea from "../../components/ServiceArea/ServiceArea";
 import MeetUs from "../../components/MeetUs/MeetUs";
+import SafetyHighlight from "../../components/SafetyHighlight/SafetyHighlight";
 import QuickActions from "../../components/QuickActions/QuickActions";
 import BusinessPartner from "../../components/BusinessPartner/BusinessPartner";
 import Contact from "../../components/Contact/Contact";
@@ -18,6 +19,9 @@ const Home = () => {
       <StatCard />
       <section id="sobre-nos">
         <MeetUs />
+      </section>
+      <section id="sst">
+        <SafetyHighlight />
       </section>
       <QuickActions />
        <section id="clientes">

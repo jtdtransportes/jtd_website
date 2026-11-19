@@ -37,6 +37,7 @@ const Footer = () => {
 
             <Link to="/anticorruption">Política de Anticorrupção</Link>
             <Link to="/environmental">Política Ambiental</Link>
+            <Link to="/saude-seguranca">Política de Saúde e Segurança do Trabalho</Link>
             <Link to="/codeofethics">Código de Ética</Link>
             <Link to="/etibasecodes">Código Base ETI</Link>
           </div>

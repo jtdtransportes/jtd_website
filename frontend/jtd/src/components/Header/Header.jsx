@@ -100,6 +100,7 @@ const Header = () => {
             <div className="dropdown-content">
               <Link to="/anticorruption">Política de Anticorrupção</Link>
               <Link to="/environmental">Política Ambiental</Link>
+              <Link to="/saude-seguranca">Política de Saúde e Segurança do Trabalho</Link>
               <Link to="/codeofethics">Código de Ética</Link>
               <Link to="/etibasecodes">Código Base ETI</Link>
             </div>
@@ -203,6 +204,7 @@ const Header = () => {
             <div className="mobile-submenu">
               <Link to="/anticorruption">Política de Anticorrupção</Link>
               <Link to="/environmental">Política Ambiental</Link>
+              <Link to="/saude-seguranca">Política de Saúde e Segurança do Trabalho</Link>
               <Link to="/codeofethics">Código de Ética</Link>
               <Link to="/etibasecodes">Código Base ETI</Link>
             </div>
