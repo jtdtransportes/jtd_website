@@ -3,15 +3,22 @@ name: Deploy React to GitHub Pages
 on:
   push:
     branches:
-      - main   
+      - main
+  # Permite publicar manualmente pela aba Actions ("Run workflow").
+  workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# Evita dois deploys simultâneos; o mais recente substitui o anterior.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -36,5 +43,16 @@ jobs:
         with:
           path: frontend/jtd/build
 
+  # Job separado: se a publicação falhar, "Re-run failed jobs" repete só esta
+  # etapa e reaproveita o mesmo artefato (sem gerar artefatos duplicados).
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
